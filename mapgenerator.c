@@ -255,16 +255,40 @@ int pathfind(int map[BOUNDS_Y][BOUNDS_X][2], int src)
 
 int trailblaze(int map[BOUNDS_Y][BOUNDS_X][2])
 {
-    int i, u = BOUNDS_X/2 + rand() % 20;
+    int i, j, k, l, m, u = BOUNDS_X/2 + rand() % 20;
 
+    //left
     for (i = 0; i < u; i++) {
         // printf("%d, %d\n", EXITS[2][0], EXITS[2][1]+i);
+        map[EXITS[3][0]][EXITS[3][1]+i][0] = '#';
+        map[EXITS[3][0]][EXITS[3][1]+i][1] = 25;
+    }
+    l = i - 1;
+    //right
+    while (i < BOUNDS_X) {
+        // printf("%d, %d\n", EXITS[3][0], EXITS[3][1]+i);
         map[EXITS[2][0]][EXITS[2][1]+i][0] = '#';
+        map[EXITS[2][0]][EXITS[2][1]+i][1] = 25;
+        i++;
     }
 
-    while (i < BOUNDS_X) {
-        printf("%d, %d\n", EXITS[3][0], EXITS[3][1]+i);
-        map[EXITS[3][0]][EXITS[3][1]+i][0] = '#';
+    //connect left and right
+    j = (EXITS[3][0] > EXITS[2][0]) ? EXITS[2][0] : EXITS[3][0];
+    k = (EXITS[3][0] > EXITS[2][0]) ? EXITS[3][0] : EXITS[2][0];
+    i = 0;
+    while (j + i <= k) {
+        // printf("%d, %d, %d\n", j, l, k);
+        map[j+i][l][0] = '#';
+        map[j+i][l][1] = 25;
+        i++;
+    }
+
+    //top
+    m = 0;
+    while (map[EXITS[1][0]][EXITS[1][1]][0] != '#') {
+        printf("%d, %d\n", EXITS[0][0] + m, EXITS[0][1]);
+        map[EXITS[0][0] + m][EXITS[0][1]][0] = '#';
+        map[EXITS[0][0] + m][EXITS[0][1]][1] = 25;
     }
 
     return 0;
@@ -336,7 +360,7 @@ int create_map(int map[BOUNDS_Y][BOUNDS_X][2])
         // print_map(map, 0);
         spread_seed(map, qx, qy);
         fill_map(map);
-        print_map(map, 0);
+        // print_map(map, 0);
         // pathfind(map, 0);
         trailblaze(map);
         print_map(map, 0);
