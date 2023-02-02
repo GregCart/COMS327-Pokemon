@@ -271,7 +271,6 @@ int trailblaze(int map[BOUNDS_Y][BOUNDS_X][2])
         map[EXITS[2][0]][EXITS[2][1]+i][1] = 25;
         i++;
     }
-
     //connect left and right
     j = (EXITS[3][0] > EXITS[2][0]) ? EXITS[2][0] : EXITS[3][0];
     k = (EXITS[3][0] > EXITS[2][0]) ? EXITS[3][0] : EXITS[2][0];
@@ -282,7 +281,7 @@ int trailblaze(int map[BOUNDS_Y][BOUNDS_X][2])
         map[j+i][l][1] = 25;
         i++;
     }
-
+    
     //top
     m = 1;
     // printf("%d, %d\n", EXITS[1][0] + m, EXITS[1][1]);
@@ -302,6 +301,51 @@ int trailblaze(int map[BOUNDS_Y][BOUNDS_X][2])
         map[EXITS[0][0]-m][EXITS[0][1]][1] = 25;
         m++;
     }
+
+    //Add PokemartMart
+    map[j+2][l-1][0] = 'M';
+    map[j+2][l-1][1] = 99;
+    map[j+3][l-2][0] = 'M';
+    map[j+3][l-2][1] = 99;
+    map[j+2][l-2][0] = 'M';
+    map[j+2][l-2][1] = 99;
+    map[j+3][l-1][0] = 'M';
+    map[j+3][l-1][1] = 99;
+    //road
+    if(j >= 16) j -= 2;
+    map[j+2][l-3][0] = '#';
+    map[j+2][l-3][1] = 25;
+    map[j+3][l-3][0] = '#';
+    map[j+3][l-3][1] = 25;
+    map[j+4][l-3][0] = '#';
+    map[j+4][l-3][1] = 25;
+    map[j+4][l-1][0] = '#';
+    map[j+4][l-1][1] = 25;
+    map[j+4][l-2][0] = '#';
+    map[j+4][l-2][1] = 25;
+    map[j+4][l][0] = '#';
+    map[j+4][l][1] = 25;
+    map[j+5][l][0] = '#';
+    map[j+5][l][1] = 25;
+    map[j+3][l][0] = '#';
+    map[j+3][l][1] = 25;
+    map[j+2][l][0] = '#';
+    map[j+2][l][1] = 25;
+    map[j+6][l][0] = '#';
+    map[j+6][l][1] = 25;
+    map[j+5][l-3][0] = '#';
+    map[j+5][l-3][1] = 25;
+    map[j+6][l-3][0] = '#';
+    map[j+6][l-3][1] = 25;
+    //Pokecenter
+    map[j+5][l-1][0] = 'C';
+    map[j+5][l-1][1] = 99;
+    map[j+6][l-2][0] = 'C';
+    map[j+6][l-2][1] = 99;
+    map[j+5][l-2][0] = 'C';
+    map[j+5][l-2][1] = 99;
+    map[j+6][l-1][0] = 'C';
+    map[j+6][l-1][1] = 99;
 
     return 0;
 }
