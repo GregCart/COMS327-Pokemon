@@ -61,7 +61,7 @@ int make_boundary(int map[BOUNDS_Y][BOUNDS_X][2])
     EXITS[3][1] = 0;
     map[x[2]][BOUNDS_X-1][1] = 25;
     map[x[2]][BOUNDS_X-1][0] = PATH;
-    EXITS[2][0] = x[2];
+    EXITS[2][0] = x[2] - 1;
     EXITS[2][1] = BOUNDS_X-1;
     map[BOUNDS_Y-1][x[0]][1] = 25;
     map[BOUNDS_Y-1][x[0]][0] = PATH;
@@ -264,7 +264,7 @@ int trailblaze(int map[BOUNDS_Y][BOUNDS_X][2])
         map[EXITS[3][0]][EXITS[3][1]+i][1] = 25;
     }
     l = i - 1;
-    //right
+    // right
     while (i < BOUNDS_X) {
         // printf("%d, %d\n", EXITS[3][0], EXITS[3][1]+i);
         map[EXITS[2][0]][EXITS[2][1]+i][0] = '#';
@@ -284,11 +284,23 @@ int trailblaze(int map[BOUNDS_Y][BOUNDS_X][2])
     }
 
     //top
-    m = 0;
-    while (map[EXITS[1][0]][EXITS[1][1]][0] != '#') {
-        printf("%d, %d\n", EXITS[0][0] + m, EXITS[0][1]);
-        map[EXITS[0][0] + m][EXITS[0][1]][0] = '#';
-        map[EXITS[0][0] + m][EXITS[0][1]][1] = 25;
+    m = 1;
+    // printf("%d, %d\n", EXITS[1][0] + m, EXITS[1][1]);
+    while (map[EXITS[1][0] + m][EXITS[1][1]][0] != '#') {
+        // printf("%d, %d\n", EXITS[1][0] + m, m);
+        map[EXITS[1][0]+m][EXITS[1][1]][0] = '#';
+        map[EXITS[1][0]+m][EXITS[1][1]][1] = 25;
+        m++;
+    }
+
+    //bottom
+    m = 1;
+    // printf("%d, %d\n", EXITS[0][0] - m, EXITS[0][1]);
+    while (map[EXITS[0][0] - m][EXITS[0][1]][0] != '#') {
+        // printf("%d, %d\n", EXITS[0][0] -     m, m);
+        map[EXITS[0][0]-m][EXITS[0][1]][0] = '#';
+        map[EXITS[0][0]-m][EXITS[0][1]][1] = 25;
+        m++;
     }
 
     return 0;
