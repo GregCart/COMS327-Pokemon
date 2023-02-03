@@ -222,7 +222,6 @@ int printSolution(int dist[], int n)
 
 int pathfind(int map[BOUNDS_Y][BOUNDS_X][2], int src)
 {
-// printf("blazing trail\n");
     int i, j, k, u;
     int dist[BOUNDS_X], sptSet[BOUNDS_X];
 
@@ -246,7 +245,6 @@ int pathfind(int map[BOUNDS_Y][BOUNDS_X][2], int src)
             }
         }
     }
-    printf("done blazing\n");
 
     printSolution(dist, BOUNDS_X);
 
@@ -419,7 +417,7 @@ int create_map(int map[BOUNDS_Y][BOUNDS_X][2])
         // print_map(map, 0);
         // pathfind(map, 0);
         trailblaze(map);
-        print_map(map, 0);
+        // print_map(map, 0);
     } else {
         printf("There was an error generating the map");
         return 1;
@@ -427,9 +425,6 @@ int create_map(int map[BOUNDS_Y][BOUNDS_X][2])
 
     queue_destroy(qx);
     queue_destroy(qy);
-
-    free(qx);
-    free(qy);
 
     return 0;
 }

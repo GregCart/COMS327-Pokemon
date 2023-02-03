@@ -1,0 +1,20 @@
+1/26/2023
+- Started by putting in stubs for all functions I thought I'd need
+
+1/27/2023
+- Started implementing basic board initialization and borders
+
+1/30/2023
+- Finnished working on borders and added exits
+- Bug fixes
+- started working on seeding algo
+
+1/31/2023
+- Finnished implementing seeding algorith and seeds
+- Bugfixes
+- started working on paths
+
+2/1/2023
+- Bugfixes
+- Implemented basic pathing
+- attempted to fix complex pathing

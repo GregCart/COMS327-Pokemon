@@ -10,8 +10,8 @@ CXXFLAGS = -Wall -Werror -ggdb -funroll-loops -DTERM=$(TERM)
 
 LDFLAGS = 
 
-BIN = map_generator
-OBJS = map_generator.o heap.o queue.o
+BIN = poke327
+OBJS = poke327.o heap.o
 
 all: $(BIN) etags
 
@@ -42,7 +42,3 @@ clobber: clean
 etags:
 	@$(ECHO) Updating TAGS
 	@etags *.[ch]
-
-package:
-	make clean
-	cd ..; cp -rv HW0 greg-carter_assignment-1_01; tar cvfz greg-carter_assignment-1_01.tar.gz greg-carter_assignment-1_01;

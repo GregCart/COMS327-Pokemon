@@ -1,0 +1,6 @@
+Implements All map generation requirements with basic pathing generation. Commeneted code is
+for debugging, ease of use, and the remains of my attempt at dijksta's algorithm for generating a path.
+
+To build and run: make
+TO clean: make clean
+To package into tarball: make package
