@@ -9,6 +9,7 @@
 #include <assert.h>
 
 #include "heap.h"
+// #include "heap.c"
 
 #define malloc(size) ({          \
   void *_tmp;                    \
@@ -769,8 +770,9 @@ int main(int argc, char *argv[])
 
   new_map(&d, n, s, e, w);
   print_map(&d);
-
+  
   world[curPos[0]][curPos[1]] = &d;
+  
   while (1) {
       printf("Move: %d, Current Position: (%d, %d). Enter Move:\t", count, curPos[1] - 200, curPos[0] - 200);
       fgets(in, sizeof(in), stdin);
@@ -778,6 +780,7 @@ int main(int argc, char *argv[])
 
       prev = world[curPos[0]][curPos[1]];
 
+      printf("check moves\n");
       switch (in[0]) {
           case 'n':
               curPos[0] += 1;
@@ -829,9 +832,10 @@ int main(int argc, char *argv[])
       if (!(curPos[1] % 401)) {
           curPos[1] -= 1;
       }
+      printf("nullcheck spot\n");
       if (world[curPos[0]][curPos[1]] == NULL) {
-          new_map(&d, n, s, e, w);
-          world[curPos[0]][curPos[1]] = &d;
+          world[curPos[0]][curPos[1]] = malloc(sizeof(world[curPos[0]][curPos[1]]));
+          new_map(world[curPos[0]][curPos[1]], n, s, e, w);
           print_map(world[curPos[0]][curPos[1]]);
       } else {
         print_map(world[curPos[0]][curPos[1]]);

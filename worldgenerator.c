@@ -47,7 +47,7 @@ int main(int argc, char *argv[]) {
                 return 0;
                 break;
             default:
-                printf("Command Not Valid");
+                printf("Command Not Valid\n");
                 break;
         }
 
@@ -63,7 +63,7 @@ int main(int argc, char *argv[]) {
         print_map(world[curPos[0]][curPos[1]]);
 
         printf("Current Position: (%d, %d). Enter Move:\t", curPos[1] - 200, curPos[0] - 200);
-        in = scanf("%c %d %d", in, nx, ny);
+        in = scanf("%c %d %d", &in, &nx, &ny);
     }
 
     return 1;
