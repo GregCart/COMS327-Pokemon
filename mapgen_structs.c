@@ -31,13 +31,13 @@ typedef struct map {
 Map *world[WORLD_SIZE][WORLD_SIZE];
 int curPos[2] = {200, 200};
 
-int print_map(Map *map)
+int print_map(Map *m)
 {
     int i, j;
 
     for (i = 0; i < BOUNDS_Y; i++) {
         for (j = 0; j < BOUNDS_X; j++) {
-            printf("%c", map->terrain[i][j]);
+            printf("%c", m->terrain[i][j]);
         }
         printf("\n");
     }
@@ -73,7 +73,7 @@ int make_boundary(Map *m)
     m->w = x[3];
     m->alt[x[2]][BOUNDS_X-1] = 25;
     m->terrain[x[2]][BOUNDS_X-1] = PATH;
-    m->e = x[2];
+    m->e = x[2]-1;
     m->alt[BOUNDS_Y-1][x[0]] = 25;
     m->terrain[BOUNDS_Y-1][x[0]] = PATH;
     m->s = x[0];
@@ -267,22 +267,22 @@ int trailblaze(Map *m)
     // printf("TRAILS\n");
     //left
     for (i = 0; i < u; i++) {
-        // printf("%d, %d\n", EXITS[2][0], EXITS[2][1]+i);
-        m->terrain[EXITS[3][0]][EXITS[3][1]+i] = '#';
-        m->terrain[EXITS[3][0]][EXITS[3][1]+i] = 25;
+        // printf("%d, %d\n", m->e, EXITS[2][1]+i);
+        m->terrain[m->w][0+i] = '#';
+        m->terrain[m->w][0+i] = 25;
     }
     l = i - 1;
     // printf("TRAILS\n");
     // right
     while (i < BOUNDS_X) {
-        // printf("%d, %d\n", EXITS[3][0], EXITS[3][1]+i);
-        m->terrain[EXITS[2][0]][EXITS[2][1]+i] = '#';
-        m->alt[EXITS[2][0]][EXITS[2][1]+i] = 25;
+        // printf("%d, %d\n", m->w, 0+i);
+        m->terrain[m->e][EXITS[2][1]+i] = '#';
+        m->alt[m->e][EXITS[2][1]+i] = 25;
         i++;
     }
     //connect left and right
-    j = (EXITS[3][0] > EXITS[2][0]) ? EXITS[2][0] : EXITS[3][0];
-    k = (EXITS[3][0] > EXITS[2][0]) ? EXITS[3][0] : EXITS[2][0];
+    j = (m->w > m->e) ? m->e : m->w;
+    k = (m->w > m->e) ? m->w : m->e;
     i = 0;
     // printf("TRAILS\n");
     while (j + i <= k) {
@@ -295,26 +295,26 @@ int trailblaze(Map *m)
     // printf("TRAILS\n");
     //top
     b = 1;
-    // printf("%d, %d\n", EXITS[1][0] + b, EXITS[1][1]);
-    while (m->terrain[EXITS[1][0] + b][EXITS[1][1]] != '#') {
-        // printf("%d, %d\n", EXITS[1][0] + m, m);
-        m->terrain[EXITS[1][0]+b][EXITS[1][1]] = '#';
-        m->alt[EXITS[1][0]+b][EXITS[1][1]] = 25;
+    // printf("%d, %d\n", 0 + b, m->n);
+    while (m->terrain[0 + b][m->n] != '#') {
+        // printf("%d, %d\n", 0 + m, m);
+        m->terrain[0+b][m->n] = '#';
+        m->alt[0+b][m->n] = 25;
         b++;
     }
 
     // printf("TRAILS\n");
     //bottom
     b = 1;
-    // printf("%d, %d\n", EXITS[0][0] - b, EXITS[0][1]);
-    while (m->terrain[EXITS[0][0] - b][EXITS[0][1]] != '#') {
-        printf("%d, %d\n", EXITS[0][0] - b, b);
-        m->terrain[EXITS[0][0]-b][EXITS[0][1]] = '#';
-        m->alt[EXITS[0][0]-b][EXITS[0][1]] = 25;
+    // printf("%d, %d\n", BOUNDS_Y-1 - b, m->s);
+    while (m->terrain[BOUNDS_Y-1 - b][m->s] != '#') {
+        printf("%d, %d\n", BOUNDS_Y-1 - b, b);
+        m->terrain[BOUNDS_Y-1-b][m->s] = '#';
+        m->alt[BOUNDS_Y-1-b][m->s] = 25;
         b++;
     }
 
-    printf("TRAILS\n");
+    // printf("TRAILS\n");
     //Add PokemartMart
     m->terrain[j+2][l-1] = 'M';
     m->alt[j+2][l-1] = 99;
@@ -366,9 +366,20 @@ int trailblaze(Map *m)
 int create_map(Map *m)
 {
     queue_t *qx, *qy;
+    int i, j;
+
+    for (i = 0; i < BOUNDS_Y; i++) {
+        for (j = 0; j < BOUNDS_X; j++) {
+            m->terrain[i][j] = ' ';
+            // printf("%c", m->terrain[i][j]);
+        }
+        // printf("\n");
+    }
+    print_map(m);
 
 
     if (!make_boundary(m)) {
+        // print_map(m);
         int i, r;
         int x[2];
 
@@ -426,16 +437,16 @@ int create_map(Map *m)
             queue_enqueue(qy, x[1]);
         }
 
-        // print_map(m, 0);
+        // print_map(m);
         // printf("Begin spreading\n");
         spread_seed(m, qx, qy);
         // printf("Fill Map\n");
         fill_map(m);
-        // print_map(m, 0);
+        // print_map(m);
         printf("Add Paths\n");
         // pathfind(m, 0);
         trailblaze(m);
-        // print_map(m, 0);
+        // print_map(m);
     } else {
         printf("There was an error generating the map");
         return 1;
@@ -451,20 +462,19 @@ int create_map(Map *m)
 
 int main(int argc, char *argv[])
 {
-    printf("start\n");
+    // printf("start\n");
     int i, j;
-    // Map d, *prev;
     // int count = 0, n, s, e, w;
     // char in[6];
 
-    printf("initialize World\n");
+    // printf("initialize World\n");
     for (i = 0; i < WORLD_SIZE; i++) {
         for (j = 0; j < WORLD_SIZE; j++) {
             world[i][j] = NULL;
         }
     }
 
-    printf("setup Randoms\n");
+    // printf("setup Randoms\n");
     srand(time(NULL));
 
     // n = 1 + (rand() % BOUNDS_X - 2);
@@ -472,7 +482,7 @@ int main(int argc, char *argv[])
     // e = 1 + (rand() % BOUNDS_Y - 2);
     // w = 1 + (rand() % BOUNDS_Y - 2);
 
-    printf("Create Starting Map\n");
+    // printf("Create Starting Map\n");
     world[curPos[0]][curPos[1]] = malloc(sizeof(world[curPos[0]][curPos[1]]));
     create_map(world[curPos[0]][curPos[1]]);
     print_map(world[curPos[0]][curPos[1]]);
