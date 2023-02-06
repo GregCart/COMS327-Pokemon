@@ -68,6 +68,11 @@ typedef struct queue_node {
   struct queue_node *next;
 } queue_node_t;
 
+#define WORLD_SIZE 401
+//y, x
+map_t *world[WORLD_SIZE][WORLD_SIZE];
+int curPos[2] = {200, 200};
+
 static int32_t path_cmp(const void *key, const void *with) {
   return ((path_t *) key)->cost - ((path_t *) with)->cost;
 }
@@ -673,12 +678,10 @@ static int place_trees(map_t *m)
   return 0;
 }
 
-static int new_map(map_t *m)
+static int new_map(map_t *m, uint8_t n, uint8_t s, uint8_t e, uint8_t w)
 {
   smooth_height(m);
-  map_terrain(m,
-              1 + rand() % (MAP_X - 2), 1 + rand() % (MAP_X - 2),
-              1 + rand() % (MAP_Y - 2), 1 + rand() % (MAP_Y - 2));
+  map_terrain(m, n, s, e, w);
   place_boulders(m);
   place_trees(m);
   build_paths(m);
@@ -737,9 +740,17 @@ static void print_map(map_t *m)
 
 int main(int argc, char *argv[])
 {
-  map_t d;
+  map_t d, *prev;
   struct timeval tv;
   uint32_t seed;
+  int i, j, count = 0, n, s, e, w;
+  char in[6];
+
+  for (i = 0; i < WORLD_SIZE; i++) {
+      for (j = 0; j < WORLD_SIZE; j++) {
+          world[i][j] = NULL;
+      }
+  }
 
   if (argc == 2) {
     seed = atoi(argv[1]);
@@ -751,8 +762,81 @@ int main(int argc, char *argv[])
   printf("Using seed: %u\n", seed);
   srand(seed);
 
-  new_map(&d);
+  n = 1 + (rand() % MAP_X - 2);
+  s = 1 + (rand() % MAP_X - 2);
+  e = 1 + (rand() % MAP_Y - 2);
+  w = 1 + (rand() % MAP_Y - 2);
+
+  new_map(&d, n, s, e, w);
   print_map(&d);
+
+  world[curPos[0]][curPos[1]] = &d;
+  while (1) {
+      printf("Move: %d, Current Position: (%d, %d). Enter Move:\t", count, curPos[1] - 200, curPos[0] - 200);
+      fgets(in, sizeof(in), stdin);
+      printf("%c\n", in[0]);
+
+      prev = world[curPos[0]][curPos[1]];
+
+      switch (in[0]) {
+          case 'n':
+              curPos[0] += 1;
+              count++;
+              n = 1 + (rand() % MAP_X - 2);
+              s = prev->n;
+              e = 1 + (rand() % MAP_Y - 2);
+              w = 1 + (rand() % MAP_Y - 2);
+              break;
+          case 's':
+              curPos[0] -= 1;
+              count++;
+              n = prev->s;
+              s = 1 + (rand() % MAP_X - 2);
+              e = 1 + (rand() % MAP_Y - 2);
+              w = 1 + (rand() % MAP_Y - 2);
+              break;
+          case 'e':
+              curPos[1] += 1;
+              count++;
+              n = 1 + (rand() % MAP_X - 2);
+              s = 1 + (rand() % MAP_X - 2);
+              e = 1 + (rand() % MAP_Y - 2);
+              w = prev->e;
+              break;
+          case 'w':
+              curPos[1] -= 1;
+              count++;
+              n = 1 + (rand() % MAP_X - 2);
+              s = 1 + (rand() % MAP_X - 2);
+              e = prev->w;
+              w = 1 + (rand() % MAP_Y - 2);
+              break;
+          case 'f':
+              curPos[0] = in[2];
+              curPos[1] = in[4];
+              count++;
+              break;
+          case 'q':
+              return 0;
+          default:
+              printf("Command Not Valid\n");
+              break;
+      }
+
+      if (!(curPos[0] % 401)) {
+          curPos[0] -= 1;
+      }
+      if (!(curPos[1] % 401)) {
+          curPos[1] -= 1;
+      }
+      if (world[curPos[0]][curPos[1]] == NULL) {
+          new_map(&d, n, s, e, w);
+          world[curPos[0]][curPos[1]] = &d;
+          print_map(world[curPos[0]][curPos[1]]);
+      } else {
+        print_map(world[curPos[0]][curPos[1]]);
+      }
+  }
   
-  return 0;
+  return 1;
 }

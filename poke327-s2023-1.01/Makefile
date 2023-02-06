@@ -13,7 +13,7 @@ LDFLAGS =
 BIN = poke327
 OBJS = poke327.o heap.o
 
-all: $(BIN) etags
+all: $(BIN) #etags
 
 $(BIN): $(OBJS)
 	@$(ECHO) Linking $@
