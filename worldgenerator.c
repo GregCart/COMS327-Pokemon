@@ -511,14 +511,14 @@ int main(int argc, char *argv[])
     // printf("Begin Game\n");
     r = print_map(world[curPos[0]][curPos[1]]);
     while (r == 0) {
-        char in[6];
+        char in[15];
+        char c;
+        int nx = 0, ny = 0;
         printf("Current Position: (%d, %d). Enter Move:  ", curPos[1] - 200, curPos[0] - 200);
         fgets(in, sizeof(in), stdin);
         // printf("%c %d %d\n", in[0], in[2], in[4]);
-        char c;
-        int nx, ny;
         sscanf(in, "%c %d %d", &c, &nx, &ny);
-        
+        // printf("c:%c x:%d y:%d\n", c, nx, ny);
 
         prev = world[curPos[0]][curPos[1]];
 
@@ -564,15 +564,19 @@ int main(int argc, char *argv[])
             case 'q':
                 return 0;
             default:
-                printf("Command Not Valid\n");
+                if (c == '\0' || c == '\n') {
+                    printf("\n");
+                    break;
+                }
+                printf("Command Not Found\n");
                 break;
         }
 
         // printf("valid check\n");
-        if (!(curPos[0] % 401)) {
+        while (curPos[0] >= 401) {
             curPos[0] -= 1;
         }
-        if (!(curPos[1] % 401)) {
+        while (curPos[1] >= 401) {
             curPos[1] -= 1;
         }
 
