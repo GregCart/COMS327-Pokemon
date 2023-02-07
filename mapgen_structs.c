@@ -47,7 +47,7 @@ int print_map(Map *m)
 
 int check_map(Map *m) {
     printf("terrain: %ld x %ld\n", sizeof(m->terrain[0])/sizeof(char), sizeof(m->terrain)/sizeof(m->terrain[0])/sizeof(char));
-    printf("%d %d %d %d\n", m->n, m->s, m->e, m->w);
+    printf("n:%d s:%d e:%d w:%d\n", m->n, m->s, m->e, m->w);
 
     return 0;
 }
@@ -81,12 +81,12 @@ int make_boundary(Map *m)
     m->alt[x[2]][BOUNDS_X-1] = 25;
     m->terrain[x[2]][BOUNDS_X-1] = PATH;
     m->e = x[2]-1;
-    m->alt[BOUNDS_Y-1][x[0]] = 25;
-    m->terrain[BOUNDS_Y-1][x[0]] = PATH;
-    m->s = x[0];
-    m->alt[0][x[1]] = 25;
-    m->terrain[0][x[1]] = PATH;
-    m->n = x[1];
+    m->alt[BOUNDS_Y-1][x[1]] = 25;
+    m->terrain[BOUNDS_Y-1][x[1]] = PATH;
+    m->s = x[1];
+    m->alt[0][x[0]] = 25;
+    m->terrain[0][x[0]] = PATH;
+    m->n = x[0];
 
     return 0;
 }
@@ -378,7 +378,7 @@ int create_map(Map *m)
     queue_t *qx, *qy;
     int i, j;
 
-    printf("setting terrain\n");
+    // printf("setting map\n");
     for (i = 0; i < BOUNDS_Y; i++) {
         for (j = 0; j < BOUNDS_X; j++) {
             m->terrain[i][j] = ' ';
@@ -389,13 +389,13 @@ int create_map(Map *m)
     // print_map(m);
 
 
-    printf("trying boundary\n");
+    // printf("trying boundary\n");
     if (!make_boundary(m)) {
         // print_map(m);
         int i, r;
         int x[2];
 
-        printf("Making queues\n");
+        // printf("Making queues\n");
         qx = qy = malloc(sizeof(queue_t));
         queue_init(qx);
         queue_init(qy);
@@ -404,7 +404,7 @@ int create_map(Map *m)
 
         //seed
         r = rand() % 2;
-        printf("Start Seed: %d\n", r);
+        // printf("Start Seed: %d\n", r);
         
         //tallgrass
         for (i = -1; i <= r; i++) {
@@ -437,7 +437,7 @@ int create_map(Map *m)
 
         r = rand() % 3;
 
-        printf("Random Terrain start\n");
+        // printf("Random Terrain start\n");
         //get seed coords
         for (i = 0; i <= r; i++) {
             x[0] = (rand() % (BOUNDS_X - 5)) + 3;
@@ -451,12 +451,12 @@ int create_map(Map *m)
         }
 
         // print_map(m);
-        printf("Begin spreading\n");
+        // printf("Begin spreading\n");
         spread_seed(m, qx, qy);
-        printf("Fill Map\n");
+        // printf("Fill Map\n");
         fill_map(m);
-        print_map(m);
-        printf("Add Paths\n");
+        // print_map(m);
+        // printf("Add Paths\n");
         // pathfind(m, 0);
         trailblaze(m);
         // print_map(m);
@@ -477,8 +477,8 @@ int main(int argc, char *argv[])
 {
     // printf("start\n");
     int i, j, n, s, e, w;
-    // int count = 0, r;
-    // Map *prev;
+    int count = 0, r;
+    Map *prev;
 
     // printf("initialize World\n");
     for (i = 0; i < WORLD_SIZE; i++) {
@@ -490,105 +490,103 @@ int main(int argc, char *argv[])
     // printf("setup Randoms\n");
     srand(time(NULL));
 
-    while (1) {
-    n = 1 + (rand() % BOUNDS_X);
-    s = 1 + (rand() % BOUNDS_X);
-    e = 1 + (rand() % BOUNDS_Y);
-    w = 1 + (rand() % BOUNDS_Y);
-    printf("%d %d %d %d\n", n, s, e, w);
+    
+    n = 1 + (rand() % (BOUNDS_X - 2));
+    s = 1 + (rand() % (BOUNDS_X - 2));
+    e = 1 + (rand() % (BOUNDS_Y - 2));
+    w = 1 + (rand() % (BOUNDS_Y - 2));
+    // printf("n:%d s:%d e:%d w:%d\n", n, s, e, w);
 
-    // printf("Create Starting Map\n");
+   
     world[curPos[0]][curPos[1]] = malloc(sizeof(Map));
     world[curPos[0]][curPos[1]]->n = n;
     world[curPos[0]][curPos[1]]->s = s;
     world[curPos[0]][curPos[1]]->e = e;
     world[curPos[0]][curPos[1]]->w = w;
-    create_map(world[curPos[0]][curPos[1]]);
-    check_map(world[curPos[0]][curPos[1]]);
+    // printf("Create Starting Map\n");
+    r = create_map(world[curPos[0]][curPos[1]]);
+    // check_map(world[curPos[0]][curPos[1]]);
 
-    
-
-    }
 
     // printf("Begin Game\n");
-    // r = print_map(world[curPos[0]][curPos[1]]);
-    // while (r == 0) {
-    //     char in[6];
-    //     printf("Move: %d, Current Position: (%d, %d). Enter Move:\t", count, curPos[1] - 200, curPos[0] - 200);
-    //     fgets(in, sizeof(in), stdin);
-    //     printf("%c %d %d\n", in[0], in[2], in[4]);
-    //     char c = in[0];
+    r = print_map(world[curPos[0]][curPos[1]]);
+    while (r == 0) {
+        char in[6];
+        printf("Move: %d, Current Position: (%d, %d). Enter Move:\t", count, curPos[1] - 200, curPos[0] - 200);
+        fgets(in, sizeof(in), stdin);
+        // printf("%c %d %d\n", in[0], in[2], in[4]);
+        char c = in[0];
 
-    //     prev = world[curPos[0]][curPos[1]];
+        prev = world[curPos[0]][curPos[1]];
 
-    //     // printf("check moves\n");
-    //     switch (c) {
-    //         case 'n':
-    //             curPos[0] += 1;
-    //             count++;
-    //             n = 1 + (rand() % BOUNDS_X - 2);
-    //             s = prev->n;
-    //             e = 1 + (rand() % BOUNDS_Y - 2);
-    //             w = 1 + (rand() % BOUNDS_Y - 2);
-    //             break;
-    //         case 's':
-    //             curPos[0] -= 1;
-    //             count++;
-    //             n = prev->s;
-    //             s = 1 + (rand() % BOUNDS_X - 2);
-    //             e = 1 + (rand() % BOUNDS_Y - 2);
-    //             w = 1 + (rand() % BOUNDS_Y - 2);
-    //             break;
-    //         case 'e':
-    //             curPos[1] += 1;
-    //             count++;
-    //             n = 1 + (rand() % (BOUNDS_X - 2));
-    //             s = 1 + (rand() % (BOUNDS_X - 2));
-    //             e = 1 + (rand() % (BOUNDS_Y - 2));
-    //             w = prev->e;
-    //             break;
-    //         case 'w':
-    //             curPos[1] -= 1;
-    //             count++;
-    //             n = 1 + (rand() % BOUNDS_X - 2);
-    //             s = 1 + (rand() % BOUNDS_X - 2);
-    //             e = prev->w;
-    //             w = 1 + (rand() % BOUNDS_Y - 2);
-    //             break;
-    //         case 'f':
-    //             curPos[0] = in[2] + 200;
-    //             curPos[1] = in[4] + 200;
-    //             count++;
-    //             break;
-    //         case 'q':
-    //             return 0;
-    //         default:
-    //             printf("Command Not Valid\n");
-    //             break;
-    //     }
+        // printf("check moves\n");
+        switch (c) {
+            case 'n':
+                curPos[0] += 1;
+                count++;
+                n = 1 + (rand() % (BOUNDS_X - 2));
+                s = prev->n;
+                e = 1 + (rand() % (BOUNDS_Y - 2));
+                w = 1 + (rand() % (BOUNDS_Y - 2));
+                break;
+            case 's':
+                curPos[0] -= 1;
+                count++;
+                n = prev->s;
+                s = 1 + (rand() % (BOUNDS_X - 2));
+                e = 1 + (rand() % (BOUNDS_Y - 2));
+                w = 1 + (rand() % (BOUNDS_Y - 2));
+                break;
+            case 'e':
+                curPos[1] += 1;
+                count++;
+                n = 1 + (rand() % (BOUNDS_X - 2));
+                s = 1 + (rand() % (BOUNDS_X - 2));
+                e = 1 + (rand() % (BOUNDS_Y - 2));
+                w = prev->e;
+                break;
+            case 'w':
+                curPos[1] -= 1;
+                count++;
+                n = 1 + (rand() % (BOUNDS_X - 2));
+                s = 1 + (rand() % (BOUNDS_X - 2));
+                e = prev->w;
+                w = 1 + (rand() % (BOUNDS_Y - 2));
+                break;
+            case 'f':
+                curPos[0] = (in[2] - '0') + 200;
+                curPos[1] = (in[4] - '0') + 200;
+                count++;
+                break;
+            case 'q':
+                return 0;
+            default:
+                printf("Command Not Valid\n");
+                break;
+        }
 
-    //     // printf("valid check\n");
-    //     if (!(curPos[0] % 401)) {
-    //         curPos[0] -= 1;
-    //     }
-    //     if (!(curPos[1] % 401)) {
-    //         curPos[1] -= 1;
-    //     }
+        // printf("valid check\n");
+        if (!(curPos[0] % 401)) {
+            curPos[0] -= 1;
+        }
+        if (!(curPos[1] % 401)) {
+            curPos[1] -= 1;
+        }
 
-    //     printf("nullcheck spot\n");
-    //     if (world[curPos[0]][curPos[1]] == NULL) {
-    //         world[curPos[0]][curPos[1]] = malloc(sizeof(Map));
-    //         world[curPos[0]][curPos[1]]->n = n;
-    //         world[curPos[0]][curPos[1]]->s = s;
-    //         world[curPos[0]][curPos[1]]->e = e;
-    //         world[curPos[0]][curPos[1]]->w = w;
-    //         check_map(world[curPos[0]][curPos[1]]);
-    //         r = create_map(world[curPos[0]][curPos[1]]);
-    //         print_map(world[curPos[0]][curPos[1]]);
-    //     } else {
-    //         print_map(world[curPos[0]][curPos[1]]);
-    //     }
-    // }
+        // printf("nullcheck spot\n");
+        if (world[curPos[0]][curPos[1]] == NULL) {
+            world[curPos[0]][curPos[1]] = malloc(sizeof(Map));
+            world[curPos[0]][curPos[1]]->n = n;
+            world[curPos[0]][curPos[1]]->s = s;
+            world[curPos[0]][curPos[1]]->e = e;
+            world[curPos[0]][curPos[1]]->w = w;
+            // check_map(world[curPos[0]][curPos[1]]);
+            r = create_map(world[curPos[0]][curPos[1]]);
+            print_map(world[curPos[0]][curPos[1]]);
+        } else {
+            print_map(world[curPos[0]][curPos[1]]);
+        }
+    }
     
     for (i = 0; i < WORLD_SIZE; i++) {
         for (j = 0; j < WORLD_SIZE; j++) {
