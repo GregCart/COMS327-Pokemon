@@ -1,12 +1,8 @@
-all: gen_map_structs
+all: gen_world
 
 gen_map: mapgenerator.c
 	gcc -Wall -Werror -ggdb mapgenerator.c -o map_generator
 	./map_generator
-
-gen_map_structs: mapgen_structs.c
-	gcc -Wall -Werror -ggdb mapgen_structs.c -o map_generator_structs
-	./map_generator_structs
 
 gen_world: worldgenerator.c 
 	gcc -Wall -Werror -ggdb worldgenerator.c -o world_generator
