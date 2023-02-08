@@ -519,10 +519,11 @@ int main(int argc, char *argv[])
         sscanf(in, "%c %d %d", &c, &nx, &ny);
         // printf("c:%c x:%d y:%d\n", c, nx, ny);
 
-        world[curPos[0]][curPos[1]]->n = n;
-        world[curPos[0]][curPos[1]]->s = s;
-        world[curPos[0]][curPos[1]]->e = e;
-        world[curPos[0]][curPos[1]]->w = w;
+        n = 1 + (rand() % (BOUNDS_X - 3));
+        s = 1 + (rand() % (BOUNDS_X - 3));
+        e = 1 + (rand() % (BOUNDS_Y - 3));
+        w = 1 + (rand() % (BOUNDS_Y - 3));
+        // printf("n: %d, s: %d, e: %d, w: %d\n", n, s, e, w);
 
         // printf("check moves\n");
         switch (c) {
@@ -566,29 +567,38 @@ int main(int argc, char *argv[])
             curPos[1] -= 1;
         }
 
+        // printf("Set Gates\n");
+        if (world[curPos[0] - 1][curPos[1]] != NULL) {
+            // printf("N->s:%d, ", world[curPos[0] - 1][curPos[1]]->n);
+            s = world[curPos[0] - 1][curPos[1]]->n;
+        }
+        if (world[curPos[0] + 1][curPos[1]] != NULL) {
+            // printf("S->n:%d, ", world[curPos[0] + 1][curPos[1]]->s);
+            n = world[curPos[0] + 1][curPos[1]]->s;
+        }
+        if (world[curPos[0]][curPos[1] + 1] != NULL) {
+            // printf("E->w:%d, ", world[curPos[0]][curPos[1] + 1]->w);
+            e = world[curPos[0]][curPos[1] + 1]->w;
+        }
+        if (world[curPos[0]][curPos[1] - 1] != NULL) {
+            // printf("W->e:%d", world[curPos[0]][curPos[1] - 1]->e);
+            w = world[curPos[0]][curPos[1] - 1]->e;
+        }
+        // printf("\n");
+        // printf("n: %d, s: %d, e: %d, w: %d\n", n, s, e, w);
+
         // printf("nullcheck spot\n");
         if (world[curPos[0]][curPos[1]] == NULL) {
             world[curPos[0]][curPos[1]] = malloc(sizeof(*world[curPos[0]][curPos[1]]));
-
-            if (world[curPos[0] - 1][curPos[1]] != NULL) {
-                world[curPos[0]][curPos[1]]->n = world[curPos[0] - 1][curPos[1]]->s;
-            }
-            if (world[curPos[0] + 1][curPos[1]] != NULL) {
-                world[curPos[0]][curPos[1]]->s = world[curPos[0] + 1][curPos[1]]->n;
-            }
-            if (world[curPos[0]][curPos[1] + 1] != NULL) {
-                world[curPos[0]][curPos[1]]->w = world[curPos[0]][curPos[1] + 1]->e;
-            }
-            if (world[curPos[0]][curPos[1] - 1] != NULL) {
-                world[curPos[0]][curPos[1]]->e = world[curPos[0]][curPos[1] - 1]->w;
-            }
-            
+            world[curPos[0]][curPos[1]]->n = n;
+            world[curPos[0]][curPos[1]]->s = s;
+            world[curPos[0]][curPos[1]]->e = e;
+            world[curPos[0]][curPos[1]]->w = w;
             // check_map(world[curPos[0]][curPos[1]]);
             r = create_map(world[curPos[0]][curPos[1]]);
-            print_map(world[curPos[0]][curPos[1]]);
-        } else {
-            print_map(world[curPos[0]][curPos[1]]);
         }
+
+        print_map(world[curPos[0]][curPos[1]]);
     }
     
     for (i = 0; i < WORLD_SIZE; i++) {
