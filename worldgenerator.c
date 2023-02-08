@@ -356,10 +356,10 @@ int trailblaze(Map *m)
     if (d >= 200) {
         p = 5;
     }
-    printf("d:%d, p:%d\n", d, p);
+    // printf("d:%d, p:%d\n", d, p);
 
     if ((rand() % 100) < p) {
-        if(j >= 15) j -= 2;
+        if(j >= 14) j -= 2;
         //Add PokemartMart
         m->terrain[j+2][l-1] = 'M';
         m->alt[j+2][l-1] = 99;
