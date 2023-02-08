@@ -5,7 +5,7 @@ gen_map: mapgenerator.c
 	./map_generator
 
 gen_world: worldgenerator.c 
-	gcc -Wall -Werror -ggdb worldgenerator.c -o world_generator
+	gcc -Wall -Werror -ggdb worldgenerator.c -o world_generator -lm
 	./world_generator
 
 clean:

@@ -14,11 +14,6 @@
 #define WATER '~'
 #define PATH '#'
 
-const int TERRAIN[] = {ROCK, TREE, GRASS_T, WATER, GRASS_S};
-const int ALTITUDE[][2] = {{50, 30}, {43, 25}, {45, 15}, {18, 0}, {45, 20}};
-
-//sorted in {y, x}
-int EXITS[4][2];
 
 typedef struct map {
     char terrain[BOUNDS_Y][BOUNDS_X];
@@ -31,9 +26,16 @@ typedef struct point {
     int x, y;
 } Point;
 
-//y, x
+
+const int TERRAIN[] = {ROCK, TREE, GRASS_T, WATER, GRASS_S};
+const int ALTITUDE[][2] = {{50, 30}, {43, 25}, {45, 15}, {18, 0}, {45, 20}};
+const Point center = {.x = 200, .y = 200};
+
+//sorted in {y, x}
+int EXITS[4][2];
 Map *world[WORLD_SIZE][WORLD_SIZE];
 Point curPos;
+
 
 int print_map(Map *m)
 {
@@ -79,9 +81,13 @@ int printSolution(int dist[], int n)
     return 0;
 }
 
-int manhattan()
+int manhattan(Point p, Point q)
 {
-    return 0;
+    int ret;
+    // printf("(%d, %d) and (%d, %d)\n", p.x, p.y, q.x, q.y);
+    ret = abs(p.x - q.x) + abs(p.y - q.y);
+    // printf("ret:%d\n", ret);
+    return ret;
 }
 
 
@@ -288,7 +294,7 @@ int pathfind(Map *m, int src)
 
 int trailblaze(Map *m)
 {
-    int i, j, k, l, b, u = BOUNDS_X/2 + (rand() % 20);
+    int i, j, k, l, b, d, p, u = BOUNDS_X/2 + (rand() % 20);
     // printf("%d\n", u);
 
     // print_map(m);
@@ -344,50 +350,60 @@ int trailblaze(Map *m)
     }
     // print_map(m);
 
-    //Add PokemartMart
-    m->terrain[j+2][l-1] = 'M';
-    m->alt[j+2][l-1] = 99;
-    m->terrain[j+3][l-2] = 'M';
-    m->alt[j+3][l-2] = 99;
-    m->terrain[j+2][l-2] = 'M';
-    m->alt[j+2][l-2] = 99;
-    m->terrain[j+3][l-1] = 'M';
-    m->alt[j+3][l-1] = 99;
-    //road
-    if(j >= 16) j -= 2;
-    m->terrain[j+2][l-3] = '#';
-    m->alt[j+2][l-3] = 25;
-    m->terrain[j+3][l-3] = '#';
-    m->alt[j+3][l-3] = 25;
-    m->terrain[j+4][l-3] = '#';
-    m->alt[j+4][l-3] = 25;
-    m->terrain[j+4][l-1] = '#';
-    m->alt[j+4][l-1] = 25;
-    m->terrain[j+4][l-2] = '#';
-    m->alt[j+4][l-2] = 25;
-    m->terrain[j+4][l] = '#';
-    m->alt[j+4][l] = 25;
-    m->terrain[j+5][l] = '#';
-    m->alt[j+5][l] = 25;
-    m->terrain[j+3][l] = '#';
-    m->alt[j+3][l] = 25;
-    m->terrain[j+2][l] = '#';
-    m->alt[j+2][l] = 25;
-    m->terrain[j+6][l] = '#';
-    m->alt[j+6][l] = 25;
-    m->terrain[j+5][l-3] = '#';
-    m->alt[j+5][l-3] = 25;
-    m->terrain[j+6][l-3] = '#';
-    m->alt[j+6][l-3] = 25;
-    //Pokecenter
-    m->terrain[j+5][l-1] = 'C';
-    m->alt[j+5][l-1] = 99;
-    m->terrain[j+6][l-2] = 'C';
-    m->alt[j+6][l-2] = 99;
-    m->terrain[j+5][l-2] = 'C';
-    m->alt[j+5][l-2] = 99;
-    m->terrain[j+6][l-1] = 'C';
-    m->alt[j+6][l-1] = 99;
+    //get probability
+    d = manhattan(center, curPos);
+    p = 100 - ((45 * d) / 200);
+    if (d >= 200) {
+        p = 5;
+    }
+    printf("d:%d, p:%d\n", d, p);
+
+    if ((rand() % 100) < p) {
+        if(j >= 15) j -= 2;
+        //Add PokemartMart
+        m->terrain[j+2][l-1] = 'M';
+        m->alt[j+2][l-1] = 99;
+        m->terrain[j+3][l-2] = 'M';
+        m->alt[j+3][l-2] = 99;
+        m->terrain[j+2][l-2] = 'M';
+        m->alt[j+2][l-2] = 99;
+        m->terrain[j+3][l-1] = 'M';
+        m->alt[j+3][l-1] = 99;
+        //road
+        m->terrain[j+2][l-3] = '#';
+        m->alt[j+2][l-3] = 25;
+        m->terrain[j+3][l-3] = '#';
+        m->alt[j+3][l-3] = 25;
+        m->terrain[j+4][l-3] = '#';
+        m->alt[j+4][l-3] = 25;
+        m->terrain[j+4][l-1] = '#';
+        m->alt[j+4][l-1] = 25;
+        m->terrain[j+4][l-2] = '#';
+        m->alt[j+4][l-2] = 25;
+        m->terrain[j+4][l] = '#';
+        m->alt[j+4][l] = 25;
+        m->terrain[j+5][l] = '#';
+        m->alt[j+5][l] = 25;
+        m->terrain[j+3][l] = '#';
+        m->alt[j+3][l] = 25;
+        m->terrain[j+2][l] = '#';
+        m->alt[j+2][l] = 25;
+        m->terrain[j+6][l] = '#';
+        m->alt[j+6][l] = 25;
+        m->terrain[j+5][l-3] = '#';
+        m->alt[j+5][l-3] = 25;
+        m->terrain[j+6][l-3] = '#';
+        m->alt[j+6][l-3] = 25;
+        //Pokecenter
+        m->terrain[j+5][l-1] = 'C';
+        m->alt[j+5][l-1] = 99;
+        m->terrain[j+6][l-2] = 'C';
+        m->alt[j+6][l-2] = 99;
+        m->terrain[j+5][l-2] = 'C';
+        m->alt[j+5][l-2] = 99;
+        m->terrain[j+6][l-1] = 'C';
+        m->alt[j+6][l-1] = 99;
+    }
 
     return 0;
 }
