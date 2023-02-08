@@ -1,6 +1,17 @@
 Implements All map generation requirements with basic pathing generation. Commeneted code is
 for debugging, ease of use, and the remains of my attempt at dijksta's algorithm for generating a path.
 
+HW2:
+    All commands implemented and working as of 2/7/23.
+    NOTES:
+        Map is opposite: (-200, -200) maps to upper left corner
+        Occasionally a malloc() error will occur on startup or during traversal. i looked into it and apparently it's to do with how malloc calls other functions and i'm not sure how to fix it.
+    Moves that go past map borders just set uyou at the map at that border.
+    Chance of buildings appearing decreases as you move out until +/-100, where it is locked at 5%.
+    Gates match up when they are generate adjacently to an already generated map.
+    No map is generated until it is visited.
+    World borders have no exit on the side that borders the world edge.
+
 To build and run: make
 TO clean: make clean
 To package into tarball: make package
