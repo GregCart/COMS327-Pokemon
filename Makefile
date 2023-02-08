@@ -9,7 +9,7 @@ gen_world: worldgenerator.c
 	./world_generator
 
 clean:
-	rm -f map_generator *~ core
+	rm -f map_generator world_generator *~ core *.exe *.stackdump
 
 package:
 	make clean
