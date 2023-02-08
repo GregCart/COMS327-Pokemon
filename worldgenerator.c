@@ -478,7 +478,6 @@ int main(int argc, char *argv[])
     // printf("start\n");
     int i, j, n, s, e, w;
     int count = 0, r;
-    Map *prev;
 
     // printf("initialize World\n");
     for (i = 0; i < WORLD_SIZE; i++) {
@@ -498,7 +497,7 @@ int main(int argc, char *argv[])
     // printf("n:%d s:%d e:%d w:%d\n", n, s, e, w);
 
    
-    world[curPos[0]][curPos[1]] = malloc(sizeof(Map));
+    world[curPos[0]][curPos[1]] = malloc(sizeof(*world[curPos[0]][curPos[1]]));
     world[curPos[0]][curPos[1]]->n = n;
     world[curPos[0]][curPos[1]]->s = s;
     world[curPos[0]][curPos[1]]->e = e;
@@ -520,41 +519,28 @@ int main(int argc, char *argv[])
         sscanf(in, "%c %d %d", &c, &nx, &ny);
         // printf("c:%c x:%d y:%d\n", c, nx, ny);
 
-        prev = world[curPos[0]][curPos[1]];
+        world[curPos[0]][curPos[1]]->n = n;
+        world[curPos[0]][curPos[1]]->s = s;
+        world[curPos[0]][curPos[1]]->e = e;
+        world[curPos[0]][curPos[1]]->w = w;
 
         // printf("check moves\n");
         switch (c) {
             case 'n':
                 curPos[0] += 1;
                 count++;
-                n = 1 + (rand() % (BOUNDS_X - 2));
-                s = prev->n;
-                e = 1 + (rand() % (BOUNDS_Y - 2));
-                w = 1 + (rand() % (BOUNDS_Y - 2));
                 break;
             case 's':
                 curPos[0] -= 1;
                 count++;
-                n = prev->s;
-                s = 1 + (rand() % (BOUNDS_X - 2));
-                e = 1 + (rand() % (BOUNDS_Y - 2));
-                w = 1 + (rand() % (BOUNDS_Y - 2));
                 break;
             case 'e':
                 curPos[1] += 1;
                 count++;
-                n = 1 + (rand() % (BOUNDS_X - 2));
-                s = 1 + (rand() % (BOUNDS_X - 2));
-                e = 1 + (rand() % (BOUNDS_Y - 2));
-                w = prev->e;
                 break;
             case 'w':
                 curPos[1] -= 1;
                 count++;
-                n = 1 + (rand() % (BOUNDS_X - 2));
-                s = 1 + (rand() % (BOUNDS_X - 2));
-                e = prev->w;
-                w = 1 + (rand() % (BOUNDS_Y - 2));
                 break;
             case 'f':
                 curPos[0] = ny + 200;
@@ -582,11 +568,21 @@ int main(int argc, char *argv[])
 
         // printf("nullcheck spot\n");
         if (world[curPos[0]][curPos[1]] == NULL) {
-            world[curPos[0]][curPos[1]] = malloc(sizeof(Map));
-            world[curPos[0]][curPos[1]]->n = n;
-            world[curPos[0]][curPos[1]]->s = s;
-            world[curPos[0]][curPos[1]]->e = e;
-            world[curPos[0]][curPos[1]]->w = w;
+            world[curPos[0]][curPos[1]] = malloc(sizeof(*world[curPos[0]][curPos[1]]));
+
+            if (world[curPos[0] - 1][curPos[1]] != NULL) {
+                world[curPos[0]][curPos[1]]->n = world[curPos[0] - 1][curPos[1]]->s;
+            }
+            if (world[curPos[0] + 1][curPos[1]] != NULL) {
+                world[curPos[0]][curPos[1]]->s = world[curPos[0] + 1][curPos[1]]->n;
+            }
+            if (world[curPos[0]][curPos[1] + 1] != NULL) {
+                world[curPos[0]][curPos[1]]->w = world[curPos[0]][curPos[1] + 1]->e;
+            }
+            if (world[curPos[0]][curPos[1] - 1] != NULL) {
+                world[curPos[0]][curPos[1]]->e = world[curPos[0]][curPos[1] - 1]->w;
+            }
+            
             // check_map(world[curPos[0]][curPos[1]]);
             r = create_map(world[curPos[0]][curPos[1]]);
             print_map(world[curPos[0]][curPos[1]]);
