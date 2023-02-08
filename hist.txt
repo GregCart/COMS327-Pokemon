@@ -1,164 +1,8 @@
-commit 74ec8eebc8350bc763731e24c6b826d57f3edf71
+commit 01133f96bc414e3970bc8771456e2a90254b6ee7
 Author: Greg <gcartcca2n@gmail.com>
-Date:   Tue Feb 7 23:05:55 2023 -0600
+Date:   Wed Feb 1 12:12:51 2023 -0600
 
-    makefile and changelog updates
-
-commit 2a1ad3d5a546c339a8a9686dc8d4b66c8a30ddef
-Author: Greg <gcartcca2n@gmail.com>
-Date:   Tue Feb 7 23:03:45 2023 -0600
-
-    makefile updates
-
-commit 024f3581533048911f59bfab12d2603a38cbf7f7
-Author: Greg <gcartcca2n@gmail.com>
-Date:   Tue Feb 7 23:02:03 2023 -0600
-
-    README updates
-
-commit a4d6d1e3c0c161011ff2671c08c0969a5d959abc
-Author: Greg <gcartcca2n@gmail.com>
-Date:   Tue Feb 7 22:56:21 2023 -0600
-
-    fixed building clipping wall
-
-commit 40d973574a65c57754bceb4d2f3a75f5b9d5e363
-Author: Greg <gcartcca2n@gmail.com>
-Date:   Tue Feb 7 22:51:44 2023 -0600
-
-    update package command
-
-commit 981575e54c8e264c1126bddda69959d508010503
-Author: Greg <gcartcca2n@gmail.com>
-Date:   Tue Feb 7 22:37:46 2023 -0600
-
-    fixed makefile
-
-commit 5b092b150671bc49e01c06e26bc6cc837e8d73da
-Author: Greg <gcartcca2n@gmail.com>
-Date:   Tue Feb 7 22:36:32 2023 -0600
-
-    added probability for generating buildings
-
-commit f1d824bcbef4f170ed42b9bfb09d43890a10a29c
-Author: Greg <gcartcca2n@gmail.com>
-Date:   Tue Feb 7 21:28:23 2023 -0600
-
-    moved to Point structs
-
-commit 06529102a8f87c0c08c9c3d2d0b66fc8843eda41
-Author: Greg <gcartcca2n@gmail.com>
-Date:   Tue Feb 7 20:47:56 2023 -0600
-
-    fixed gate spawn issue with west
-
-commit 9879d61b4fd8ea6523a0f8480cf46401103dfdc1
-Author: Greg <gcartcca2n@gmail.com>
-Date:   Tue Feb 7 20:17:49 2023 -0600
-
-    gates now generate corretcly (idk why)
-
-commit a54d05d5dea2ca44a7300924784d24ecc139ca01
-Author: Greg <gcartcca2n@gmail.com>
-Date:   Tue Feb 7 18:54:55 2023 -0600
-
-    gates are brocken again
-
-commit 06c87041d792010d8ff624e726e3b3f0ff6d97c9
-Author: Greg <gcartcca2n@gmail.com>
-Date:   Tue Feb 7 09:02:44 2023 -0600
-
-    updated make for new assignment
-
-commit 9c08907839bdc82cf26ddc5fba458528418d5e41
-Author: Greg <gcartcca2n@gmail.com>
-Date:   Tue Feb 7 00:13:37 2023 -0600
-
-    now works with numbers > 99
-
-commit f491eb6337120f702a559c5f5dae358df4b94024
-Author: Greg <gcartcca2n@gmail.com>
-Date:   Mon Feb 6 23:54:10 2023 -0600
-
-    trying to get multiple digits to work for fly
-
-commit d591cd186cd949a9b399bf208142595ffc3ac3c1
-Author: Greg <gcartcca2n@gmail.com>
-Date:   Mon Feb 6 23:53:14 2023 -0600
-
-    trying to get multiple digits for fly command to work
-
-commit 286e25c6a8aca4a53c0d38afdb877fb62ec50fdd
-Author: Greg <gcartcca2n@gmail.com>
-Date:   Mon Feb 6 23:31:34 2023 -0600
-
-    IT WORKS
-
-commit 76bbb98cf0f490e0529b8790079a8f9b6f4ec393
-Author: Greg <gcartcca2n@gmail.com>
-Date:   Mon Feb 6 23:00:44 2023 -0600
-
-    solved aborted issue, but new issue with map paths
-
-commit 56be07f9421fe2f56fe1a77b0a05cf86efd92724
-Author: Greg <gcartcca2n@gmail.com>
-Date:   Sun Feb 5 22:25:38 2023 -0600
-
-    map won't initialize if i dont print it as it initializes for some reason
-
-commit bf35493ffe0c212aff6146ccfda84328a098cfbd
-Author: Greg <gcartcca2n@gmail.com>
-Date:   Sun Feb 5 21:39:44 2023 -0600
-
-    re-did structure because of weird numebr errors with queues. now tehres an error with the exits and idk how tf that hapened ahahahahahahahahaha
-
-commit 278e8234651dabf19cd59abc61c19f912116e957
-Author: Greg <gcartcca2n@gmail.com>
-Date:   Sun Feb 5 20:21:59 2023 -0600
-
-    edited gitignore (otehr commit still abort-crashes)
-
-commit c618733f98c6227482bb9e9f1f7279421669f214
-Author: Greg <gcartcca2n@gmail.com>
-Date:   Sun Feb 5 20:21:01 2023 -0600
-
-    save before i switch back to using my won solution because the teachers doesn't work
-
-commit 0c8a828dde9ca56ab8b41c1865b6039c68cef71f
-Author: Greg <gcartcca2n@gmail.com>
-Date:   Sun Feb 5 19:01:33 2023 -0600
-
-    fixed make, added world map to prof solution. doesnt work, but generates maps and can move
-
-commit 2703569f4537be261dc56203c6d58ddc5f076e53
-Author: Greg <gcartcca2n@gmail.com>
-Date:   Fri Feb 3 13:52:46 2023 -0600
-
-    imported teacher's solution
-
-commit 5a7743341f34d1437664086b0d36869680695dec
-Author: Greg <gcartcca2n@gmail.com>
-Date:   Fri Feb 3 13:08:02 2023 -0600
-
-    Added teachers solution to hw1
-
-commit e222e346518e98e564eb4cac324f4cb8910f9dbd
-Author: Greg <gcartcca2n@gmail.com>
-Date:   Wed Feb 1 19:08:21 2023 -0600
-
-    added pokecenter and pokemart
-
-commit d314ff6fedb6466973f6616b25257bbd84954911
-Author: Greg <gcartcca2n@gmail.com>
-Date:   Wed Feb 1 18:50:57 2023 -0600
-
-    added gitignore
-
-commit 2ab9123ebd84097137239e75d5ac012a417c305a
-Author: Greg <gcartcca2n@gmail.com>
-Date:   Wed Feb 1 18:50:02 2023 -0600
-
-    paths work
+    first commit
 
 commit 2e3f48d6ad0aa2dc6688b6d0b5bbe13d959f0049
 Author: Greg <gcartcca2n@gmail.com>
@@ -166,8 +10,170 @@ Date:   Wed Feb 1 13:14:55 2023 -0600
 
     map generates left and right paths
 
-commit 01133f96bc414e3970bc8771456e2a90254b6ee7
+commit 2ab9123ebd84097137239e75d5ac012a417c305a
 Author: Greg <gcartcca2n@gmail.com>
-Date:   Wed Feb 1 12:12:51 2023 -0600
+Date:   Wed Feb 1 18:50:02 2023 -0600
 
-    first commit
+    paths work
+
+commit d314ff6fedb6466973f6616b25257bbd84954911
+Author: Greg <gcartcca2n@gmail.com>
+Date:   Wed Feb 1 18:50:57 2023 -0600
+
+    added gitignore
+
+commit e222e346518e98e564eb4cac324f4cb8910f9dbd
+Author: Greg <gcartcca2n@gmail.com>
+Date:   Wed Feb 1 19:08:21 2023 -0600
+
+    added pokecenter and pokemart
+
+commit 5a7743341f34d1437664086b0d36869680695dec
+Author: Greg <gcartcca2n@gmail.com>
+Date:   Fri Feb 3 13:08:02 2023 -0600
+
+    Added teachers solution to hw1
+
+commit 2703569f4537be261dc56203c6d58ddc5f076e53
+Author: Greg <gcartcca2n@gmail.com>
+Date:   Fri Feb 3 13:52:46 2023 -0600
+
+    imported teacher's solution
+
+commit 0c8a828dde9ca56ab8b41c1865b6039c68cef71f
+Author: Greg <gcartcca2n@gmail.com>
+Date:   Sun Feb 5 19:01:33 2023 -0600
+
+    fixed make, added world map to prof solution. doesnt work, but generates maps and can move
+
+commit c618733f98c6227482bb9e9f1f7279421669f214
+Author: Greg <gcartcca2n@gmail.com>
+Date:   Sun Feb 5 20:21:01 2023 -0600
+
+    save before i switch back to using my won solution because the teachers doesn't work
+
+commit 278e8234651dabf19cd59abc61c19f912116e957
+Author: Greg <gcartcca2n@gmail.com>
+Date:   Sun Feb 5 20:21:59 2023 -0600
+
+    edited gitignore (otehr commit still abort-crashes)
+
+commit bf35493ffe0c212aff6146ccfda84328a098cfbd
+Author: Greg <gcartcca2n@gmail.com>
+Date:   Sun Feb 5 21:39:44 2023 -0600
+
+    re-did structure because of weird numebr errors with queues. now tehres an error with the exits and idk how tf that hapened ahahahahahahahahaha
+
+commit 56be07f9421fe2f56fe1a77b0a05cf86efd92724
+Author: Greg <gcartcca2n@gmail.com>
+Date:   Sun Feb 5 22:25:38 2023 -0600
+
+    map won't initialize if i dont print it as it initializes for some reason
+
+commit 76bbb98cf0f490e0529b8790079a8f9b6f4ec393
+Author: Greg <gcartcca2n@gmail.com>
+Date:   Mon Feb 6 23:00:44 2023 -0600
+
+    solved aborted issue, but new issue with map paths
+
+commit 286e25c6a8aca4a53c0d38afdb877fb62ec50fdd
+Author: Greg <gcartcca2n@gmail.com>
+Date:   Mon Feb 6 23:31:34 2023 -0600
+
+    IT WORKS
+
+commit d591cd186cd949a9b399bf208142595ffc3ac3c1
+Author: Greg <gcartcca2n@gmail.com>
+Date:   Mon Feb 6 23:53:14 2023 -0600
+
+    trying to get multiple digits for fly command to work
+
+commit f491eb6337120f702a559c5f5dae358df4b94024
+Author: Greg <gcartcca2n@gmail.com>
+Date:   Mon Feb 6 23:54:10 2023 -0600
+
+    trying to get multiple digits to work for fly
+
+commit 9c08907839bdc82cf26ddc5fba458528418d5e41
+Author: Greg <gcartcca2n@gmail.com>
+Date:   Tue Feb 7 00:13:37 2023 -0600
+
+    now works with numbers > 99
+
+commit 06c87041d792010d8ff624e726e3b3f0ff6d97c9
+Author: Greg <gcartcca2n@gmail.com>
+Date:   Tue Feb 7 09:02:44 2023 -0600
+
+    updated make for new assignment
+
+commit a54d05d5dea2ca44a7300924784d24ecc139ca01
+Author: Greg <gcartcca2n@gmail.com>
+Date:   Tue Feb 7 18:54:55 2023 -0600
+
+    gates are brocken again
+
+commit 9879d61b4fd8ea6523a0f8480cf46401103dfdc1
+Author: Greg <gcartcca2n@gmail.com>
+Date:   Tue Feb 7 20:17:49 2023 -0600
+
+    gates now generate corretcly (idk why)
+
+commit 06529102a8f87c0c08c9c3d2d0b66fc8843eda41
+Author: Greg <gcartcca2n@gmail.com>
+Date:   Tue Feb 7 20:47:56 2023 -0600
+
+    fixed gate spawn issue with west
+
+commit f1d824bcbef4f170ed42b9bfb09d43890a10a29c
+Author: Greg <gcartcca2n@gmail.com>
+Date:   Tue Feb 7 21:28:23 2023 -0600
+
+    moved to Point structs
+
+commit 5b092b150671bc49e01c06e26bc6cc837e8d73da
+Author: Greg <gcartcca2n@gmail.com>
+Date:   Tue Feb 7 22:36:32 2023 -0600
+
+    added probability for generating buildings
+
+commit 981575e54c8e264c1126bddda69959d508010503
+Author: Greg <gcartcca2n@gmail.com>
+Date:   Tue Feb 7 22:37:46 2023 -0600
+
+    fixed makefile
+
+commit 40d973574a65c57754bceb4d2f3a75f5b9d5e363
+Author: Greg <gcartcca2n@gmail.com>
+Date:   Tue Feb 7 22:51:44 2023 -0600
+
+    update package command
+
+commit a4d6d1e3c0c161011ff2671c08c0969a5d959abc
+Author: Greg <gcartcca2n@gmail.com>
+Date:   Tue Feb 7 22:56:21 2023 -0600
+
+    fixed building clipping wall
+
+commit 024f3581533048911f59bfab12d2603a38cbf7f7
+Author: Greg <gcartcca2n@gmail.com>
+Date:   Tue Feb 7 23:02:03 2023 -0600
+
+    README updates
+
+commit 2a1ad3d5a546c339a8a9686dc8d4b66c8a30ddef
+Author: Greg <gcartcca2n@gmail.com>
+Date:   Tue Feb 7 23:03:45 2023 -0600
+
+    makefile updates
+
+commit 74ec8eebc8350bc763731e24c6b826d57f3edf71
+Author: Greg <gcartcca2n@gmail.com>
+Date:   Tue Feb 7 23:05:55 2023 -0600
+
+    makefile and changelog updates
+
+commit 397b49e247fac6e159a2ab9d6c370826784aa880
+Author: Greg <gcartcca2n@gmail.com>
+Date:   Tue Feb 7 23:26:53 2023 -0600
+
+    fixed makefile again
