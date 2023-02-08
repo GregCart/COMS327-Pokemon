@@ -13,4 +13,4 @@ clean:
 
 package:
 	make clean
-	cd ..; cp -rv Pokemon greg-carter_assignment-1.02; tar cvfz greg-carter_assignment-1.02.tar.gz greg-carter_assignment-1.01;
+	cd ..; cp -rv Pokemon greg-carter_assignment-1.02; tar cvfz greg-carter_assignment-1.02.tar.gz greg-carter_assignment-1.02;
