@@ -75,19 +75,28 @@ int make_boundary(Map *m)
     }
 
     //set paths
-    m->alt[x[3]][0] = 25;
-    m->terrain[x[3]][0] = PATH;
-    m->w = x[3];
-    m->alt[x[2]][BOUNDS_X-1] = 25;
-    m->terrain[x[2]][BOUNDS_X-1] = PATH;
-    m->e = x[2]-1;
-    m->alt[BOUNDS_Y-1][x[1]] = 25;
-    m->terrain[BOUNDS_Y-1][x[1]] = PATH;
-    m->s = x[1];
-    m->alt[0][x[0]] = 25;
-    m->terrain[0][x[0]] = PATH;
-    m->n = x[0];
-
+    if (curPos[1] > 2) {
+        m->alt[x[3]][0] = 25;
+        m->terrain[x[3]][0] = PATH;
+        m->w = x[3];
+    }
+    if (curPos[1] < WORLD_SIZE - 1) {
+        m->alt[x[2]][BOUNDS_X-1] = 25;
+        m->terrain[x[2]][BOUNDS_X-1] = PATH;
+        m->e = x[2]-1;
+    }
+    if (curPos[0] < WORLD_SIZE - 1) {
+        m->alt[BOUNDS_Y-1][x[1]] = 25;
+        m->terrain[BOUNDS_Y-1][x[1]] = PATH;
+        m->s = x[1];
+    }
+    if (curPos[0] > 1) {
+        m->alt[0][x[0]] = 25;
+        m->terrain[0][x[0]] = PATH;
+        m->n = x[0];
+    }
+    // print_map(m);
+    
     return 0;
 }
 
@@ -276,8 +285,8 @@ int trailblaze(Map *m)
     //left
     for (i = 0; i < u; i++) {
         // printf("%d, %d\n", m->w, m->w+i);
-        m->terrain[m->w][0+i] = PATH;
-        m->alt[m->w][0+i] = 25;
+        m->terrain[m->w][1+i] = PATH;
+        m->alt[m->w][1+i] = 25;
         // print_map(m);
     }
     // print_map(m);
@@ -560,30 +569,42 @@ int main(int argc, char *argv[])
         }
 
         // printf("valid check\n");
-        while (curPos[0] >= 401) {
+        while (curPos[0] >= WORLD_SIZE) {
             curPos[0] -= 1;
         }
-        while (curPos[1] >= 401) {
+        while (curPos[1] >= WORLD_SIZE) {
             curPos[1] -= 1;
+        }
+        while (curPos[0] < 0) {
+            curPos[0] += 1;
+        }
+        while (curPos[1] < 0) {
+            curPos[1] += 1;
         }
 
         // printf("Set Gates\n");
-        if (world[curPos[0] - 1][curPos[1]] != NULL) {
+        printf("%d\n", curPos[0]);
+        if (curPos[0] > 0 && world[curPos[0] - 1][curPos[1]] != NULL) {
             // printf("N->s:%d, ", world[curPos[0] - 1][curPos[1]]->n);
             s = world[curPos[0] - 1][curPos[1]]->n;
         }
-        if (world[curPos[0] + 1][curPos[1]] != NULL) {
+        // printf("-1");
+        if (curPos[0] < (WORLD_SIZE) && world[curPos[0] + 1][curPos[1]] != NULL) {
             // printf("S->n:%d, ", world[curPos[0] + 1][curPos[1]]->s);
             n = world[curPos[0] + 1][curPos[1]]->s;
         }
-        if (world[curPos[0]][curPos[1] + 1] != NULL) {
+        // printf("-2");
+        printf("%d\n", curPos[1]);
+        if (curPos[1] < (WORLD_SIZE) && world[curPos[0]][curPos[1] + 1] != NULL) {
             // printf("E->w:%d, ", world[curPos[0]][curPos[1] + 1]->w);
             e = world[curPos[0]][curPos[1] + 1]->w;
         }
-        if (world[curPos[0]][curPos[1] - 1] != NULL) {
+        // printf("-3");
+        if (curPos[1] > 0 && world[curPos[0]][curPos[1] - 1] != NULL) {
             // printf("W->e:%d", world[curPos[0]][curPos[1] - 1]->e);
             w = world[curPos[0]][curPos[1] - 1]->e;
         }
+        // printf("-4");
         // printf("\n");
         // printf("n: %d, s: %d, e: %d, w: %d\n", n, s, e, w);
 
