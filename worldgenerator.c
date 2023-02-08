@@ -27,9 +27,13 @@ typedef struct map {
     int n, s, e, w;
 } Map;
 
+typedef struct point {
+    int x, y;
+} Point;
+
 //y, x
 Map *world[WORLD_SIZE][WORLD_SIZE];
-int curPos[2] = {200, 200};
+Point curPos;
 
 int print_map(Map *m)
 {
@@ -51,6 +55,35 @@ int check_map(Map *m) {
 
     return 0;
 }
+
+int minDistance(int dist[], int sptSet[])
+{
+    int min = 99999, min_index, v;
+    // printf("finding min\n");
+    for (v = 0; v < BOUNDS_X; v++) {
+        if (sptSet[v] == 0 && dist[v] <= min) {
+            min = dist[v], min_index = v;
+        }
+    }
+    
+    printf("Min Distance: %d\n", min_index);
+    return min_index;
+}
+
+int printSolution(int dist[], int n)
+{
+    printf("Vertex   Distance from Source\n");
+    for (int i = 0; i < BOUNDS_X; i++)
+        printf("%d \t\t %d\n", i, dist[i]);
+        
+    return 0;
+}
+
+int manhattan()
+{
+    return 0;
+}
+
 
 int make_boundary(Map *m)
 {
@@ -75,22 +108,22 @@ int make_boundary(Map *m)
     }
 
     //set paths
-    if (curPos[1] > 2) {
+    if (curPos.x > 2) {
         m->alt[x[3]][0] = 25;
         m->terrain[x[3]][0] = PATH;
         m->w = x[3];
     }
-    if (curPos[1] < WORLD_SIZE - 1) {
+    if (curPos.x < WORLD_SIZE - 1) {
         m->alt[x[2]][BOUNDS_X-1] = 25;
         m->terrain[x[2]][BOUNDS_X-1] = PATH;
         m->e = x[2]-1;
     }
-    if (curPos[0] < WORLD_SIZE - 1) {
+    if (curPos.y < WORLD_SIZE - 1) {
         m->alt[BOUNDS_Y-1][x[1]] = 25;
         m->terrain[BOUNDS_Y-1][x[1]] = PATH;
         m->s = x[1];
     }
-    if (curPos[0] > 1) {
+    if (curPos.y > 1) {
         m->alt[0][x[0]] = 25;
         m->terrain[0][x[0]] = PATH;
         m->n = x[0];
@@ -219,29 +252,6 @@ int fill_map(Map *m)
         }
     }
 
-    return 0;
-}
-
-int minDistance(int dist[], int sptSet[])
-{
-    int min = 99999, min_index, v;
-    // printf("finding min\n");
-    for (v = 0; v < BOUNDS_X; v++) {
-        if (sptSet[v] == 0 && dist[v] <= min) {
-            min = dist[v], min_index = v;
-        }
-    }
-    
-    printf("Min Distance: %d\n", min_index);
-    return min_index;
-}
-
-int printSolution(int dist[], int n)
-{
-    printf("Vertex   Distance from Source\n");
-    for (int i = 0; i < BOUNDS_X; i++)
-        printf("%d \t\t %d\n", i, dist[i]);
-        
     return 0;
 }
 
@@ -487,6 +497,8 @@ int main(int argc, char *argv[])
     // printf("start\n");
     int i, j, n, s, e, w;
     int count = 0, r;
+    curPos.x = 200;
+    curPos.y = 200;
 
     // printf("initialize World\n");
     for (i = 0; i < WORLD_SIZE; i++) {
@@ -506,23 +518,23 @@ int main(int argc, char *argv[])
     // printf("n:%d s:%d e:%d w:%d\n", n, s, e, w);
 
    
-    world[curPos[0]][curPos[1]] = malloc(sizeof(*world[curPos[0]][curPos[1]]));
-    world[curPos[0]][curPos[1]]->n = n;
-    world[curPos[0]][curPos[1]]->s = s;
-    world[curPos[0]][curPos[1]]->e = e;
-    world[curPos[0]][curPos[1]]->w = w;
+    world[curPos.y][curPos.x] = malloc(sizeof(*world[curPos.y][curPos.x]));
+    world[curPos.y][curPos.x]->n = n;
+    world[curPos.y][curPos.x]->s = s;
+    world[curPos.y][curPos.x]->e = e;
+    world[curPos.y][curPos.x]->w = w;
     // printf("Create Starting Map\n");
-    r = create_map(world[curPos[0]][curPos[1]]);
-    // check_map(world[curPos[0]][curPos[1]]);
+    r = create_map(world[curPos.y][curPos.x]);
+    // check_map(world[curPos.y][curPos.x]);
 
 
     // printf("Begin Game\n");
-    r = print_map(world[curPos[0]][curPos[1]]);
+    r = print_map(world[curPos.y][curPos.x]);
     while (r == 0) {
         char in[15];
         char c;
         int nx = 0, ny = 0;
-        printf("Current Position: (%d, %d). Enter Move:  ", curPos[1] - 200, curPos[0] - 200);
+        printf("Current Position: (%d, %d). Enter Move:  ", curPos.x - 200, curPos.y - 200);
         fgets(in, sizeof(in), stdin);
         // printf("%c %d %d\n", in[0], in[2], in[4]);
         sscanf(in, "%c %d %d", &c, &nx, &ny);
@@ -537,24 +549,24 @@ int main(int argc, char *argv[])
         // printf("check moves\n");
         switch (c) {
             case 'n':
-                curPos[0] += 1;
+                curPos.y += 1;
                 count++;
                 break;
             case 's':
-                curPos[0] -= 1;
+                curPos.y -= 1;
                 count++;
                 break;
             case 'e':
-                curPos[1] += 1;
+                curPos.x += 1;
                 count++;
                 break;
             case 'w':
-                curPos[1] -= 1;
+                curPos.x -= 1;
                 count++;
                 break;
             case 'f':
-                curPos[0] = ny + 200;
-                curPos[1] = nx + 200;
+                curPos.y = ny + 200;
+                curPos.x = nx + 200;
                 count++;
                 break;
             case 'q':
@@ -569,57 +581,57 @@ int main(int argc, char *argv[])
         }
 
         // printf("valid check\n");
-        while (curPos[0] >= WORLD_SIZE) {
-            curPos[0] -= 1;
+        while (curPos.y >= WORLD_SIZE) {
+            curPos.y -= 1;
         }
-        while (curPos[1] >= WORLD_SIZE) {
-            curPos[1] -= 1;
+        while (curPos.x >= WORLD_SIZE) {
+            curPos.x -= 1;
         }
-        while (curPos[0] < 0) {
-            curPos[0] += 1;
+        while (curPos.y < 0) {
+            curPos.y += 1;
         }
-        while (curPos[1] < 0) {
-            curPos[1] += 1;
+        while (curPos.x < 0) {
+            curPos.x += 1;
         }
 
         // printf("Set Gates\n");
-        printf("%d\n", curPos[0]);
-        if (curPos[0] > 0 && world[curPos[0] - 1][curPos[1]] != NULL) {
-            // printf("N->s:%d, ", world[curPos[0] - 1][curPos[1]]->n);
-            s = world[curPos[0] - 1][curPos[1]]->n;
+        // printf("%d\n", curPos.y);
+        if (curPos.y > 0 && world[curPos.y - 1][curPos.x] != NULL) {
+            // printf("N->s:%d, ", world[curPos.y - 1][curPos.x]->n);
+            s = world[curPos.y - 1][curPos.x]->n;
         }
         // printf("-1");
-        if (curPos[0] < (WORLD_SIZE) && world[curPos[0] + 1][curPos[1]] != NULL) {
-            // printf("S->n:%d, ", world[curPos[0] + 1][curPos[1]]->s);
-            n = world[curPos[0] + 1][curPos[1]]->s;
+        if (curPos.y < (WORLD_SIZE - 1) && world[curPos.y + 1][curPos.x] != NULL) {
+            // printf("S->n:%d, ", world[curPos.y + 1][curPos.x]->s);
+            n = world[curPos.y + 1][curPos.x]->s;
         }
         // printf("-2");
-        printf("%d\n", curPos[1]);
-        if (curPos[1] < (WORLD_SIZE) && world[curPos[0]][curPos[1] + 1] != NULL) {
-            // printf("E->w:%d, ", world[curPos[0]][curPos[1] + 1]->w);
-            e = world[curPos[0]][curPos[1] + 1]->w;
+        // printf("%d\n", curPos.x);
+        if (curPos.x < (WORLD_SIZE - 1) && world[curPos.y][curPos.x + 1] != NULL) {
+            // printf("E->w:%d, ", world[curPos.y][curPos.x + 1]->w);
+            e = world[curPos.y][curPos.x + 1]->w;
         }
         // printf("-3");
-        if (curPos[1] > 0 && world[curPos[0]][curPos[1] - 1] != NULL) {
-            // printf("W->e:%d", world[curPos[0]][curPos[1] - 1]->e);
-            w = world[curPos[0]][curPos[1] - 1]->e;
+        if (curPos.x > 0 && world[curPos.y][curPos.x - 1] != NULL) {
+            // printf("W->e:%d", world[curPos.y][curPos.x - 1]->e);
+            w = world[curPos.y][curPos.x - 1]->e;
         }
         // printf("-4");
         // printf("\n");
         // printf("n: %d, s: %d, e: %d, w: %d\n", n, s, e, w);
 
         // printf("nullcheck spot\n");
-        if (world[curPos[0]][curPos[1]] == NULL) {
-            world[curPos[0]][curPos[1]] = malloc(sizeof(*world[curPos[0]][curPos[1]]));
-            world[curPos[0]][curPos[1]]->n = n;
-            world[curPos[0]][curPos[1]]->s = s;
-            world[curPos[0]][curPos[1]]->e = e;
-            world[curPos[0]][curPos[1]]->w = w;
-            // check_map(world[curPos[0]][curPos[1]]);
-            r = create_map(world[curPos[0]][curPos[1]]);
+        if (world[curPos.y][curPos.x] == NULL) {
+            world[curPos.y][curPos.x] = malloc(sizeof(*world[curPos.y][curPos.x]));
+            world[curPos.y][curPos.x]->n = n;
+            world[curPos.y][curPos.x]->s = s;
+            world[curPos.y][curPos.x]->e = e;
+            world[curPos.y][curPos.x]->w = w;
+            // check_map(world[curPos.y][curPos.x]);
+            r = create_map(world[curPos.y][curPos.x]);
         }
 
-        print_map(world[curPos[0]][curPos[1]]);
+        print_map(world[curPos.y][curPos.x]);
     }
     
     for (i = 0; i < WORLD_SIZE; i++) {
