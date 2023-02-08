@@ -16,4 +16,5 @@ package:
 	\cp -r changes.txt CHANGELOG
 	git --no-pager log > hist.txt
 	cat hist.txt >> CHANGELOG
-	cd ..; cp -rv Pokemon/!(.git | .vscode) greg-carter_assignment-1.02; tar cvfz greg-carter_assignment-1.02.tar.gz greg-carter_assignment-1.02;
+	cd ..; rm -fr greg-carter_assignment-1.02 greg-carter_assignment-1.02.tar.gz;
+	cd ..; rsync -av --exclude=Pokemon/.git --exclude=Pokemon/.vscode Pokemon greg-carter_assignment-1.02; tar cvfz greg-carter_assignment-1.02.tar.gz greg-carter_assignment-1.02;

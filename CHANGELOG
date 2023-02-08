@@ -18,6 +18,12 @@
 - Bugfixes
 - Implemented basic pathing
 - attempted to fix complex pathing
+commit 74ec8eebc8350bc763731e24c6b826d57f3edf71
+Author: Greg <gcartcca2n@gmail.com>
+Date:   Tue Feb 7 23:05:55 2023 -0600
+
+    makefile and changelog updates
+
 commit 2a1ad3d5a546c339a8a9686dc8d4b66c8a30ddef
 Author: Greg <gcartcca2n@gmail.com>
 Date:   Tue Feb 7 23:03:45 2023 -0600
