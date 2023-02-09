@@ -27,7 +27,7 @@ typedef struct point {
 } Point;
 
 
-const int TERRAIN[] = {ROCK, TREE, GRASS_T, WATER, GRASS_S};
+const char TERRAIN[] = {ROCK, TREE, GRASS_T, WATER, GRASS_S};
 const int ALTITUDE[][2] = {{50, 30}, {43, 25}, {45, 15}, {18, 0}, {45, 20}};
 const int STRESS[] = {20, 50, 15, 40, 10};
 const Point center = {.x = 200, .y = 200};
@@ -91,77 +91,10 @@ int manhattan(Point p, Point q)
     return ret;
 }
 
-int dijkstra(Map *m, Point p) {
-    int i, j, k, l, s, ci;
-    // {cost, prevIndex}
-    int dist[(BOUNDS_X - 1) * (BOUNDS_Y - 1)][2];
-    char tm, tw;
-
-
-    for (i = 0; i < BOUNDS_Y - 1; i++) {
-        for (j = 0; j < BOUNDS_X - 1; j++) {
-            m->alt[i][j] = 99999;
-            dist[i * BOUNDS_X + j][0] = 99999;
-            dist[i * BOUNDS_X + j][1] = 0;
-        }
-    }
-
-    m->alt[p.y][p.x] = 0;
-    dist[p.y * BOUNDS_X + p.x][0] = 0;
-    dist[p.y * BOUNDS_X + p.x][1] = 0;
-
-    i = 3, j = 3;
-
-    while (j < (BOUNDS_X/2) - 1) {
-        for (l = i/2; l >= -i/2; l --) {
-            for (k = j/2; k >= -j/2; k--) {
-                if (!(p.x == j && p.y == k)) {
-                    /*
-                        TODO: Get the index of the current spot in the array, 
-                                check if it is < the previous spot, 
-                                if so, update the current value and previous index value
-                                then fill in the map
-                    */
-                    dist[ci][1] = ci;
-
-                    ci = ((p.y + l) * BOUNDS_X) + (p.x + k);
-
-                    if (dist[ci][0] < dist[dist[ci][1]][0]) {
-                        tw = world[curPos.y][curPos.x]->terrain[l][k];
-                        for (s = 0; s < sizeof(TERRAIN)/sizeof(char); s++) {
-                            tm = TERRAIN[s];
-                            if (tm == tw) {
-                                m->alt[l][k] = STRESS[s] + dist[dist[ci][1]][0];
-                                dist[ci][0] = STRESS[s] + dist[dist[ci][1]][0];
-                            } else if (tw == 'M' || tw == 'C') {
-                                m->alt[l][k] = 30 + dist[dist[ci][1]][0];
-                                dist[ci][0] = 30 + dist[dist[ci][1]][0];
-                            } else if (tw == PATH) {
-                                m->alt[l][k] = 5 + dist[dist[ci][1]][0];
-                                dist[ci][0] = STRESS[s] + dist[dist[ci][1]][0];
-                            } else {
-                                printf("There was an error generating the distance map");
-                                return 1;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        if (i < (BOUNDS_Y/2) - 1) {
-            i++;
-        }
-
-        j++;
-    }
-
-    for (i = 0; i < BOUNDS_Y; i++) {
-        for (j = 0; j < BOUNDS_X; j++) {
-            printf("%4d", m->alt[i][j]);
-        }
-        printf("\n");
-    }
+int dijkstra(Map *m, Point p)
+{
+    printf("Start Dijk's\n");
+    
 
     return 0;
 }
@@ -587,10 +520,12 @@ int create_map(Map *m)
 int main(int argc, char *argv[])
 {
 
-    if (argc == 2 && argv[0] == 'd') {
+    if (argc == 2) {
         Map *m = malloc(sizeof(*m));
         Point p = {.x = 5, .y = 5};
         dijkstra(m, p);
+
+        return 0;
     }
 
     // printf("start\n");
