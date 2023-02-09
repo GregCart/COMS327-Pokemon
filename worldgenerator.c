@@ -90,6 +90,26 @@ int manhattan(Point p, Point q)
     return ret;
 }
 
+int dijkstra(Map *m, Point p) {
+    int i, j, k;
+
+    for (i = 0; i < BOUNDS_Y - 1; i++) {
+        for (j = 0; j < BOUNDS_X - 1; j++) {
+            m->alt[i][j] = 99999;
+        }
+    }
+
+    m->alt[p.y][p.x] = 0;
+
+    i = 0, j = 3;
+
+    while (j < (BOUNDS_X/2) - 1) {
+
+    }
+
+    return 0;
+}
+
 
 int make_boundary(Map *m)
 {
