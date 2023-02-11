@@ -1,15 +1,24 @@
+CFLAGS = -Wall -Werror -ggdb -funroll-loops -DTERM=Fall2023 -lm
+OBJS = world_generator.o heap.o queue.o
+
 all: gen_world
 
-gen_map: mapgenerator.c
-	gcc -Wall -Werror -ggdb mapgenerator.c -o map_generator
+gen_map: mapgenerator.c queue.o
+	gcc $(CFLAGS) mapgenerator.c -o map_generator
 	./map_generator
 
-gen_world: worldgenerator.c 
-	gcc -Wall -Werror -ggdb worldgenerator.c -o world_generator -lm
+gen_world: worldgenerator.c heap.o queue.o
+	gcc $(CFLAGS) worldgenerator.c -o world_generator 
 	./world_generator
 
+heap.o: lib/heap.c
+	cd lib; gcc $(CFLAGS) -MMD -MF heap.c -c;
+
+queue.o: lib/queue.c
+	cd lib; gcc $(CFLAGS) -MMD -MF queue.c -c;
+
 clean:
-	rm -f map_generator world_generator *~ core *.exe *.stackdump
+	rm -f map_generator world_generator *.o *~ core *.exe *.stackdump
 
 package:
 	make clean

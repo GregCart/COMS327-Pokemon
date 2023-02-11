@@ -1,7 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include "lib/queue.c"
+#include <limits.h>
+
+#include "lib/queue.h"
+#include "lib/heap.h"
 
 
 #define WORLD_SIZE 401
@@ -26,6 +29,12 @@ typedef struct point {
     int x, y;
 } Point;
 
+typedef struct path {
+    heap_node_t *hn;    
+    int pos[2];
+    int from[2];
+    int cost;
+} Path;
 
 const char TERRAIN[] = {ROCK, TREE, GRASS_T, WATER, GRASS_S};
 const int ALTITUDE[][2] = {{50, 30}, {43, 25}, {45, 15}, {18, 0}, {45, 20}};
@@ -33,7 +42,7 @@ const int STRESS[] = {20, 50, 15, 40, 10};
 const Point center = {.x = 200, .y = 200};
 
 //sorted in {y, x}
-int EXITS[4][2];
+// int EXITS[4][2];
 Map *world[WORLD_SIZE][WORLD_SIZE];
 Point curPos;
 
@@ -57,6 +66,10 @@ int check_map(Map *m) {
     printf("n:%d s:%d e:%d w:%d\n", m->n, m->s, m->e, m->w);
 
     return 0;
+}
+
+static int32_t path_cmp(const void *key, const void *with) {
+  return ((Path *) key)->cost - ((Path *) with)->cost;
 }
 
 int minDistance(int dist[], int sptSet[])
@@ -91,10 +104,116 @@ int manhattan(Point p, Point q)
     return ret;
 }
 
-int dijkstra(Map *m, Point p)
+static int dijkstra(Map *m, Point p)
 {
     printf("Start Dijk's\n");
-    
+    static Path path[BOUNDS_Y][BOUNDS_X], *pth;
+    static int init = 0;
+    heap_t h;
+    int x, y;
+
+    if (!init) {
+        for (y = 0; y < BOUNDS_Y; y++) {
+            for (x = 0; x < BOUNDS_X; x++) {
+                path[y][x].pos[0] = y;
+                path[y][x].pos[1] = x;
+            }
+        }
+    }
+
+    for (y = 0; y < BOUNDS_Y; y++) {
+        for (x = 0; x < BOUNDS_X; x++) {
+            path[y][x].cost = INT_MAX;
+        }
+    }
+
+    path[p.y][p.x].cost = 0;
+
+    heap_init(&h, path_cmp, NULL);
+
+    for (y = 1; y < BOUNDS_Y - 1; y++) {
+        for (x = 1; x < BOUNDS_X - 1; x++) {
+            path[y][x].hn = heap_insert(&h, &path[y][x]);
+        }
+    }
+
+    while ((pth = heap_remove_min(&h))) {
+        pth->hn = NULL;
+
+        //above
+        if ((path[pth->pos[0] - 1][pth->pos[1]].hn) && (path[pth->pos[0] - 1][pth->pos[1]].cost >
+            ((pth->cost + abs(m->alt[pth->pos[0] - 1][pth->pos[1]] - m->alt[pth->pos[0]][pth->pos[1]]))))) {
+                path[pth->pos[0] - 1][pth->pos[1]].cost = pth->cost + 
+                    abs(m->alt[pth->pos[0] - 1][pth->pos[1]] - m->alt[pth->pos[0]][pth->pos[1]]);
+                //from stuff for drawing nodes, don't need for part 3
+                path[pth->pos[0] - 1][pth->pos[1]].from[0] = pth->pos[0];
+                path[pth->pos[0] - 1][pth->pos[1]].from[1] = pth->pos[1];
+                heap_decrease_key_no_replace(&h, path[pth->pos[0] - 1][pth->pos[1]].hn);
+        }
+        if ((path[pth->pos[0] - 1][pth->pos[1] - 1].hn) && (path[pth->pos[0] - 1][pth->pos[1] - 1].cost >
+            ((pth->cost + abs(m->alt[pth->pos[0] - 1][pth->pos[1] - 1] - m->alt[pth->pos[0]][pth->pos[1]]))))) {    //TL
+                path[pth->pos[0] - 1][pth->pos[1] - 1].cost = pth->cost + 
+                    abs(m->alt[pth->pos[0] - 1][pth->pos[1] - 1] - m->alt[pth->pos[0]][pth->pos[1]]);
+                //from stuff for drawing nodes, don't need for part 3
+                path[pth->pos[0] - 1][pth->pos[1] - 1].from[0] = pth->pos[0];
+                path[pth->pos[0] - 1][pth->pos[1] - 1].from[1] = pth->pos[1];
+                heap_decrease_key_no_replace(&h, path[pth->pos[0] - 1][pth->pos[1] - 1].hn);
+        }
+        if ((path[pth->pos[0] - 1][pth->pos[1] + 1].hn) && (path[pth->pos[0] - 1][pth->pos[1] + 1].cost >
+            ((pth->cost + abs(m->alt[pth->pos[0] - 1][pth->pos[1] + 1] - m->alt[pth->pos[0]][pth->pos[1]]))))) {    //TR
+                path[pth->pos[0] - 1][pth->pos[1] + 1].cost = pth->cost + 
+                    abs(m->alt[pth->pos[0] - 1][pth->pos[1] + 1] - m->alt[pth->pos[0]][pth->pos[1]]);
+                //from stuff for drawing nodes, don't need for part 3
+                path[pth->pos[0] - 1][pth->pos[1] + 1].from[0] = pth->pos[0];
+                path[pth->pos[0] - 1][pth->pos[1] + 1].from[1] = pth->pos[1];
+                heap_decrease_key_no_replace(&h, path[pth->pos[0] - 1][pth->pos[1] + 1].hn);
+        }
+        if ((path[pth->pos[0]][pth->pos[1] - 1].hn) && (path[pth->pos[0]][pth->pos[1] - 1].cost >   
+            ((pth->cost + abs(m->alt[pth->pos[0]][pth->pos[1] - 1] - m->alt[pth->pos[0]][pth->pos[1]]))))) {    //left
+                path[pth->pos[0]][pth->pos[1] - 1].cost = pth->cost + 
+                    abs(m->alt[pth->pos[0]][pth->pos[1] - 1] - m->alt[pth->pos[0]][pth->pos[1]]);
+                //from stuff for drawing nodes, don't need for part 3
+                path[pth->pos[0]][pth->pos[1] - 1].from[0] = pth->pos[0];
+                path[pth->pos[0]][pth->pos[1] - 1].from[1] = pth->pos[1];
+                heap_decrease_key_no_replace(&h, path[pth->pos[0]][pth->pos[1] - 1].hn);
+        }
+        if ((path[pth->pos[0]][pth->pos[1] + 1].hn) && (path[pth->pos[0]][pth->pos[1] + 1].cost >   
+            ((pth->cost + abs(m->alt[pth->pos[0]][pth->pos[1] + 1] - m->alt[pth->pos[0]][pth->pos[1]]))))) {    //right
+                path[pth->pos[0]][pth->pos[1] + 1].cost = pth->cost + 
+                    abs(m->alt[pth->pos[0]][pth->pos[1] + 1] - m->alt[pth->pos[0]][pth->pos[1]]);
+                //from stuff for drawing nodes, don't need for part 3
+                path[pth->pos[0]][pth->pos[1] + 1].from[0] = pth->pos[0];
+                path[pth->pos[0]][pth->pos[1] + 1].from[1] = pth->pos[1];
+                heap_decrease_key_no_replace(&h, path[pth->pos[0]][pth->pos[1] + 1].hn);
+        }
+        if ((path[pth->pos[0] + 1][pth->pos[1]].hn) && (path[pth->pos[0] + 1][pth->pos[1]].cost >
+            ((pth->cost + abs(m->alt[pth->pos[0] + 1][pth->pos[1]] - m->alt[pth->pos[0]][pth->pos[1]]))))) {    //bottom
+                path[pth->pos[0] + 1][pth->pos[1]].cost = pth->cost + 
+                    abs(m->alt[pth->pos[0] + 1][pth->pos[1]] - m->alt[pth->pos[0]][pth->pos[1]]);
+                //from stuff for drawing nodes, don't need for part 3
+                path[pth->pos[0] + 1][pth->pos[1]].from[0] = pth->pos[0];
+                path[pth->pos[0] + 1][pth->pos[1]].from[1] = pth->pos[1];
+                heap_decrease_key_no_replace(&h, path[pth->pos[0] + 1][pth->pos[1]].hn);
+        }
+        if ((path[pth->pos[0] + 1][pth->pos[1] - 1].hn) && (path[pth->pos[0] + 1][pth->pos[1] - 1].cost >
+            ((pth->cost + abs(m->alt[pth->pos[0] + 1][pth->pos[1] - 1] - m->alt[pth->pos[0]][pth->pos[1]]))))) {    //BL
+                path[pth->pos[0] + 1][pth->pos[1] - 1].cost = pth->cost + 
+                    abs(m->alt[pth->pos[0] + 1][pth->pos[1] - 1] - m->alt[pth->pos[0]][pth->pos[1]]);
+                //from stuff for drawing nodes, don't need for part 3
+                path[pth->pos[0] + 1][pth->pos[1] - 1].from[0] = pth->pos[0];
+                path[pth->pos[0] + 1][pth->pos[1] - 1].from[1] = pth->pos[1];
+                heap_decrease_key_no_replace(&h, path[pth->pos[0] + 1][pth->pos[1] - 1].hn);
+        }
+        if ((path[pth->pos[0] + 1][pth->pos[1] + 1].hn) && (path[pth->pos[0] + 1][pth->pos[1] + 1].cost >
+            ((pth->cost + abs(m->alt[pth->pos[0] + 1][pth->pos[1] - 1] - m->alt[pth->pos[0]][pth->pos[1]]))))) {    //BR
+                path[pth->pos[0] + 1][pth->pos[1] + 1].cost = pth->cost + 
+                    abs(m->alt[pth->pos[0] + 1][pth->pos[1] + 1] - m->alt[pth->pos[0]][pth->pos[1]]);
+                //from stuff for drawing nodes, don't need for part 3
+                path[pth->pos[0] + 1][pth->pos[1] + 1].from[0] = pth->pos[0];
+                path[pth->pos[0] + 1][pth->pos[1] + 1].from[1] = pth->pos[1];
+                heap_decrease_key_no_replace(&h, path[pth->pos[0] + 1][pth->pos[1] + 1].hn);
+        }
+    }
 
     return 0;
 }
