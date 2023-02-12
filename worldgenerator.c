@@ -106,7 +106,7 @@ int manhattan(Point p, Point q)
 
 static int dijkstra(Map *m, Point p)
 {
-    printf("Start Dijk's\n");
+    // printf("Start Dijk's\n");
     static Path path[BOUNDS_Y][BOUNDS_X], *pth;
     static int init = 0;
     heap_t h;
@@ -121,6 +121,7 @@ static int dijkstra(Map *m, Point p)
         }
     }
 
+    // printf("Init paths\n");
     for (y = 0; y < BOUNDS_Y; y++) {
         for (x = 0; x < BOUNDS_X; x++) {
             path[y][x].cost = INT_MAX;
@@ -131,12 +132,14 @@ static int dijkstra(Map *m, Point p)
 
     heap_init(&h, path_cmp, NULL);
 
+    // printf("fill heap\n");
     for (y = 1; y < BOUNDS_Y - 1; y++) {
         for (x = 1; x < BOUNDS_X - 1; x++) {
             path[y][x].hn = heap_insert(&h, &path[y][x]);
         }
     }
 
+    // printf("loop start\n");
     while ((pth = heap_remove_min(&h))) {
         pth->hn = NULL;
 

@@ -1,5 +1,5 @@
 CFLAGS = -Wall -Werror -ggdb -funroll-loops -DTERM=Fall2023 -lm
-OBJS = world_generator.o heap.o queue.o
+OBJS = worldgenerator.c lib/heap.o lib/queue.o
 
 all: gen_world
 
@@ -8,7 +8,7 @@ gen_map: mapgenerator.c queue.o
 	./map_generator
 
 gen_world: worldgenerator.c heap.o queue.o
-	gcc $(CFLAGS) worldgenerator.c -o world_generator 
+	gcc $(CFLAGS) $(OBJS) -o world_generator 
 	./world_generator
 
 heap.o: lib/heap.c
