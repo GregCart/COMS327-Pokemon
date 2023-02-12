@@ -21,3 +21,5 @@ CHANGELOG
 CHANGELOG
 .gitignore
 world_generator.exe
+lib/heap.o
+lib/queue.o

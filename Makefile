@@ -12,13 +12,13 @@ gen_world: worldgenerator.c heap.o queue.o
 	./world_generator
 
 heap.o: lib/heap.c
-	cd lib; gcc $(CFLAGS) -MMD -MF heap.c -c;
+	cd lib; gcc $(CFLAGS) heap.c -c;
 
 queue.o: lib/queue.c
-	cd lib; gcc $(CFLAGS) -MMD -MF queue.c -c;
+	cd lib; gcc $(CFLAGS) queue.c -c;
 
 clean:
-	rm -f map_generator world_generator *.o *~ core *.exe *.stackdump
+	rm -f map_generator world_generator */*.o *~ core *.exe *.stackdump
 
 package:
 	make clean
