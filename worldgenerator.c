@@ -15,13 +15,14 @@
 #define GRASS_S '.'
 #define GRASS_T ':'
 #define WATER '~'
+#define MART 'M'
+#define CENTER 'C'
 #define PATH '#'
 
 
 typedef struct map {
     char terrain[BOUNDS_Y][BOUNDS_X];
     int alt[BOUNDS_Y][BOUNDS_X];
-    int px, py;
     int n, s, e, w;
 } Map;
 
@@ -36,7 +37,20 @@ typedef struct path {
     int cost;
 } Path;
 
+typedef struct entity {
+    Point pos;
+    char chr;
+    //rock, tree, tgrass, water, sgrass, gate, path, mart, center
+    int stress[9];
+    Map *trail;
+} Entity;
+
+typedef struct trainer {
+    Entity e;
+} Trainer;
+
 const char TERRAIN[] = {ROCK, TREE, GRASS_T, WATER, GRASS_S};
+const char ALL_TERRAIN[] = {ROCK, TREE, GRASS_T, WATER, GRASS_S, PATH, MART, CENTER};
 const int ALTITUDE[][2] = {{50, 30}, {43, 25}, {45, 15}, {18, 0}, {45, 20}};
 const int STRESS[] = {20, 50, 15, 40, 10};
 const Point center = {.x = 200, .y = 200};
@@ -54,6 +68,25 @@ int print_map(Map *m)
     for (i = 0; i < BOUNDS_Y; i++) {
         for (j = 0; j < BOUNDS_X; j++) {
             printf("%c", m->terrain[i][j]);
+        }
+        printf("\n");
+    }
+
+    return 0;
+}
+
+int print_cost_map(Map *m) 
+{
+    int i, j;
+
+    for (i = 0; i < BOUNDS_Y; i++) {
+        for (j = 0; j < BOUNDS_X; j++) {
+            if (m->alt[i][j] > -999 && m->alt[i][j] < 999) {
+                printf("%02d ", m->alt[i][j] % 100);
+            } else {
+                printf("   ");
+            }
+            
         }
         printf("\n");
     }
@@ -104,13 +137,63 @@ int manhattan(Point p, Point q)
     return ret;
 }
 
-static int dijkstra(Map *m, Point p)
+int get_stress(Map *m, Entity *e, Point p) {
+    int ret;
+
+    switch (m->terrain[p.y][p.x]) {
+        case ROCK:
+            if (m->alt[p.y][p.x] < 99) {
+                ret = e->stress[0];
+            } else {
+                ret = INT_MAX;
+            }
+            break;
+        case TREE:
+            ret = e->stress[1];
+            break;
+        case GRASS_T:
+            ret = e->stress[2];
+            break;
+        case WATER:
+            ret = e->stress[3];
+            break;
+        case GRASS_S:
+            ret = e->stress[4];
+            break;
+        case PATH:
+            if (p.x == 0 || p.x == BOUNDS_X - 1 || p.y == 0 || p.y == BOUNDS_Y) {
+                ret = e->stress[5];
+            } else {
+                ret = e->stress[6];
+            }
+            break;
+        case MART:
+            ret = e->stress[7];
+            break;
+        case CENTER:
+            ret = e->stress[8];
+            break;
+        default:
+            ret = INT_MAX;
+            break;
+    }
+
+    return ret;
+}
+
+static int dijkstra(Map *m, Point p, Entity *e)
 {
     // printf("Start Dijk's\n");
     static Path path[BOUNDS_Y][BOUNDS_X], *pth;
     static int init = 0;
     heap_t h;
     int x, y;
+    Map *w = world[curPos.y][curPos.x];
+    Point pnt;
+
+    if (!m) {
+        m = e->trail;
+    }
 
     if (!init) {
         for (y = 0; y < BOUNDS_Y; y++) {
@@ -119,6 +202,7 @@ static int dijkstra(Map *m, Point p)
                 path[y][x].pos[1] = x;
             }
         }
+        init = 1;
     }
 
     // printf("Init paths\n");
@@ -143,78 +227,87 @@ static int dijkstra(Map *m, Point p)
     while ((pth = heap_remove_min(&h))) {
         pth->hn = NULL;
 
-        //above
-        if ((path[pth->pos[0] - 1][pth->pos[1]].hn) && (path[pth->pos[0] - 1][pth->pos[1]].cost >
-            ((pth->cost + abs(m->alt[pth->pos[0] - 1][pth->pos[1]] - m->alt[pth->pos[0]][pth->pos[1]]))))) {
-                path[pth->pos[0] - 1][pth->pos[1]].cost = pth->cost + 
-                    abs(m->alt[pth->pos[0] - 1][pth->pos[1]] - m->alt[pth->pos[0]][pth->pos[1]]);
+        // printf("check above\n");//above
+        pnt = (Point) {.x = pth->pos[1], .y = pth->pos[0] - 1};
+        if ((path[pth->pos[0] - 1][pth->pos[1]].hn) && w->alt[pth->pos[0] - 1][pth->pos[1]] < 50 
+            && (path[pth->pos[0] - 1][pth->pos[1]].cost > ((pth->cost + get_stress(w, e, pnt))))) {
+                path[pth->pos[0] - 1][pth->pos[1]].cost = pth->cost + get_stress(w, e, pnt);
                 //from stuff for drawing nodes, don't need for part 3
                 path[pth->pos[0] - 1][pth->pos[1]].from[0] = pth->pos[0];
                 path[pth->pos[0] - 1][pth->pos[1]].from[1] = pth->pos[1];
                 heap_decrease_key_no_replace(&h, path[pth->pos[0] - 1][pth->pos[1]].hn);
         }
-        if ((path[pth->pos[0] - 1][pth->pos[1] - 1].hn) && (path[pth->pos[0] - 1][pth->pos[1] - 1].cost >
-            ((pth->cost + abs(m->alt[pth->pos[0] - 1][pth->pos[1] - 1] - m->alt[pth->pos[0]][pth->pos[1]]))))) {    //TL
-                path[pth->pos[0] - 1][pth->pos[1] - 1].cost = pth->cost + 
-                    abs(m->alt[pth->pos[0] - 1][pth->pos[1] - 1] - m->alt[pth->pos[0]][pth->pos[1]]);
+        // printf("check TL\n");
+        pnt = (Point) {.x = pth->pos[1] - 1, .y = pth->pos[0] - 1};
+        if ((path[pth->pos[0] - 1][pth->pos[1] - 1].hn) && w->alt[pth->pos[0] - 1][pth->pos[1] - 1] < 50 
+            && (path[pth->pos[0] - 1][pth->pos[1] - 1].cost > ((pth->cost + get_stress(w, e, pnt))))) {    //TL
+                path[pth->pos[0] - 1][pth->pos[1] - 1].cost = pth->cost + get_stress(w, e, pnt);
                 //from stuff for drawing nodes, don't need for part 3
                 path[pth->pos[0] - 1][pth->pos[1] - 1].from[0] = pth->pos[0];
                 path[pth->pos[0] - 1][pth->pos[1] - 1].from[1] = pth->pos[1];
                 heap_decrease_key_no_replace(&h, path[pth->pos[0] - 1][pth->pos[1] - 1].hn);
         }
-        if ((path[pth->pos[0] - 1][pth->pos[1] + 1].hn) && (path[pth->pos[0] - 1][pth->pos[1] + 1].cost >
-            ((pth->cost + abs(m->alt[pth->pos[0] - 1][pth->pos[1] + 1] - m->alt[pth->pos[0]][pth->pos[1]]))))) {    //TR
-                path[pth->pos[0] - 1][pth->pos[1] + 1].cost = pth->cost + 
-                    abs(m->alt[pth->pos[0] - 1][pth->pos[1] + 1] - m->alt[pth->pos[0]][pth->pos[1]]);
+        // printf("check TR\n");
+        pnt = (Point) {.x = pth->pos[1] - 1, .y = pth->pos[0] + 1};
+        if ((path[pth->pos[0] - 1][pth->pos[1] + 1].hn) && w->alt[pth->pos[0] - 1][pth->pos[1] + 1] < 50
+            && (path[pth->pos[0] - 1][pth->pos[1] + 1].cost > ((pth->cost + get_stress(w, e, pnt))))) {    //TR
+                path[pth->pos[0] - 1][pth->pos[1] + 1].cost = pth->cost + get_stress(w, e, pnt);
                 //from stuff for drawing nodes, don't need for part 3
                 path[pth->pos[0] - 1][pth->pos[1] + 1].from[0] = pth->pos[0];
                 path[pth->pos[0] - 1][pth->pos[1] + 1].from[1] = pth->pos[1];
                 heap_decrease_key_no_replace(&h, path[pth->pos[0] - 1][pth->pos[1] + 1].hn);
         }
-        if ((path[pth->pos[0]][pth->pos[1] - 1].hn) && (path[pth->pos[0]][pth->pos[1] - 1].cost >   
-            ((pth->cost + abs(m->alt[pth->pos[0]][pth->pos[1] - 1] - m->alt[pth->pos[0]][pth->pos[1]]))))) {    //left
-                path[pth->pos[0]][pth->pos[1] - 1].cost = pth->cost + 
-                    abs(m->alt[pth->pos[0]][pth->pos[1] - 1] - m->alt[pth->pos[0]][pth->pos[1]]);
+        // printf("check left\n");
+        if ((path[pth->pos[0]][pth->pos[1] - 1].hn) && w->alt[pth->pos[0]][pth->pos[1] - 1] < 50
+            && (path[pth->pos[0]][pth->pos[1] - 1].cost > ((pth->cost + get_stress(w, e, pnt))))) {    //left
+                path[pth->pos[0]][pth->pos[1] - 1].cost = pth->cost + get_stress(w, e, pnt);
                 //from stuff for drawing nodes, don't need for part 3
                 path[pth->pos[0]][pth->pos[1] - 1].from[0] = pth->pos[0];
                 path[pth->pos[0]][pth->pos[1] - 1].from[1] = pth->pos[1];
                 heap_decrease_key_no_replace(&h, path[pth->pos[0]][pth->pos[1] - 1].hn);
         }
-        if ((path[pth->pos[0]][pth->pos[1] + 1].hn) && (path[pth->pos[0]][pth->pos[1] + 1].cost >   
-            ((pth->cost + abs(m->alt[pth->pos[0]][pth->pos[1] + 1] - m->alt[pth->pos[0]][pth->pos[1]]))))) {    //right
-                path[pth->pos[0]][pth->pos[1] + 1].cost = pth->cost + 
-                    abs(m->alt[pth->pos[0]][pth->pos[1] + 1] - m->alt[pth->pos[0]][pth->pos[1]]);
+        // printf("check right\n");
+        if ((path[pth->pos[0]][pth->pos[1] + 1].hn) && w->alt[pth->pos[0]][pth->pos[1] + 1] < 50
+            && (path[pth->pos[0]][pth->pos[1] + 1].cost > ((pth->cost + get_stress(w, e, pnt))))) {    //right
+                path[pth->pos[0]][pth->pos[1] + 1].cost = pth->cost + get_stress(w, e, pnt);
                 //from stuff for drawing nodes, don't need for part 3
                 path[pth->pos[0]][pth->pos[1] + 1].from[0] = pth->pos[0];
                 path[pth->pos[0]][pth->pos[1] + 1].from[1] = pth->pos[1];
                 heap_decrease_key_no_replace(&h, path[pth->pos[0]][pth->pos[1] + 1].hn);
         }
-        if ((path[pth->pos[0] + 1][pth->pos[1]].hn) && (path[pth->pos[0] + 1][pth->pos[1]].cost >
-            ((pth->cost + abs(m->alt[pth->pos[0] + 1][pth->pos[1]] - m->alt[pth->pos[0]][pth->pos[1]]))))) {    //bottom
-                path[pth->pos[0] + 1][pth->pos[1]].cost = pth->cost + 
-                    abs(m->alt[pth->pos[0] + 1][pth->pos[1]] - m->alt[pth->pos[0]][pth->pos[1]]);
+        // printf("check bottom\n");
+        if ((path[pth->pos[0] + 1][pth->pos[1]].hn) && w->alt[pth->pos[0] + 1][pth->pos[1]] < 50
+            && (path[pth->pos[0] + 1][pth->pos[1]].cost > ((pth->cost + get_stress(w, e, pnt))))) {    //bottom
+                path[pth->pos[0] + 1][pth->pos[1]].cost = pth->cost + get_stress(w, e, pnt);
                 //from stuff for drawing nodes, don't need for part 3
                 path[pth->pos[0] + 1][pth->pos[1]].from[0] = pth->pos[0];
                 path[pth->pos[0] + 1][pth->pos[1]].from[1] = pth->pos[1];
                 heap_decrease_key_no_replace(&h, path[pth->pos[0] + 1][pth->pos[1]].hn);
         }
-        if ((path[pth->pos[0] + 1][pth->pos[1] - 1].hn) && (path[pth->pos[0] + 1][pth->pos[1] - 1].cost >
-            ((pth->cost + abs(m->alt[pth->pos[0] + 1][pth->pos[1] - 1] - m->alt[pth->pos[0]][pth->pos[1]]))))) {    //BL
-                path[pth->pos[0] + 1][pth->pos[1] - 1].cost = pth->cost + 
-                    abs(m->alt[pth->pos[0] + 1][pth->pos[1] - 1] - m->alt[pth->pos[0]][pth->pos[1]]);
+        // printf("check BL\n");
+        if ((path[pth->pos[0] + 1][pth->pos[1] - 1].hn) && w->alt[pth->pos[0] + 1][pth->pos[1] - 1] < 50
+            && (path[pth->pos[0] + 1][pth->pos[1] - 1].cost > ((pth->cost + get_stress(w, e, pnt))))) {    //BL
+                path[pth->pos[0] + 1][pth->pos[1] - 1].cost = pth->cost + get_stress(w, e, pnt);
                 //from stuff for drawing nodes, don't need for part 3
                 path[pth->pos[0] + 1][pth->pos[1] - 1].from[0] = pth->pos[0];
                 path[pth->pos[0] + 1][pth->pos[1] - 1].from[1] = pth->pos[1];
                 heap_decrease_key_no_replace(&h, path[pth->pos[0] + 1][pth->pos[1] - 1].hn);
         }
-        if ((path[pth->pos[0] + 1][pth->pos[1] + 1].hn) && (path[pth->pos[0] + 1][pth->pos[1] + 1].cost >
-            ((pth->cost + abs(m->alt[pth->pos[0] + 1][pth->pos[1] - 1] - m->alt[pth->pos[0]][pth->pos[1]]))))) {    //BR
-                path[pth->pos[0] + 1][pth->pos[1] + 1].cost = pth->cost + 
-                    abs(m->alt[pth->pos[0] + 1][pth->pos[1] + 1] - m->alt[pth->pos[0]][pth->pos[1]]);
+        // printf("check BR\n");
+        if ((path[pth->pos[0] + 1][pth->pos[1] + 1].hn) && w->alt[pth->pos[0] + 1][pth->pos[1] + 1] < 50
+            && (path[pth->pos[0] + 1][pth->pos[1] + 1].cost > ((pth->cost + get_stress(w, e, pnt))))) {    //BR
+                path[pth->pos[0] + 1][pth->pos[1] + 1].cost = pth->cost + get_stress(w, e, pnt);
                 //from stuff for drawing nodes, don't need for part 3
                 path[pth->pos[0] + 1][pth->pos[1] + 1].from[0] = pth->pos[0];
                 path[pth->pos[0] + 1][pth->pos[1] + 1].from[1] = pth->pos[1];
                 heap_decrease_key_no_replace(&h, path[pth->pos[0] + 1][pth->pos[1] + 1].hn);
+        }
+        
+    }
+
+    for (y = 0; y < BOUNDS_Y; y++) {
+        for (x = 0; x < BOUNDS_X; x++) {
+            m->alt[y][x] = path[y][x].cost;
         }
     }
 
@@ -642,17 +735,13 @@ int create_map(Map *m)
 int main(int argc, char *argv[])
 {
 
-    if (argc == 2) {
-        Map *m = malloc(sizeof(*m));
-        Point p = {.x = 5, .y = 5};
-        dijkstra(m, p);
-
-        return 0;
-    }
-
     // printf("start\n");
     int i, j, n, s, e, w;
     int count = 0, r;
+    Trainer *PC = malloc(sizeof(*PC));
+    Entity ent = {.chr = '@', .pos = {.x = 5, .y = 5}, .stress = {INT_MAX, INT_MAX, 20, INT_MAX, 10, 10, 10, 10, 10}, .trail = malloc(sizeof(ent.trail))};
+    PC->e = ent;
+    Map *display = malloc(sizeof(*display));
     curPos.x = 200;
     curPos.y = 200;
 
@@ -682,10 +771,25 @@ int main(int argc, char *argv[])
     // printf("Create Starting Map\n");
     r = create_map(world[curPos.y][curPos.x]);
     // check_map(world[curPos.y][curPos.x]);
-
-
+    display = world[curPos.y][curPos.x];
+    display->terrain[PC->e.pos.y][PC->e.pos.x] = PC->e.chr;
+    // printf("%c\n", PC->e.chr);
+    // printf("%c\n", display->terrain[PC->e.pos.y][PC->e.pos.x]);
     // printf("Begin Game\n");
-    r = print_map(world[curPos.y][curPos.x]);
+    r = print_map(display);
+    // if (argc == 2) {
+    //     Map *m = malloc(sizeof(*m));
+    //     Point p = {.x = 5, .y = 5};
+    //     Entity e = {.pos = {.x = 5, .y = 5}, .stress = {INT_MAX, INT_MAX, 20, INT_MAX, 10, 10, 10, 10, 10}, .trail = malloc(sizeof(e.trail))};
+    //     dijkstra(m, p, &e);
+    //     // printf("DO print\n");
+    //     print_cost_map(m);
+
+    //     return 0;
+    // }
+    dijkstra(PC->e.trail, PC->e.pos, &PC->e);
+    printf("DO print\n");
+    print_cost_map(PC->e.trail);
     while (r == 0) {
         char in[15];
         char c;
@@ -786,13 +890,19 @@ int main(int argc, char *argv[])
             // check_map(world[curPos.y][curPos.x]);
             r = create_map(world[curPos.y][curPos.x]);
         }
+        display = world[curPos.y][curPos.x];
+        display->terrain[PC->e.pos.y][PC->e.pos.x] = PC->e.chr;
 
-        print_map(world[curPos.y][curPos.x]);
+        print_map(display);
+        dijkstra(NULL, PC->e.pos, &PC->e);
+        print_cost_map(PC->e.trail);
     }
     
     for (i = 0; i < WORLD_SIZE; i++) {
         for (j = 0; j < WORLD_SIZE; j++) {
-            free(world[i][j]);
+            if (world[i][j] != NULL) {
+                free(world[i][j]);
+            }
         }
     }
     return 0;

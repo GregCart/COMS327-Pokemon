@@ -23,3 +23,4 @@ CHANGELOG
 world_generator.exe
 lib/heap.o
 lib/queue.o
+vgcore.*
