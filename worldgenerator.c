@@ -8,6 +8,7 @@
 
 
 #define WORLD_SIZE 401
+#define D_MAX 1000000
 #define BOUNDS_X 80
 #define BOUNDS_Y 21
 #define ROCK '%'
@@ -42,12 +43,16 @@ typedef struct entity {
     char chr;
     //rock, tree, tgrass, water, sgrass, gate, path, mart, center
     int stress[9];
-    Map *trail;
 } Entity;
 
 typedef struct trainer {
     Entity e;
 } Trainer;
+
+typedef struct player {
+    Trainer *t;
+    Map *trail;
+} PC;
 
 const char TERRAIN[] = {ROCK, TREE, GRASS_T, WATER, GRASS_S};
 const char ALL_TERRAIN[] = {ROCK, TREE, GRASS_T, WATER, GRASS_S, PATH, MART, CENTER};
@@ -81,7 +86,7 @@ int print_cost_map(Map *m)
 
     for (i = 0; i < BOUNDS_Y; i++) {
         for (j = 0; j < BOUNDS_X; j++) {
-            if (m->alt[i][j] > -999 && m->alt[i][j] < 999) {
+            if (m->alt[i][j] < 999999) {
                 printf("%02d ", m->alt[i][j] % 100);
             } else {
                 printf("   ");
@@ -145,7 +150,7 @@ int get_stress(Map *m, Entity *e, Point p) {
             if (m->alt[p.y][p.x] < 99) {
                 ret = e->stress[0];
             } else {
-                ret = INT_MAX;
+                ret = D_MAX;
             }
             break;
         case TREE:
@@ -161,7 +166,7 @@ int get_stress(Map *m, Entity *e, Point p) {
             ret = e->stress[4];
             break;
         case PATH:
-            if (p.x == 0 || p.x == BOUNDS_X - 1 || p.y == 0 || p.y == BOUNDS_Y) {
+            if (p.x == 0 || p.x == BOUNDS_X - 1 || p.y == 0 || p.y == BOUNDS_Y - 1) {
                 ret = e->stress[5];
             } else {
                 ret = e->stress[6];
@@ -174,7 +179,7 @@ int get_stress(Map *m, Entity *e, Point p) {
             ret = e->stress[8];
             break;
         default:
-            ret = INT_MAX;
+            ret = D_MAX;
             break;
     }
 
@@ -191,10 +196,6 @@ static int dijkstra(Map *m, Point p, Entity *e)
     Map *w = world[curPos.y][curPos.x];
     Point pnt;
 
-    if (!m) {
-        m = e->trail;
-    }
-
     if (!init) {
         for (y = 0; y < BOUNDS_Y; y++) {
             for (x = 0; x < BOUNDS_X; x++) {
@@ -208,7 +209,7 @@ static int dijkstra(Map *m, Point p, Entity *e)
     // printf("Init paths\n");
     for (y = 0; y < BOUNDS_Y; y++) {
         for (x = 0; x < BOUNDS_X; x++) {
-            path[y][x].cost = INT_MAX;
+            path[y][x].cost = D_MAX;
         }
     }
 
@@ -302,11 +303,13 @@ static int dijkstra(Map *m, Point p, Entity *e)
                 path[pth->pos[0] + 1][pth->pos[1] + 1].from[1] = pth->pos[1];
                 heap_decrease_key_no_replace(&h, path[pth->pos[0] + 1][pth->pos[1] + 1].hn);
         }
-        
+
     }
 
+    // printf("fill cost map\n");
     for (y = 0; y < BOUNDS_Y; y++) {
         for (x = 0; x < BOUNDS_X; x++) {
+            printf("X: %d, y:%d\n", x, y);
             m->alt[y][x] = path[y][x].cost;
         }
     }
@@ -738,10 +741,16 @@ int main(int argc, char *argv[])
     // printf("start\n");
     int i, j, n, s, e, w;
     int count = 0, r;
-    Trainer *PC = malloc(sizeof(*PC));
-    Entity ent = {.chr = '@', .pos = {.x = 5, .y = 5}, .stress = {INT_MAX, INT_MAX, 20, INT_MAX, 10, 10, 10, 10, 10}, .trail = malloc(sizeof(ent.trail))};
-    PC->e = ent;
+    PC *PC = malloc(sizeof(*PC));
+    Entity ent = {
+        .chr = '@', 
+        .pos = {.x = 5, .y = 5}, 
+        .stress = {D_MAX, D_MAX, 20, D_MAX, 10, 10, 10, 10, 10}
+    };
     Map *display = malloc(sizeof(*display));
+    PC->t = malloc(sizeof(*PC->t));
+    PC->trail = malloc(sizeof(PC->trail));
+    PC->t->e = ent;
     curPos.x = 200;
     curPos.y = 200;
 
@@ -772,24 +781,13 @@ int main(int argc, char *argv[])
     r = create_map(world[curPos.y][curPos.x]);
     // check_map(world[curPos.y][curPos.x]);
     display = world[curPos.y][curPos.x];
-    display->terrain[PC->e.pos.y][PC->e.pos.x] = PC->e.chr;
-    // printf("%c\n", PC->e.chr);
-    // printf("%c\n", display->terrain[PC->e.pos.y][PC->e.pos.x]);
-    // printf("Begin Game\n");
-    r = print_map(display);
-    // if (argc == 2) {
-    //     Map *m = malloc(sizeof(*m));
-    //     Point p = {.x = 5, .y = 5};
-    //     Entity e = {.pos = {.x = 5, .y = 5}, .stress = {INT_MAX, INT_MAX, 20, INT_MAX, 10, 10, 10, 10, 10}, .trail = malloc(sizeof(e.trail))};
-    //     dijkstra(m, p, &e);
-    //     // printf("DO print\n");
-    //     print_cost_map(m);
-
-    //     return 0;
-    // }
-    dijkstra(PC->e.trail, PC->e.pos, &PC->e);
+    display->terrain[PC->t->e.pos.y][PC->t->e.pos.x] = PC->t->e.chr;
+    printf("x:%d, y:%d\n", PC->t->e.pos.x, PC->t->e.pos.y);
+    dijkstra(PC->trail, PC->t->e.pos, &PC->t->e);
     printf("DO print\n");
-    print_cost_map(PC->e.trail);
+    PC->t->e.pos = (Point) {.x = display->n, .y = BOUNDS_Y - 3};
+    r = print_map(display);
+    print_cost_map(PC->trail);
     while (r == 0) {
         char in[15];
         char c;
@@ -800,28 +798,26 @@ int main(int argc, char *argv[])
         sscanf(in, "%c %d %d", &c, &nx, &ny);
         // printf("c:%c x:%d y:%d\n", c, nx, ny);
 
-        n = 1 + (rand() % (BOUNDS_X - 3));
-        s = 1 + (rand() % (BOUNDS_X - 3));
-        e = 1 + (rand() % (BOUNDS_Y - 3));
-        w = 1 + (rand() % (BOUNDS_Y - 3));
-        // printf("n: %d, s: %d, e: %d, w: %d\n", n, s, e, w);
-
         // printf("check moves\n");
         switch (c) {
             case 'n':
                 curPos.y += 1;
+                PC->t->e.pos = (Point) {.x = world[curPos.y][curPos.x]->n, .y = BOUNDS_Y - 2 };
                 count++;
                 break;
             case 's':
                 curPos.y -= 1;
+                PC->t->e.pos = (Point) {.x = world[curPos.y][curPos.x]->s, .y = 1 };
                 count++;
                 break;
             case 'e':
                 curPos.x += 1;
+                PC->t->e.pos = (Point) {.x = BOUNDS_X - 2, .y = world[curPos.y][curPos.x]->e };
                 count++;
                 break;
             case 'w':
                 curPos.x -= 1;
+                PC->t->e.pos = (Point) {.x = 1, .y = world[curPos.y][curPos.x]->w };
                 count++;
                 break;
             case 'f':
@@ -855,6 +851,12 @@ int main(int argc, char *argv[])
         }
 
         // printf("Set Gates\n");
+        n = 1 + (rand() % (BOUNDS_X - 3));
+        s = 1 + (rand() % (BOUNDS_X - 3));
+        e = 1 + (rand() % (BOUNDS_Y - 3));
+        w = 1 + (rand() % (BOUNDS_Y - 3));
+        // printf("n: %d, s: %d, e: %d, w: %d\n", n, s, e, w);
+
         // printf("%d\n", curPos.y);
         if (curPos.y > 0 && world[curPos.y - 1][curPos.x] != NULL) {
             // printf("N->s:%d, ", world[curPos.y - 1][curPos.x]->n);
@@ -891,11 +893,11 @@ int main(int argc, char *argv[])
             r = create_map(world[curPos.y][curPos.x]);
         }
         display = world[curPos.y][curPos.x];
-        display->terrain[PC->e.pos.y][PC->e.pos.x] = PC->e.chr;
+        display->terrain[PC->t->e.pos.y][PC->t->e.pos.x] = PC->t->e.chr;
 
         print_map(display);
-        dijkstra(NULL, PC->e.pos, &PC->e);
-        print_cost_map(PC->e.trail);
+        dijkstra(PC->trail, PC->t->e.pos, &PC->t->e);
+        print_cost_map(PC->trail);
     }
     
     for (i = 0; i < WORLD_SIZE; i++) {

@@ -19,11 +19,11 @@ test: gen_world
 	./world_generator
 
 test-v: gen_world
-	valgrind ./world_generator -f
+	valgrind --leak-check=full ./world_generator -f --log-file=valgrind-log.txt
 
 
 clean:
-	rm -f map_generator world_generator */*.o *~ core *.exe *.stackdump
+	rm -f map_generator world_generator */*.o *~ core *.exe *.stackdump vgcore.*
 
 package:
 	make clean
