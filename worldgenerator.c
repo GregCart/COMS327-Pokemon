@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <limits.h>
+#include <string.h>
 
 #include "lib/queue.h"
 #include "lib/heap.h"
@@ -11,18 +12,56 @@
 #define D_MAX 1000000
 #define BOUNDS_X 80
 #define BOUNDS_Y 21
-#define ROCK '%'
-#define TREE '^'
+
+#define ROCK    '%'
+#define TREE    '^'
 #define GRASS_S '.'
 #define GRASS_T ':'
-#define WATER '~'
-#define MART 'M'
-#define CENTER 'C'
-#define PATH '#'
+#define WATER   '~'
+#define MART    'M'
+#define CENTER  'C'
+#define PATH    '#'
 
+#define COLOR_RESET "\x1b[0m"
+#define COLOR_ROCK  "\x1b[37m"
+#define COLOR_TREE  "\x1b[92m"
+#define COLOR_GRASS_S  "\x1b[92m"
+#define COLOR_GRASS_T  "\x1b[32m"
+#define COLOR_WATER  "\x1b[94m"
+#define COLOR_MART  "\x1b[91m"
+#define COLOR_CENTER  "\x1b[93m"
+#define COLOR_PATH  "\x1b[33m"
+
+#define PLAYER  '@'
+#define RIVAL   'R'
+#define HIKER   'H'
+#define SWIMMER 'M'
+#define WANDERER    'W'
+
+
+typedef enum terrain_e {
+    R,
+    T,
+    GT,
+    W,
+    GS,
+    P,
+    M,
+    C,
+    num_types_ter
+} Terrain_e;
+
+typedef enum trainer_e {
+    PLAY,
+    RIVL,
+    HIKR,
+    SWIM,
+    WAND,
+    num_types_tra
+} Trainer_e;
 
 typedef struct map {
-    char terrain[BOUNDS_Y][BOUNDS_X];
+    Terrain_e terrain[BOUNDS_Y][BOUNDS_X];
     int alt[BOUNDS_Y][BOUNDS_X];
     int n, s, e, w;
 } Map;
@@ -40,7 +79,7 @@ typedef struct path {
 
 typedef struct entity {
     Point pos;
-    char chr;
+    Trainer_e chr;
     //rock, tree, tgrass, water, sgrass, gate, path, mart, center
     int stress[9];
 } Entity;
@@ -56,6 +95,8 @@ typedef struct player {
 
 const char TERRAIN[] = {ROCK, TREE, GRASS_T, WATER, GRASS_S};
 const char ALL_TERRAIN[] = {ROCK, TREE, GRASS_T, WATER, GRASS_S, PATH, MART, CENTER};
+const char* ALL_COLORS[] = {COLOR_ROCK, COLOR_TREE, COLOR_GRASS_T, COLOR_WATER, COLOR_GRASS_S, COLOR_PATH, COLOR_MART, COLOR_CENTER};
+const char ALL_TRAINERS[] = {PLAYER, RIVAL, HIKER, SWIMMER, WANDERER};
 const int ALTITUDE[][2] = {{50, 30}, {43, 25}, {45, 15}, {18, 0}, {45, 20}};
 const int STRESS[] = {20, 50, 15, 40, 10};
 const Point center = {.x = 200, .y = 200};
@@ -66,13 +107,13 @@ Map *world[WORLD_SIZE][WORLD_SIZE];
 Point curPos;
 
 
-int print_map(Map *m)
+int print_map(char map[BOUNDS_Y][BOUNDS_X][10])
 {
     int i, j;
 
     for (i = 0; i < BOUNDS_Y; i++) {
         for (j = 0; j < BOUNDS_X; j++) {
-            printf("%c", m->terrain[i][j]);
+            printf("%s", map[i][j]);
         }
         printf("\n");
     }
@@ -100,7 +141,7 @@ int print_cost_map(Map *m)
 }
 
 int check_map(Map *m) {
-    printf("terrain: %ld x %ld\n", sizeof(m->terrain[0])/sizeof(char), sizeof(m->terrain)/sizeof(m->terrain[0])/sizeof(char));
+    printf("terrain: %ld x %ld\n", sizeof(m->terrain[0])/sizeof(Terrain_e), sizeof(m->terrain)/sizeof(m->terrain[0])/sizeof(char));
     printf("n:%d s:%d e:%d w:%d\n", m->n, m->s, m->e, m->w);
 
     return 0;
@@ -108,29 +149,6 @@ int check_map(Map *m) {
 
 static int32_t path_cmp(const void *key, const void *with) {
   return ((Path *) key)->cost - ((Path *) with)->cost;
-}
-
-int minDistance(int dist[], int sptSet[])
-{
-    int min = 99999, min_index, v;
-    // printf("finding min\n");
-    for (v = 0; v < BOUNDS_X; v++) {
-        if (sptSet[v] == 0 && dist[v] <= min) {
-            min = dist[v], min_index = v;
-        }
-    }
-    
-    printf("Min Distance: %d\n", min_index);
-    return min_index;
-}
-
-int printSolution(int dist[], int n)
-{
-    printf("Vertex   Distance from Source\n");
-    for (int i = 0; i < BOUNDS_X; i++)
-        printf("%d \t\t %d\n", i, dist[i]);
-        
-    return 0;
 }
 
 int manhattan(Point p, Point q)
@@ -145,7 +163,7 @@ int manhattan(Point p, Point q)
 int get_stress(Map *m, Entity *e, Point p) {
     int ret;
 
-    switch (m->terrain[p.y][p.x]) {
+    switch (ALL_TERRAIN[m->terrain[p.y][p.x]]) {
         case ROCK:
             if (m->alt[p.y][p.x] < 99) {
                 ret = e->stress[0];
@@ -309,7 +327,7 @@ static int dijkstra(Map *m, Point p, Entity *e)
     // printf("fill cost map\n");
     for (y = 0; y < BOUNDS_Y; y++) {
         for (x = 0; x < BOUNDS_X; x++) {
-            printf("X: %d, y:%d\n", x, y);
+            // printf("X: %d, y:%d\n", x, y);
             m->alt[y][x] = path[y][x].cost;
         }
     }
@@ -326,16 +344,16 @@ int make_boundary(Map *m)
     
     //bounds X
     for (i = 0; i < BOUNDS_X; i++) {
-        m->terrain[0][i] = ROCK;
-        m->terrain[BOUNDS_Y-1][i] = ROCK;
+        m->terrain[0][i] = R;
+        m->terrain[BOUNDS_Y-1][i] = R;
         m->alt[0][i] = 99;
         m->alt[BOUNDS_Y-1][i] = 99;
     }
 
     //bounds Y
     for (i = 0; i < BOUNDS_Y; i++) {
-        m->terrain[i][0] = ROCK;
-        m->terrain[i][BOUNDS_X-1] = ROCK;
+        m->terrain[i][0] = R;
+        m->terrain[i][BOUNDS_X-1] = R;
         m->alt[i][0] = 99;
         m->alt[i][BOUNDS_X-1] = 99;
     }
@@ -343,22 +361,22 @@ int make_boundary(Map *m)
     //set paths
     if (curPos.x > 2) {
         m->alt[x[3]][0] = 25;
-        m->terrain[x[3]][0] = PATH;
+        m->terrain[x[3]][0] = P;
         m->w = x[3];
     }
     if (curPos.x < WORLD_SIZE - 1) {
         m->alt[x[2]][BOUNDS_X-1] = 25;
-        m->terrain[x[2]][BOUNDS_X-1] = PATH;
+        m->terrain[x[2]][BOUNDS_X-1] = P;
         m->e = x[2]-1;
     }
     if (curPos.y < WORLD_SIZE - 1) {
         m->alt[BOUNDS_Y-1][x[1]] = 25;
-        m->terrain[BOUNDS_Y-1][x[1]] = PATH;
+        m->terrain[BOUNDS_Y-1][x[1]] = P;
         m->s = x[1];
     }
     if (curPos.y > 1) {
         m->alt[0][x[0]] = 25;
-        m->terrain[0][x[0]] = PATH;
+        m->terrain[0][x[0]] = P;
         m->n = x[0];
     }
     // print_map(m);
@@ -366,9 +384,9 @@ int make_boundary(Map *m)
     return 0;
 }
 
-int add_terrain(Map *m, int x, int y, char c)
+int add_terrain(Map *m, int x, int y, Terrain_e c)
 {
-    char *chr = &m->terrain[y][x];
+    Terrain_e *chr = &m->terrain[y][x];
     int *alt = &m->alt[y][x];
 
     if ((rand() % 137) != 0) {
@@ -381,48 +399,48 @@ int add_terrain(Map *m, int x, int y, char c)
         } else if (*alt > 43) {
             int tmp = (rand() % 3);
             if (tmp == 1) {
-                *chr = TREE;
+                *chr = T;
             } else if(tmp == 0) {
-                *chr = ROCK;
+                *chr = R;
             } else {
-                *chr = GRASS_S;
+                *chr = GS;
             }
         } else if (*alt > 30) {
             int tmp = (rand() % 4);
             if (tmp == 1) {
-                *chr = TREE;
+                *chr = T;
             } else if(tmp == 0) {
-                *chr = ROCK;
+                *chr = R;
             } else if (tmp == 2) {
-                *chr = GRASS_T;
+                *chr = GT;
             } else {
-                *chr = GRASS_S;
+                *chr = GS;
             }
         } else if (*alt > 25) {
             int tmp = (rand() % 3);
             if (tmp == 1) {
-                *chr = TREE;
+                *chr = T;
             } else if (tmp == 2) {
-                *chr = GRASS_T;
+                *chr = GT;
             } else {
-                *chr = GRASS_S;
+                *chr = GS;
             }
         } else if (*alt > 18) {
             int tmp = (rand() % 2);
             if (tmp == 1) {
-                *chr = GRASS_T;
+                *chr = GT;
             } else {
-                *chr = GRASS_S;
+                *chr = GS;
             }
         } else if (*alt > 15) {
             int tmp = (rand() % 2);
             if (tmp == 1) {
-                *chr = GRASS_T;
+                *chr = GT;
             } else {
-                *chr = WATER;
+                *chr = W;
             }
         } else {
-            *chr = WATER;
+            *chr = W;
         }
     }
 
@@ -433,7 +451,7 @@ int spread_seed(Map *m, queue_t *qx, queue_t *qy)
 {
     // printf("Begin spreading\n");
     int i, x, y;
-    char chr;
+    Terrain_e chr;
 
     queue_dequeue(qx, &x);
     queue_dequeue(qy, &y);
@@ -449,18 +467,18 @@ int spread_seed(Map *m, queue_t *qx, queue_t *qy)
 
         for (i = -1; i < 2; i++) {
             if (i != 0) {
-                if (m->alt[y][x+i] < 50 && m->terrain[y][x+i] == ' ') {
+                if (m->alt[y][x+i] < 50 && m->terrain[y][x+i] == -1) {
                     queue_enqueue(qx, x+i);
                     queue_enqueue(qy, y);
                     add_terrain(m, x+i, y, chr);
                 }
             }
-            if (m->alt[y+1][x+i] < 50 && m->terrain[y+1][x+i] == ' ') {
+            if (m->alt[y+1][x+i] < 50 && m->terrain[y+1][x+i] == -1) {
                 queue_enqueue(qx, x+i);
                 queue_enqueue(qy, y+1);
                 add_terrain(m, x+i, y+1, chr);
             }
-            if (m->alt[y-1][x+i] < 50 && m->terrain[y-1][x+i] == ' ') {
+            if (m->alt[y-1][x+i] < 50 && m->terrain[y-1][x+i] == -1) {
                 queue_enqueue(qx, x+i);
                 queue_enqueue(qy, y-1);
                 add_terrain(m, x+i, y-1, chr);
@@ -478,8 +496,8 @@ int fill_map(Map *m)
 
     for (i = 0; i < BOUNDS_Y; i++) {
         for (j = 0; j < BOUNDS_X; j++) {
-            if (m->terrain[i][j] == ' ') {
-                m->terrain[i][j] = '.';
+            if (m->terrain[i][j] == -1) {
+                m->terrain[i][j] = GS;
                 m->alt[i][j] = 25;
             }
         }
@@ -488,95 +506,55 @@ int fill_map(Map *m)
     return 0;
 }
 
-int pathfind(Map *m, int src)
-{
-    int i, j, k, u;
-    int dist[BOUNDS_X], sptSet[BOUNDS_X];
-
-    for (i = 0; i < BOUNDS_X; i++) {
-        dist[i] = 99999;
-        sptSet[i] = 0;
-    }
-    
-    dist[src] = 0;  
-
-    // printf("entering loop\n");
-    for (k = 0; k < (BOUNDS_X - 1); k++) {
-        u = minDistance(dist, sptSet);
-        // printf("u: %d\n", u);
-        sptSet[u] = 1;
-        for (j = 0; j < (BOUNDS_X-1); j++) {
-            printf("%d, %d\n", u, j);
-            if (!sptSet[j] && u < BOUNDS_Y && m->alt[u][j] && dist[u] != 99999 && dist[u] + m->alt[u][j] < dist[j]) {
-                dist[j] = dist[u] + m->alt[u][j];
-                // printf("dist[j]: %d\n", dist[j]);
-            }
-        }
-    }
-
-    printSolution(dist, BOUNDS_X);
-
-    return 0;
-}
-
 int trailblaze(Map *m)
 {
     int i, j, k, l, b, d, p, u = BOUNDS_X/2 + (rand() % 20);
-    // printf("%d\n", u);
 
-    // print_map(m);
     //left
     for (i = 0; i < u; i++) {
         // printf("%d, %d\n", m->w, m->w+i);
-        m->terrain[m->w][1+i] = PATH;
+        m->terrain[m->w][1+i] = P;
         m->alt[m->w][1+i] = 25;
-        // print_map(m);
     }
-    // print_map(m);
     l = i - 1;
     // right
     while (i < BOUNDS_X) {
         // printf("%d, %d\n", m->e, 0+i);
-        m->terrain[m->e][BOUNDS_X-1+i] = PATH;
+        m->terrain[m->e][BOUNDS_X-1+i] = P;
         m->alt[m->e][BOUNDS_X-1+i] = 25;
         i++;
     }
-    // print_map(m);
     //connect left and right
     j = (m->w > m->e) ? m->e : m->w;
     k = (m->w > m->e) ? m->w : m->e;
     i = 0;
-    // print_map(m);
-    while (j + i <= k) {
+    while (j + i < k) {
         // printf("%d, %d, %d\n", j, l, k);
-        m->terrain[j+i][l] = PATH;
+        m->terrain[j+i][l] = P;
         m->alt[j+i][l] = 25;
         i++;
     }
     
-    // print_map(m);
     //top
     b = 1;
     // printf("%d, %d\n", 0 + b, m->n);
-    while (m->terrain[0 + b][m->n] != '#') {
+    while (m->terrain[0 + b][m->n] != P) {
         // printf("%d, %d\n", 0 + m, m);
-        m->terrain[0+b][m->n] = '#';
+        m->terrain[0+b][m->n] = P;
         m->alt[0+b][m->n] = 25;
         b++;
     }
 
-    // print_map(m);
     //bottom
     b = 1;
     // printf("%d, %d\n", BOUNDS_Y-1 - b, m->s);
-    while (m->terrain[BOUNDS_Y-1 - b][m->s] != '#') {
+    while (m->terrain[BOUNDS_Y-1 - b][m->s] != P) {
         // printf("%d, %d\n", BOUNDS_Y-1 - b, b);
-        m->terrain[BOUNDS_Y-1-b][m->s] = '#';
+        m->terrain[BOUNDS_Y-1-b][m->s] = P;
         m->alt[BOUNDS_Y-1-b][m->s] = 25;
         b++;
     }
-    // print_map(m);
-
+    
     //get probability
     d = manhattan(center, curPos);
     p = 100 - ((45 * d) / 200);
@@ -588,47 +566,47 @@ int trailblaze(Map *m)
     if ((rand() % 100) < p) {
         if(j >= 14) j -= 2;
         //Add PokemartMart
-        m->terrain[j+2][l-1] = 'M';
+        m->terrain[j+2][l-1] = M;
         m->alt[j+2][l-1] = 99;
-        m->terrain[j+3][l-2] = 'M';
+        m->terrain[j+3][l-2] = M;
         m->alt[j+3][l-2] = 99;
-        m->terrain[j+2][l-2] = 'M';
+        m->terrain[j+2][l-2] = M;
         m->alt[j+2][l-2] = 99;
-        m->terrain[j+3][l-1] = 'M';
+        m->terrain[j+3][l-1] = M;
         m->alt[j+3][l-1] = 99;
         //road
-        m->terrain[j+2][l-3] = '#';
+        m->terrain[j+2][l-3] = P;
         m->alt[j+2][l-3] = 25;
-        m->terrain[j+3][l-3] = '#';
+        m->terrain[j+3][l-3] = P;
         m->alt[j+3][l-3] = 25;
-        m->terrain[j+4][l-3] = '#';
+        m->terrain[j+4][l-3] = P;
         m->alt[j+4][l-3] = 25;
-        m->terrain[j+4][l-1] = '#';
+        m->terrain[j+4][l-1] = P;
         m->alt[j+4][l-1] = 25;
-        m->terrain[j+4][l-2] = '#';
+        m->terrain[j+4][l-2] = P;
         m->alt[j+4][l-2] = 25;
-        m->terrain[j+4][l] = '#';
+        m->terrain[j+4][l] = P;
         m->alt[j+4][l] = 25;
-        m->terrain[j+5][l] = '#';
+        m->terrain[j+5][l] = P;
         m->alt[j+5][l] = 25;
-        m->terrain[j+3][l] = '#';
+        m->terrain[j+3][l] = P;
         m->alt[j+3][l] = 25;
-        m->terrain[j+2][l] = '#';
+        m->terrain[j+2][l] = P;
         m->alt[j+2][l] = 25;
-        m->terrain[j+6][l] = '#';
+        m->terrain[j+6][l] = P;
         m->alt[j+6][l] = 25;
-        m->terrain[j+5][l-3] = '#';
+        m->terrain[j+5][l-3] = P;
         m->alt[j+5][l-3] = 25;
-        m->terrain[j+6][l-3] = '#';
+        m->terrain[j+6][l-3] = P;
         m->alt[j+6][l-3] = 25;
         //Pokecenter
-        m->terrain[j+5][l-1] = 'C';
+        m->terrain[j+5][l-1] = C;
         m->alt[j+5][l-1] = 99;
-        m->terrain[j+6][l-2] = 'C';
+        m->terrain[j+6][l-2] = C;
         m->alt[j+6][l-2] = 99;
-        m->terrain[j+5][l-2] = 'C';
+        m->terrain[j+5][l-2] = C;
         m->alt[j+5][l-2] = 99;
-        m->terrain[j+6][l-1] = 'C';
+        m->terrain[j+6][l-1] = C;
         m->alt[j+6][l-1] = 99;
     }
 
@@ -643,17 +621,15 @@ int create_map(Map *m)
     // printf("setting map\n");
     for (i = 0; i < BOUNDS_Y; i++) {
         for (j = 0; j < BOUNDS_X; j++) {
-            m->terrain[i][j] = ' ';
+            m->terrain[i][j] = -1;
             // printf("%c", m->terrain[i][j]);
         }
         // printf("\n");
     }
-    // print_map(m);
 
 
     // printf("trying boundary\n");
     if (!make_boundary(m)) {
-        // print_map(m);
         int i, r;
         int x[2];
 
@@ -672,7 +648,7 @@ int create_map(Map *m)
         for (i = -1; i <= r; i++) {
             x[0] = (rand() % (BOUNDS_X - 5)) + 3;
             x[1] = (rand() % (BOUNDS_Y - 5)) + 3;
-            m->terrain[x[1]][x[0]] = GRASS_T;
+            m->terrain[x[1]][x[0]] = GT;
             m->alt[x[1]][x[0]] = (rand() % 10) + 25;
             queue_enqueue(qx, x[0]);
             queue_enqueue(qy, x[1]);
@@ -683,7 +659,7 @@ int create_map(Map *m)
         for (i = -1; i <= r; i++) {
             x[0] = (rand() % (BOUNDS_X - 5)) + 3;
             x[1] = (rand() % (BOUNDS_Y - 5)) + 3;
-            m->terrain[x[1]][x[0]] = GRASS_S;
+            m->terrain[x[1]][x[0]] = GS;
             m->alt[x[1]][x[0]] = (rand() % 10) + 25;
             queue_enqueue(qx, x[0]);
             queue_enqueue(qy, x[1]);
@@ -692,7 +668,7 @@ int create_map(Map *m)
         //water
         x[0] = (rand() % (BOUNDS_X - 5)) + 3;
         x[1] = (rand() % (BOUNDS_Y - 5)) + 3;
-        m->terrain[x[1]][x[0]] = WATER;
+        m->terrain[x[1]][x[0]] = W;
         m->alt[x[1]][x[0]] = (rand() % 18);
         queue_enqueue(qx, x[0]);
         queue_enqueue(qy, x[1]);
@@ -706,7 +682,7 @@ int create_map(Map *m)
             x[1] = (rand() % (BOUNDS_Y - 5)) + 4;
             int a = rand() % 5;
             // printf("x: %d, y: %d, %c\n", x[0], x[1], (char) TERRAIN[a]);
-            m->terrain[x[1]][x[0]] = TERRAIN[a];
+            m->terrain[x[1]][x[0]] = a;
             m->alt[x[1]][x[0]] = ALTITUDE[a][0];
             queue_enqueue(qx, x[0]);
             queue_enqueue(qy, x[1]);
@@ -734,6 +710,26 @@ int create_map(Map *m)
     return 0;
 }
 
+int add_trainer(Trainer *t, char map[BOUNDS_Y][BOUNDS_X][10])
+{
+    strcpy(map[t->e.pos.y][t->e.pos.x], (char[2]) {ALL_TRAINERS[t->e.chr], '\0'});
+
+    return 0;
+}
+
+int map_chars(Map *from, char map[BOUNDS_Y][BOUNDS_X][10])
+{
+    int i, j;
+
+    for (i = 0; i < BOUNDS_Y; i++) {
+        for (j = 0; j < BOUNDS_X; j++) {
+            strcpy(map[i][j], (char[2]) {ALL_TERRAIN[from->terrain[i][j]], '\0'});
+            // printf("x:%d, y:%d, chr:%c\n", j, i, ALL_TERRAIN[from->terrain[i][j]]);
+        }
+    }
+
+    return 0;
+}
 
 int main(int argc, char *argv[])
 {
@@ -741,16 +737,16 @@ int main(int argc, char *argv[])
     // printf("start\n");
     int i, j, n, s, e, w;
     int count = 0, r;
-    PC *PC = malloc(sizeof(*PC));
+    PC *player = malloc(sizeof(*player));
     Entity ent = {
-        .chr = '@', 
+        .chr = PLAY, 
         .pos = {.x = 5, .y = 5}, 
         .stress = {D_MAX, D_MAX, 20, D_MAX, 10, 10, 10, 10, 10}
     };
-    Map *display = malloc(sizeof(*display));
-    PC->t = malloc(sizeof(*PC->t));
-    PC->trail = malloc(sizeof(PC->trail));
-    PC->t->e = ent;
+    char display[BOUNDS_Y][BOUNDS_X][10];
+    player->t = malloc(sizeof(*player->t));
+    player->trail = malloc(sizeof(player->trail));
+    player->t->e = ent;
     curPos.x = 200;
     curPos.y = 200;
 
@@ -780,14 +776,15 @@ int main(int argc, char *argv[])
     // printf("Create Starting Map\n");
     r = create_map(world[curPos.y][curPos.x]);
     // check_map(world[curPos.y][curPos.x]);
-    display = world[curPos.y][curPos.x];
-    display->terrain[PC->t->e.pos.y][PC->t->e.pos.x] = PC->t->e.chr;
-    printf("x:%d, y:%d\n", PC->t->e.pos.x, PC->t->e.pos.y);
-    dijkstra(PC->trail, PC->t->e.pos, &PC->t->e);
-    printf("DO print\n");
-    PC->t->e.pos = (Point) {.x = display->n, .y = BOUNDS_Y - 3};
+    map_chars(world[curPos.y][curPos.x], display);
+    // display->terrain[PC->t->e.pos.y][PC->t->e.pos.x] = PC->t->e.chr;
+    // printf("x:%d, y:%d\n", PC->t->e.pos.x, PC->t->e.pos.y);
+    // printf("DO print\n");
+    player->t->e.pos = (Point) {.x = world[curPos.y][curPos.x]->s, .y = BOUNDS_Y - 3};
+    add_trainer(player->t, display);
     r = print_map(display);
-    print_cost_map(PC->trail);
+    dijkstra(player->trail, player->t->e.pos, &player->t->e);
+    print_cost_map(player->trail);
     while (r == 0) {
         char in[15];
         char c;
@@ -802,22 +799,22 @@ int main(int argc, char *argv[])
         switch (c) {
             case 'n':
                 curPos.y += 1;
-                PC->t->e.pos = (Point) {.x = world[curPos.y][curPos.x]->n, .y = BOUNDS_Y - 2 };
+                player->t->e.pos = (Point) {.x = world[curPos.y][curPos.x]->n, .y = BOUNDS_Y - 2 };
                 count++;
                 break;
             case 's':
                 curPos.y -= 1;
-                PC->t->e.pos = (Point) {.x = world[curPos.y][curPos.x]->s, .y = 1 };
+                player->t->e.pos = (Point) {.x = world[curPos.y][curPos.x]->s, .y = 1 };
                 count++;
                 break;
             case 'e':
                 curPos.x += 1;
-                PC->t->e.pos = (Point) {.x = BOUNDS_X - 2, .y = world[curPos.y][curPos.x]->e };
+                player->t->e.pos = (Point) {.x = BOUNDS_X - 2, .y = world[curPos.y][curPos.x]->e };
                 count++;
                 break;
             case 'w':
                 curPos.x -= 1;
-                PC->t->e.pos = (Point) {.x = 1, .y = world[curPos.y][curPos.x]->w };
+                player->t->e.pos = (Point) {.x = 1, .y = world[curPos.y][curPos.x]->w };
                 count++;
                 break;
             case 'f':
@@ -892,12 +889,12 @@ int main(int argc, char *argv[])
             // check_map(world[curPos.y][curPos.x]);
             r = create_map(world[curPos.y][curPos.x]);
         }
-        display = world[curPos.y][curPos.x];
-        display->terrain[PC->t->e.pos.y][PC->t->e.pos.x] = PC->t->e.chr;
+        
+        add_trainer(player->t, display);
 
         print_map(display);
-        dijkstra(PC->trail, PC->t->e.pos, &PC->t->e);
-        print_cost_map(PC->trail);
+        dijkstra(player->trail, player->t->e.pos, &player->t->e);
+        print_cost_map(player->trail);
     }
     
     for (i = 0; i < WORLD_SIZE; i++) {
