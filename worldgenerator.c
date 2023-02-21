@@ -734,7 +734,7 @@ int create_map(Map *m)
 
 int add_trainer(Trainer *t, char map[BOUNDS_Y][BOUNDS_X][10])
 {
-    strcpy(map[t->e.pos.y][t->e.pos.x], (char[2]) {ALL_TRAINERS[t->e.chr], '\0'});
+    strcpy(map[t->e.pos.y][t->e.pos.x], (char[2]) {t->e.chr, '\0'});
 
     return 0;
 }
@@ -764,20 +764,20 @@ int main(int argc, char *argv[])
     Rival *rival = malloc(sizeof(*rival));
     char display[BOUNDS_Y][BOUNDS_X][10];
     player->e = (Entity) {
-        .chr = PLAY, 
+        .chr = PLAYER, 
         .pos = {.x = 5, .y = 5}, 
         .stress = {D_MAX, D_MAX, 20, D_MAX, 10, 10, 10, 10, 10}
     };
     player->trail = malloc(sizeof(player->trail));
     hiker->e = (Entity) {
         .chr = HIKER, 
-        .pos = {.x = 5, .y = 5}, 
+        .pos = {.x = 6, .y = 6}, 
         .stress = {15, D_MAX, 15, D_MAX, 10, D_MAX, 10, 50, 50}
     };
     hiker->trail = malloc(sizeof(hiker->trail));
     rival->e = (Entity) {
-        .chr = HIKER, 
-        .pos = {.x = 5, .y = 5}, 
+        .chr = RIVAL, 
+        .pos = {.x = 7, .y = 7}, 
         .stress = {D_MAX, D_MAX, 20, D_MAX, 10, D_MAX, 10, 50, 50}
     };
     rival->trail = malloc(sizeof(rival->trail));
@@ -816,6 +816,8 @@ int main(int argc, char *argv[])
     // printf("DO print\n");
     player->e.pos = (Point) {.x = world[curPos.y][curPos.x]->s, .y = BOUNDS_Y - 2};
     add_trainer(player, display);
+    add_trainer(hiker, display);
+    add_trainer(rival, display);
     r = print_map(display);
     dijkstra(player->trail, player->e.pos, &player->e);
     dijkstra(hiker->trail, hiker->e.pos, &hiker->e);
