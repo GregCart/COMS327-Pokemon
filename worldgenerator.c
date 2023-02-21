@@ -109,13 +109,41 @@ Map *world[WORLD_SIZE][WORLD_SIZE];
 Point curPos;
 
 
-int print_map(char map[BOUNDS_Y][BOUNDS_X][10])
+int print_display(char map[BOUNDS_Y][BOUNDS_X][10])
 {
     int i, j;
 
     for (i = 0; i < BOUNDS_Y; i++) {
         for (j = 0; j < BOUNDS_X; j++) {
             printf("%s", map[i][j]);
+        }
+        printf("\n");
+    }
+
+    return 0;
+}
+
+int print_map_alt(Map *m) 
+{
+    int i , j;
+
+    for (i = 0; i < BOUNDS_Y; i++) {
+        for (j = 0; j < BOUNDS_X; j++) {
+            printf("%d ", m->alt[i][j]);
+        }
+        printf("\n");
+    }
+
+    return 0;
+}
+
+int print_map_terrain(Map *m) 
+{
+    int i , j;
+
+    for (i = 0; i < BOUNDS_Y; i++) {
+        for (j = 0; j < BOUNDS_X; j++) {
+            printf("%d ", m->terrain[i][j]);
         }
         printf("\n");
     }
@@ -142,14 +170,67 @@ int print_cost_map(Map *m)
     return 0;
 }
 
-int check_map(Map *m) {
+int print_trainer(Trainer *t) {
+    int i;
+
+    printf("Entity: {\n");
+    printf("\tChar: %c\n", t->e.chr);
+    printf("\tPos: (%d, %d),\n", t->e.pos.x, t->e.pos.y);
+    printf("\tStressors: ");
+    for (i = 0; i < 9; i++) {
+        printf(" %d", t->e.stress[i]);
+        if (i < 8) {
+            printf(",");
+        }
+    }
+    printf("\n}\n");
+    printf("Trail:\n");
+    print_map_alt(t->trail);
+
+    return 0;
+}
+
+int check_map(Map *m) 
+{
     printf("terrain: %ld x %ld\n", sizeof(m->terrain[0])/sizeof(Terrain_e), sizeof(m->terrain)/sizeof(m->terrain[0])/sizeof(char));
     printf("n:%d s:%d e:%d w:%d\n", m->n, m->s, m->e, m->w);
 
     return 0;
 }
 
-static int32_t path_cmp(const void *key, const void *with) {
+int copy_map_terrain(Map *from, Map *to) {
+    int i, j;
+
+    for (i = 0; i < BOUNDS_Y; i++) {
+        for (j = 0; j < BOUNDS_X; j++) {
+            to->terrain[i][j] = from->terrain[i][j];
+        }
+    }
+
+    return 0;
+}
+
+int copy_map_alt(Map *from, Map *to) {
+    int i, j;
+
+    for (i = 0; i < BOUNDS_Y; i++) {
+        for (j = 0; j < BOUNDS_X; j++) {
+            to->alt[i][j] = from->alt[i][j];
+        }
+    }
+
+    return 0;
+}
+
+int copy_map(Map *from, Map *to) {
+    copy_map_alt(from, to);
+    copy_map_terrain(from, to);
+
+    return 0;
+}
+
+static int32_t path_cmp(const void *key, const void *with) 
+{
   return ((Path *) key)->cost - ((Path *) with)->cost;
 }
 
@@ -160,6 +241,63 @@ int manhattan(Point p, Point q)
     ret = abs(p.x - q.x) + abs(p.y - q.y);
     // printf("ret:%d\n", ret);
     return ret;
+}
+
+int set_stress(int in[9], Trainer_e t) 
+{
+    // printf("t:%d\n", t);
+    int i, *stress;
+    
+    switch (t) {
+        case PLAY:
+            stress = (int[]) {D_MAX, D_MAX, 20, D_MAX, 10, 10, 10, 10, 10};
+            break;
+        case RIVL:
+            stress = (int[]) {D_MAX, D_MAX, 20, D_MAX, 10, D_MAX, 10, 50, 50};
+            break;
+        case HIKR:
+             stress = (int[]) {15, 15, 15, D_MAX, 10, D_MAX, 10, 50, 50};
+            break;
+        case SWIM:
+             stress = (int[]) {D_MAX, D_MAX, D_MAX, 7, D_MAX, D_MAX, D_MAX, D_MAX, D_MAX};
+            break;
+        case WAND:
+             stress = (int[]) {D_MAX, D_MAX, D_MAX, D_MAX, D_MAX, D_MAX, D_MAX, D_MAX, D_MAX};
+            break;
+        default:
+             stress = (int[]) {D_MAX, D_MAX, D_MAX, D_MAX, D_MAX, D_MAX, D_MAX, D_MAX, D_MAX};
+            return 1;
+    }
+
+    // printf("in = ");
+    for (i = 0; i < 9; i++) {
+        in[i] = stress[i];
+        // printf("[%d]:%d\t", i, in[i]);
+    }
+    // printf("\n");
+
+    return 0;
+}
+
+Trainer* init_trainer(Trainer_e te, Point p) 
+{
+    int x, y;
+    Trainer* t = malloc(sizeof(*t));
+
+    if (t != NULL) {
+        t->e.chr = ALL_TRAINERS[te];
+        t->e.pos = p;
+        set_stress(t->e.stress, te);
+
+        t->trail = malloc(sizeof(*t->trail));
+        for (y = 0; y < BOUNDS_Y; y++) {
+            for (x = 0; x < BOUNDS_X; x++) {
+                t->trail->terrain[y][x] = 8;
+            }
+        }
+    }
+
+    return t;
 }
 
 int get_stress(Map *m, Entity *e, Point p) {
@@ -202,13 +340,14 @@ int get_stress(Map *m, Entity *e, Point p) {
             ret = D_MAX;
             break;
     }
+    // printf("Checked: %d, Stress: %d\n", m->terrain[p.y][p.x], ret);
 
     return ret;
 }
 
 static int dijkstra(Map *m, Point p, Entity *e)
 {
-    printf("Start Dijk's\n");
+    // printf("Start Dijk's\n");
     static Path path[BOUNDS_Y][BOUNDS_X], *pth;
     static int init = 0;
     heap_t h;
@@ -237,11 +376,13 @@ static int dijkstra(Map *m, Point p, Entity *e)
 
     heap_init(&h, path_cmp, NULL);
 
+    // print_map_terrain(m);
+
     // printf("fill heap\n");
-    for (y = 1; y < BOUNDS_Y; y++) {
-        for (x = 1; x < BOUNDS_X; x++) {
+    for (y = 1; y < BOUNDS_Y - 1; y++) {
+        for (x = 1; x < BOUNDS_X - 1; x++) {
             // printf("x:%d, y:%d, str:%d\t", x, y, e->stress[m->terrain[y][x]]);
-            if (e->stress[m->terrain[y][x]] != D_MAX) {
+            if (e->stress[w->terrain[y][x]] != D_MAX) {
                 path[y][x].hn = heap_insert(&h, &path[y][x]);
                 // printf("In\t\t");
             }
@@ -249,7 +390,9 @@ static int dijkstra(Map *m, Point p, Entity *e)
         // printf("\n");
     }
 
-    printf("loop start\n");
+    // print_map_terrain(m);
+
+    // printf("loop start\n");
     c = 0;
     while ((pth = heap_remove_min(&h))) {
         pth->hn = NULL;
@@ -344,9 +487,9 @@ static int dijkstra(Map *m, Point p, Entity *e)
         }
 
     }
-    printf("#less: %d\n", c);
+    // printf("#less: %d\n", c);
 
-    printf("fill cost map\n");
+    // printf("fill cost map\n");
     for (y = 0; y < BOUNDS_Y; y++) {
         for (x = 0; x < BOUNDS_X; x++) {
             // printf("X: %d, y:%d, cost:%d\n", x, y, path[y][x].cost);
@@ -401,7 +544,7 @@ int make_boundary(Map *m)
         m->terrain[0][x[0]] = P;
         m->n = x[0];
     }
-    // print_map(m);
+    // print_display(m);
     
     return 0;
 }
@@ -484,7 +627,7 @@ int spread_seed(Map *m, queue_t *qx, queue_t *qy)
 
         chr = m->terrain[y][x];
         // alt = map[x][y][1];
-        // print_map(map, 0);
+        // print_display(map, 0);
         // printf("Length: %d, Char: %c\n", queue_length(qx), chr);
 
         for (i = -1; i < 2; i++) {
@@ -538,7 +681,7 @@ int trailblaze(Map *m)
         m->terrain[m->w][1+i] = P;
         m->alt[m->w][1+i] = 25;
     }
-    l = i - 1;
+    l = i;
     // right
     while (i < BOUNDS_X) {
         // printf("%d, %d\n", m->e, 0+i);
@@ -550,7 +693,7 @@ int trailblaze(Map *m)
     j = (m->w > m->e) ? m->e : m->w;
     k = (m->w > m->e) ? m->w : m->e;
     i = 0;
-    while (j + i < k) {
+    while (j + i <= k) {
         // printf("%d, %d, %d\n", j, l, k);
         m->terrain[j+i][l] = P;
         m->alt[j+i][l] = 25;
@@ -710,16 +853,16 @@ int create_map(Map *m)
             queue_enqueue(qy, x[1]);
         }
 
-        // print_map(m);
+        // print_display(m);
         // printf("Begin spreading\n");
         spread_seed(m, qx, qy);
         // printf("Fill Map\n");
         fill_map(m);
-        // print_map(m);
+        // print_display(m);
         // printf("Add Paths\n");
         // pathfind(m, 0);
         trailblaze(m);
-        // print_map(m);
+        // print_display(m);
     } else {
         printf("There was an error generating the map");
         return 1;
@@ -759,28 +902,11 @@ int main(int argc, char *argv[])
     // printf("start\n");
     int i, j, n, s, e, w;
     int count = 0, r;
-    PC *player = malloc(sizeof(*player));
-    Hiker *hiker = malloc(sizeof(*hiker));
-    Rival *rival = malloc(sizeof(*rival));
+    PC *player = init_trainer(PLAY, (Point) {.x=5, .y=5});
+    Hiker *hiker = init_trainer(HIKR, (Point) {.x=6, .y=6});
+    Rival *rival = init_trainer(RIVL, (Point) {.x=7, .y=7});
     char display[BOUNDS_Y][BOUNDS_X][10];
-    player->e = (Entity) {
-        .chr = PLAYER, 
-        .pos = {.x = 5, .y = 5}, 
-        .stress = {D_MAX, D_MAX, 20, D_MAX, 10, 10, 10, 10, 10}
-    };
-    player->trail = malloc(sizeof(player->trail));
-    hiker->e = (Entity) {
-        .chr = HIKER, 
-        .pos = {.x = 6, .y = 6}, 
-        .stress = {15, D_MAX, 15, D_MAX, 10, D_MAX, 10, 50, 50}
-    };
-    hiker->trail = malloc(sizeof(hiker->trail));
-    rival->e = (Entity) {
-        .chr = RIVAL, 
-        .pos = {.x = 7, .y = 7}, 
-        .stress = {D_MAX, D_MAX, 20, D_MAX, 10, D_MAX, 10, 50, 50}
-    };
-    rival->trail = malloc(sizeof(rival->trail));
+
     curPos.x = 200;
     curPos.y = 200;
 
@@ -809,6 +935,10 @@ int main(int argc, char *argv[])
     world[curPos.y][curPos.x]->w = w;
     // printf("Create Starting Map\n");
     r = create_map(world[curPos.y][curPos.x]);
+    copy_map_terrain(world[curPos.y][curPos.x], player->trail);
+    copy_map_terrain(world[curPos.y][curPos.x], hiker->trail);
+    copy_map_terrain(world[curPos.y][curPos.x], rival->trail);
+    // print_trainer(player);
     // check_map(world[curPos.y][curPos.x]);
     map_chars(world[curPos.y][curPos.x], display);
     // display->terrain[PC->e.pos.y][PC->e.pos.x] = PC->e.chr;
@@ -818,7 +948,7 @@ int main(int argc, char *argv[])
     add_trainer(player, display);
     add_trainer(hiker, display);
     add_trainer(rival, display);
-    r = print_map(display);
+    r = print_display(display);
     dijkstra(player->trail, player->e.pos, &player->e);
     dijkstra(hiker->trail, hiker->e.pos, &hiker->e);
     dijkstra(rival->trail, rival->e.pos, &rival->e);
@@ -935,7 +1065,7 @@ int main(int argc, char *argv[])
         
         add_trainer(player, display);
 
-        print_map(display);
+        print_display(display);
         dijkstra(player->trail, player->e.pos, &player->e);
         dijkstra(hiker->trail, hiker->e.pos, &hiker->e);
         dijkstra(rival->trail, rival->e.pos, &rival->e);
