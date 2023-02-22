@@ -106,7 +106,13 @@ const char ALL_TERRAIN[] = {ROCK, TREE, GRASS_T, WATER, GRASS_S, GATE, PATH, MAR
 const char* ALL_COLORS[] = {COLOR_ROCK, COLOR_TREE, COLOR_GRASS_T, COLOR_WATER, COLOR_GRASS_S, COLOR_GATE, COLOR_PATH, COLOR_MART, COLOR_CENTER, COLOR_BORDER};
 const char ALL_TRAINERS[] = {PLAYER, RIVAL, HIKER, SWIMMER, WANDERER};
 const int ALTITUDE[][2] = {{50, 30}, {43, 25}, {45, 15}, {18, 0}, {45, 20}};
-const int STRESS[] = {20, 50, 15, 40, 10};
+const int STRESS[num_types_tra][9] = {
+    {D_MAX, D_MAX, 20, D_MAX, 10, 10, 10, 10, 10},
+    {D_MAX, D_MAX, 20, D_MAX, 10, D_MAX, 10, 50, 50},
+    {15, 15, 15, D_MAX, 10, D_MAX, 10, 50, 50},
+    {D_MAX, D_MAX, D_MAX, 7, D_MAX, D_MAX, D_MAX, D_MAX, D_MAX},
+    {D_MAX, D_MAX, D_MAX, D_MAX, D_MAX, D_MAX, D_MAX, D_MAX, D_MAX}
+};
 const Point center = {.x = 200, .y = 200};
 
 //sorted in {y, x}
@@ -251,7 +257,7 @@ int manhattan(Point p, Point q)
 
 int set_stress(int in[9], Trainer_e t) 
 {
-    printf("t:%d\n", t);
+    // printf("t:%d\n", t);
     int i, *stress;
     
     switch (t) {
@@ -291,7 +297,7 @@ Trainer* init_trainer(Trainer_e te, Point p)
     Trainer* t = malloc(sizeof(*t));
 
     if (t != NULL) {
-        t->e.chr = ALL_TRAINERS[te];
+        t->e.chr = te;
         t->e.pos = p;
         set_stress(t->e.stress, te);
 
@@ -504,6 +510,12 @@ static int dijkstra(Map *m, Point p, Entity *e)
     }
 
     return 0;
+}
+
+int valid_pos(Trainer_e e, Terrain_e t)
+{
+    // printf("e:%d, t:%d, strss:%d\n", e, t, STRESS[e][t]);
+    return (STRESS[e][t] != D_MAX);
 }
 
 
@@ -883,7 +895,7 @@ int create_map(Map *m)
 
 int add_trainer(Trainer *t, char map[BOUNDS_Y][BOUNDS_X][10])
 {
-    strcpy(map[t->e.pos.y][t->e.pos.x], (char[2]) {t->e.chr, '\0'});
+    strcpy(map[t->e.pos.y][t->e.pos.x], (char[2]) {ALL_TRAINERS[t->e.chr], '\0'});
 
     return 0;
 }
@@ -950,6 +962,12 @@ int main(int argc, char *argv[])
     map_chars(world[curPos.y][curPos.x], display);
     // printf("DO print\n");
     player->e.pos = (Point) {.x = world[curPos.y][curPos.x]->s, .y = BOUNDS_Y - 2};
+    while (!valid_pos(hiker->e.chr, world[curPos.y][curPos.x]->terrain[hiker->e.pos.y][hiker->e.pos.x])) {
+        hiker->e.pos = (Point) {.x = 2 + (rand() % BOUNDS_X - 3), 2 + (rand() % BOUNDS_Y - 3)};
+    }
+    while (!valid_pos(rival->e.chr, world[curPos.y][curPos.x]->terrain[rival->e.pos.y][rival->e.pos.x])) {
+        rival->e.pos = (Point) {.x = 2 + (rand() % BOUNDS_X - 3), 2 + (rand() % BOUNDS_Y - 3)};
+    }
     add_trainer(player, display);
     add_trainer(hiker, display);
     add_trainer(rival, display);
