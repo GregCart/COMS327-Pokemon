@@ -21,6 +21,8 @@
 #define MART    'M'
 #define CENTER  'C'
 #define PATH    '#'
+#define GATE    '#'
+#define BORDER    '%'
 
 #define COLOR_RESET "\x1b[0m"
 #define COLOR_ROCK  "\x1b[37m"
@@ -31,6 +33,8 @@
 #define COLOR_MART  "\x1b[91m"
 #define COLOR_CENTER  "\x1b[93m"
 #define COLOR_PATH  "\x1b[33m"
+#define COLOR_GATE  "\x1b[33m"
+#define COLOR_BORDER  "\x1b[37m"
 
 #define PLAYER  '@'
 #define RIVAL   'R'
@@ -45,9 +49,11 @@ typedef enum terrain_e {
     GT,
     W,
     GS,
+    G,
     P,
     M,
     C,
+    B,
     num_types_ter
 } Terrain_e;
 
@@ -96,8 +102,8 @@ typedef Trainer Swimmer;
 typedef Trainer Wanderer;
 
 const char TERRAIN[] = {ROCK, TREE, GRASS_T, WATER, GRASS_S};
-const char ALL_TERRAIN[] = {ROCK, TREE, GRASS_T, WATER, GRASS_S, PATH, MART, CENTER};
-const char* ALL_COLORS[] = {COLOR_ROCK, COLOR_TREE, COLOR_GRASS_T, COLOR_WATER, COLOR_GRASS_S, COLOR_PATH, COLOR_MART, COLOR_CENTER};
+const char ALL_TERRAIN[] = {ROCK, TREE, GRASS_T, WATER, GRASS_S, GATE, PATH, MART, CENTER, BORDER};
+const char* ALL_COLORS[] = {COLOR_ROCK, COLOR_TREE, COLOR_GRASS_T, COLOR_WATER, COLOR_GRASS_S, COLOR_GATE, COLOR_PATH, COLOR_MART, COLOR_CENTER, COLOR_BORDER};
 const char ALL_TRAINERS[] = {PLAYER, RIVAL, HIKER, SWIMMER, WANDERER};
 const int ALTITUDE[][2] = {{50, 30}, {43, 25}, {45, 15}, {18, 0}, {45, 20}};
 const int STRESS[] = {20, 50, 15, 40, 10};
@@ -245,7 +251,7 @@ int manhattan(Point p, Point q)
 
 int set_stress(int in[9], Trainer_e t) 
 {
-    // printf("t:%d\n", t);
+    printf("t:%d\n", t);
     int i, *stress;
     
     switch (t) {
@@ -272,7 +278,7 @@ int set_stress(int in[9], Trainer_e t)
     // printf("in = ");
     for (i = 0; i < 9; i++) {
         in[i] = stress[i];
-        // printf("[%d]:%d\t", i, in[i]);
+        // printf("[%d]:%d  ", i, in[i]);
     }
     // printf("\n");
 
@@ -305,11 +311,7 @@ int get_stress(Map *m, Entity *e, Point p) {
 
     switch (m->terrain[p.y][p.x]) {
         case R:
-            if (m->alt[p.y][p.x] < 99) {
-                ret = e->stress[0];
-            } else {
-                ret = D_MAX;
-            }
+            ret = e->stress[0];
             break;
         case T:
             ret = e->stress[1];
@@ -323,18 +325,20 @@ int get_stress(Map *m, Entity *e, Point p) {
         case GS:
             ret = e->stress[4];
             break;
+        case G:
+            ret = e->stress[5];
+            break;
         case P:
-            if (p.x == 0 || p.x == BOUNDS_X - 1 || p.y == 0 || p.y == BOUNDS_Y - 1) {
-                ret = e->stress[5];
-            } else {
-                ret = e->stress[6];
-            }
+            ret = e->stress[6];
             break;
         case M:
             ret = e->stress[7];
             break;
         case C:
             ret = e->stress[8];
+            break;
+        case B:
+            ret = D_MAX;
             break;
         default:
             ret = D_MAX;
@@ -381,14 +385,16 @@ static int dijkstra(Map *m, Point p, Entity *e)
     // printf("fill heap\n");
     for (y = 1; y < BOUNDS_Y - 1; y++) {
         for (x = 1; x < BOUNDS_X - 1; x++) {
-            // printf("x:%d, y:%d, str:%d\t", x, y, e->stress[m->terrain[y][x]]);
-            if (e->stress[w->terrain[y][x]] != D_MAX) {
+            // if (m->terrain[y][x] == M || m->terrain[y][x] == C)
+            //     printf("x:%d, y:%d, str:%d  ", x, y, e->stress[m->terrain[y][x]]);
+            if (get_stress(w, e, (Point){.x=x, .y=y}) != D_MAX) {
                 path[y][x].hn = heap_insert(&h, &path[y][x]);
                 // printf("In\t\t");
             }
         }
         // printf("\n");
     }
+    // printf("\n");
 
     // print_map_terrain(m);
 
@@ -510,7 +516,7 @@ int make_boundary(Map *m)
     //bounds X
     for (i = 0; i < BOUNDS_X; i++) {
         m->terrain[0][i] = R;
-        m->terrain[BOUNDS_Y-1][i] = R;
+        m->terrain[BOUNDS_Y-1][i] = B;
         m->alt[0][i] = 99;
         m->alt[BOUNDS_Y-1][i] = 99;
     }
@@ -518,7 +524,7 @@ int make_boundary(Map *m)
     //bounds Y
     for (i = 0; i < BOUNDS_Y; i++) {
         m->terrain[i][0] = R;
-        m->terrain[i][BOUNDS_X-1] = R;
+        m->terrain[i][BOUNDS_X-1] = B;
         m->alt[i][0] = 99;
         m->alt[i][BOUNDS_X-1] = 99;
     }
@@ -526,22 +532,22 @@ int make_boundary(Map *m)
     //set paths
     if (curPos.x > 2) {
         m->alt[x[3]][0] = 25;
-        m->terrain[x[3]][0] = P;
+        m->terrain[x[3]][0] = G;
         m->w = x[3];
     }
     if (curPos.x < WORLD_SIZE - 1) {
         m->alt[x[2]][BOUNDS_X-1] = 25;
-        m->terrain[x[2]][BOUNDS_X-1] = P;
+        m->terrain[x[2]][BOUNDS_X-1] = G;
         m->e = x[2]-1;
     }
     if (curPos.y < WORLD_SIZE - 1) {
         m->alt[BOUNDS_Y-1][x[1]] = 25;
-        m->terrain[BOUNDS_Y-1][x[1]] = P;
+        m->terrain[BOUNDS_Y-1][x[1]] = G;
         m->s = x[1];
     }
     if (curPos.y > 1) {
         m->alt[0][x[0]] = 25;
-        m->terrain[0][x[0]] = P;
+        m->terrain[0][x[0]] = G;
         m->n = x[0];
     }
     // print_display(m);
@@ -938,11 +944,10 @@ int main(int argc, char *argv[])
     copy_map_terrain(world[curPos.y][curPos.x], player->trail);
     copy_map_terrain(world[curPos.y][curPos.x], hiker->trail);
     copy_map_terrain(world[curPos.y][curPos.x], rival->trail);
+    // print_map_terrain(player->trail);
     // print_trainer(player);
     // check_map(world[curPos.y][curPos.x]);
     map_chars(world[curPos.y][curPos.x], display);
-    // display->terrain[PC->e.pos.y][PC->e.pos.x] = PC->e.chr;
-    // printf("x:%d, y:%d\n", PC->e.pos.x, PC->e.pos.y);
     // printf("DO print\n");
     player->e.pos = (Point) {.x = world[curPos.y][curPos.x]->s, .y = BOUNDS_Y - 2};
     add_trainer(player, display);
@@ -952,7 +957,7 @@ int main(int argc, char *argv[])
     dijkstra(player->trail, player->e.pos, &player->e);
     dijkstra(hiker->trail, hiker->e.pos, &hiker->e);
     dijkstra(rival->trail, rival->e.pos, &rival->e);
-    print_cost_map(player->trail);
+    // print_cost_map(player->trail);
     print_cost_map(hiker->trail);
     print_cost_map(rival->trail);
     while (r == 0) {
@@ -1067,11 +1072,11 @@ int main(int argc, char *argv[])
 
         print_display(display);
         dijkstra(player->trail, player->e.pos, &player->e);
-        dijkstra(hiker->trail, hiker->e.pos, &hiker->e);
-        dijkstra(rival->trail, rival->e.pos, &rival->e);
+        // dijkstra(hiker->trail, hiker->e.pos, &hiker->e);
+        // dijkstra(rival->trail, rival->e.pos, &rival->e);
         print_cost_map(player->trail);
-        print_cost_map(hiker->trail);
-        print_cost_map(rival->trail);
+        // print_cost_map(hiker->trail);
+        // print_cost_map(rival->trail);
     }
     
     for (i = 0; i < WORLD_SIZE; i++) {
