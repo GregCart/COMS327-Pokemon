@@ -177,3 +177,99 @@ Author: Greg <gcartcca2n@gmail.com>
 Date:   Tue Feb 7 23:26:53 2023 -0600
 
     fixed makefile again
+
+commit a8444869ab2175cfcde4ef700010ecd823c944fc
+Author: Greg <gcartcca2n@gmail.com>
+Date:   Tue Feb 7 23:33:18 2023 -0600
+
+    fixed package again
+
+commit 30dc92f35916e0dc2a6ceeef1d3ff270255f5e73
+Author: Greg <gcartcca2n@gmail.com>
+Date:   Wed Feb 8 23:47:40 2023 -0600
+
+    started on dijkstra's algorithm
+
+commit 2fbf04d94e6a77045c5674d8298a506abc9e9d10
+Author: Greg <gcartcca2n@gmail.com>
+Date:   Thu Feb 9 01:28:01 2023 -0600
+
+    finnished 1st dijkstras iteration
+
+commit ff74e257ebf023fafc3dfb9de4e4212ffa7c9980
+Author: Greg <gcartcca2n@gmail.com>
+Date:   Thu Feb 9 13:08:32 2023 -0600
+
+    erase dijk, need a heap
+
+commit 75d40d971a967dd9dd7fc08132406242e99e9daa
+Author: Greg <gcartcca2n@gmail.com>
+Date:   Sat Feb 11 13:42:47 2023 -0600
+
+    finnished dijkstras, but can't test
+
+commit 618509825751cbc4d157f8a97be4a6b9025af7d0
+Author: Greg <gcartcca2n@gmail.com>
+Date:   Sat Feb 11 20:32:15 2023 -0600
+
+    it works?
+
+commit 069c58f66001fd3d557396388f95f8b67e08c851
+Author: Greg <gcartcca2n@gmail.com>
+Date:   Sat Feb 11 20:37:13 2023 -0600
+
+    fixed make
+
+commit 5443eb6b908eeccf3b10d9f701d4ae391afc9fd7
+Author: Greg <gcartcca2n@gmail.com>
+Date:   Sun Feb 12 16:54:35 2023 -0600
+
+    dispaly works , but dikjs segfaults always fsr
+
+commit a1bc854eee4b55c1fcd750cd819eabb305afa6fb
+Author: Greg <gcartcca2n@gmail.com>
+Date:   Thu Feb 16 12:47:56 2023 -0600
+
+    1st map works
+
+commit 4cfbd1a0d0b04c7c2dad36f8f95851d8222d2f24
+Author: Greg <gcartcca2n@gmail.com>
+Date:   Fri Feb 17 00:42:58 2023 -0600
+
+    refactored to work with structs, need to fix dikjs
+
+commit ce25c36a40fd95dd1e7e9f1c736dac6f891e0d67
+Author: Greg <gcartcca2n@gmail.com>
+Date:   Mon Feb 20 19:04:30 2023 -0600
+
+    add hiker and rival
+
+commit d6822cdc26839fd013576995b5ac0fe11b555242
+Author: Greg <gcartcca2n@gmail.com>
+Date:   Mon Feb 20 19:11:01 2023 -0600
+
+    DOESNT WORK
+
+commit c4a12fcd70008e43ade66a28f884260d9b00c743
+Author: Greg <gcartcca2n@gmail.com>
+Date:   Tue Feb 21 00:56:31 2023 -0600
+
+    fixed part of dikjs
+
+commit 1709630476ef8055af5106d885dbeafd8ae59a35
+Author: Greg <gcartcca2n@gmail.com>
+Date:   Tue Feb 21 00:57:17 2023 -0600
+
+    update gitignore
+
+commit c7f015bbf6f4988696e856d0587e70a7d77e0fc5
+Author: Greg <gcartcca2n@gmail.com>
+Date:   Tue Feb 21 20:25:28 2023 -0600
+
+    1.03 ready
+
+commit d8a20f49e78387a4d5456869dc3891e1c9a0bac1
+Author: Greg <gcartcca2n@gmail.com>
+Date:   Tue Feb 21 23:24:49 2023 -0600
+
+    safe hiker and rival gen

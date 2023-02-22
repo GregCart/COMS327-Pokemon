@@ -12,6 +12,13 @@ HW2:
     No map is generated until it is visited.
     World borders have no exit on the side that borders the world edge.
 
+HW3:
+    Can generate starting map with no uissues and display proper maps
+    NOTE:
+        Displays Hiker then Rival Maps
+    Malloc error still present.
+    Program crashes if you try to move. Several TAs as well as the professor haven't been able to identify the cause.
+
 To build and run: make
 TO clean: make clean
 To package into tarball: make package
