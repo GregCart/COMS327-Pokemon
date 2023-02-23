@@ -312,6 +312,14 @@ Trainer* init_trainer(Trainer_e te, Point p)
     return t;
 }
 
+Point init_point(int x, int y)
+{
+    Point q;
+    q.x = x;
+    q.y = y;
+    return q;
+}
+
 int get_stress(Map *m, Entity *e, Point p) {
     int ret;
 
@@ -976,8 +984,8 @@ int main(int argc, char *argv[])
     dijkstra(hiker->trail, hiker->e.pos, &hiker->e);
     dijkstra(rival->trail, rival->e.pos, &rival->e);
     // print_cost_map(player->trail);
-    print_cost_map(hiker->trail);
-    print_cost_map(rival->trail);
+    // print_cost_map(hiker->trail);
+    // print_cost_map(rival->trail);
     while (r == 0) {
         char in[15];
         char c;
@@ -993,23 +1001,23 @@ int main(int argc, char *argv[])
         printf("check moves\n");
         switch (c) {
             case 'n':
-                curPos.y += 1;
                 player->e.pos = (Point) {.x = world[curPos.y][curPos.x]->n, .y = BOUNDS_Y - 2 };
+                curPos.y += 1;
                 count++;
                 break;
             case 's':
+                player->e.pos = (Point) {.x = world[curPos.y][curPos.x]->s, .y = 1 };
                 curPos.y -= 1;
-                player->e.pos = (Point) {.x = world[curPos.y][curPos.x]->s, .y = 1 };    //creashes here fsr
                 count++;
                 break;
             case 'e':
-                curPos.x += 1;
                 player->e.pos = (Point) {.x = BOUNDS_X - 2, .y = world[curPos.y][curPos.x]->e };
+                curPos.x += 1;
                 count++;
                 break;
             case 'w':
-                curPos.x -= 1;
                 player->e.pos = (Point) {.x = 1, .y = world[curPos.y][curPos.x]->w };
+                curPos.x -= 1;
                 count++;
                 break;
             case 'f':
@@ -1083,16 +1091,27 @@ int main(int argc, char *argv[])
             world[curPos.y][curPos.x]->w = w;
             // check_map(world[curPos.y][curPos.x]);
             r = create_map(world[curPos.y][curPos.x]);
-            map_chars(world[curPos.y][curPos.x], display);
         }
+
+        map_chars(world[curPos.y][curPos.x], display);
+
+        while (!valid_pos(hiker->e.chr, world[curPos.y][curPos.x]->terrain[hiker->e.pos.y][hiker->e.pos.x])) {
+            hiker->e.pos = (Point) {.x = 2 + (rand() % BOUNDS_X - 3), 2 + (rand() % BOUNDS_Y - 3)};
+        }
+        while (!valid_pos(rival->e.chr, world[curPos.y][curPos.x]->terrain[rival->e.pos.y][rival->e.pos.x])) {
+            rival->e.pos = (Point) {.x = 2 + (rand() % BOUNDS_X - 3), 2 + (rand() % BOUNDS_Y - 3)};
+        }
+
         
         add_trainer(player, display);
+        add_trainer(hiker, display);
+        add_trainer(rival, display);
 
         print_display(display);
         dijkstra(player->trail, player->e.pos, &player->e);
-        // dijkstra(hiker->trail, hiker->e.pos, &hiker->e);
-        // dijkstra(rival->trail, rival->e.pos, &rival->e);
-        print_cost_map(player->trail);
+        dijkstra(hiker->trail, hiker->e.pos, &hiker->e);
+        dijkstra(rival->trail, rival->e.pos, &rival->e);
+        // print_cost_map(player->trail);
         // print_cost_map(hiker->trail);
         // print_cost_map(rival->trail);
     }

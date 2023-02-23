@@ -25,3 +25,5 @@ lib/heap.o
 lib/queue.o
 vgcore.*
 *.nfs*
+hist.txt
+CHANGELOG
