@@ -320,7 +320,8 @@ Point init_point(int x, int y)
     return q;
 }
 
-int get_stress(Map *m, Entity *e, Point p) {
+int get_stress(Map *m, Entity *e, Point p) 
+{
     int ret;
 
     switch (m->terrain[p.y][p.x]) {
@@ -361,6 +362,11 @@ int get_stress(Map *m, Entity *e, Point p) {
     // printf("Checked: %d, Stress: %d\n", m->terrain[p.y][p.x], ret);
 
     return ret;
+}
+
+int find_stress(Map *m, Entity *e, Point p)
+{
+    return STRESS[e->chr][m->terrain[p.y][p.x]];
 }
 
 static int dijkstra(Map *m, Point p, Entity *e)
@@ -416,12 +422,13 @@ static int dijkstra(Map *m, Point p, Entity *e)
     c = 0;
     while ((pth = heap_remove_min(&h))) {
         pth->hn = NULL;
+        // printf("get:%d, find:%d\n", get_stress(w, e, (Point) {.x=pth->pos[1], .y=pth->pos[0]}), find_stress(w, e, (Point) {.x=pth->pos[1], .y=pth->pos[0]}));
 
         // printf("check above\n");//above
         pnt = (Point) {.x = pth->pos[1], .y = pth->pos[0] - 1};
         if ((path[pnt.y][pnt.x].hn) && w->alt[pnt.y][pnt.x] < 99 
-            && (path[pnt.y][pnt.x].cost > ((pth->cost + get_stress(w, e, (Point) {.x=pth->pos[1], .y=pth->pos[0]}))))) {
-                path[pnt.y][pnt.x].cost = pth->cost + get_stress(w, e, (Point) {.x=pth->pos[1], .y=pth->pos[0]});
+            && (path[pnt.y][pnt.x].cost > ((pth->cost + find_stress(w, e, (Point) {.x=pth->pos[1], .y=pth->pos[0]}))))) {
+                path[pnt.y][pnt.x].cost = pth->cost + find_stress(w, e, (Point) {.x=pth->pos[1], .y=pth->pos[0]});
                 //from stuff for drawing nodes, don't need for part 3
                 path[pnt.y][pnt.x].from[0] = pth->pos[0];
                 path[pnt.y][pnt.x].from[1] = pth->pos[1];
@@ -431,8 +438,8 @@ static int dijkstra(Map *m, Point p, Entity *e)
         // printf("check TL\n");
         pnt = (Point) {.x = pth->pos[1] - 1, .y = pth->pos[0] - 1};
         if ((path[pnt.y][pnt.x].hn) && w->alt[pnt.y][pnt.x] < 99 
-            && (path[pnt.y][pnt.x].cost > ((pth->cost + get_stress(w, e, (Point) {.x=pth->pos[1], .y=pth->pos[0]}))))) {    //TL
-                path[pnt.y][pnt.x].cost = pth->cost + get_stress(w, e, (Point) {.x=pth->pos[1], .y=pth->pos[0]});
+            && (path[pnt.y][pnt.x].cost > ((pth->cost + find_stress(w, e, (Point) {.x=pth->pos[1], .y=pth->pos[0]}))))) {    //TL
+                path[pnt.y][pnt.x].cost = pth->cost + find_stress(w, e, (Point) {.x=pth->pos[1], .y=pth->pos[0]});
                 //from stuff for drawing nodes, don't need for part 3
                 path[pnt.y][pnt.x].from[0] = pth->pos[0];
                 path[pnt.y][pnt.x].from[1] = pth->pos[1];
@@ -442,8 +449,8 @@ static int dijkstra(Map *m, Point p, Entity *e)
         // printf("check TR\n");
         pnt = (Point) {.x = pth->pos[1] + 1, .y = pth->pos[0] - 1};
         if ((path[pnt.y][pnt.x].hn) && w->alt[pnt.y][pnt.x] < 99
-            && (path[pnt.y][pnt.x].cost > ((pth->cost + get_stress(w, e, (Point) {.x=pth->pos[1], .y=pth->pos[0]}))))) {    //TR
-                path[pnt.y][pnt.x].cost = pth->cost + get_stress(w, e, (Point) {.x=pth->pos[1], .y=pth->pos[0]});
+            && (path[pnt.y][pnt.x].cost > ((pth->cost + find_stress(w, e, (Point) {.x=pth->pos[1], .y=pth->pos[0]}))))) {    //TR
+                path[pnt.y][pnt.x].cost = pth->cost + find_stress(w, e, (Point) {.x=pth->pos[1], .y=pth->pos[0]});
                 //from stuff for drawing nodes, don't need for part 3
                 path[pnt.y][pnt.x].from[0] = pth->pos[0];
                 path[pnt.y][pnt.x].from[1] = pth->pos[1];
@@ -453,8 +460,8 @@ static int dijkstra(Map *m, Point p, Entity *e)
         // printf("check left\n");
         pnt = (Point) {.x = pth->pos[1] - 1, .y = pth->pos[0]};
         if ((path[pnt.y][pnt.x].hn) && w->alt[pnt.y][pnt.x] < 99
-            && (path[pnt.y][pnt.x].cost > ((pth->cost + get_stress(w, e, (Point) {.x=pth->pos[1], .y=pth->pos[0]}))))) {    //left
-                path[pnt.y][pnt.x].cost = pth->cost + get_stress(w, e, (Point) {.x=pth->pos[1], .y=pth->pos[0]});
+            && (path[pnt.y][pnt.x].cost > ((pth->cost + find_stress(w, e, (Point) {.x=pth->pos[1], .y=pth->pos[0]}))))) {    //left
+                path[pnt.y][pnt.x].cost = pth->cost + find_stress(w, e, (Point) {.x=pth->pos[1], .y=pth->pos[0]});
                 //from stuff for drawing nodes, don't need for part 3
                 path[pnt.y][pnt.x].from[0] = pth->pos[0];
                 path[pnt.y][pnt.x].from[1] = pth->pos[1];
@@ -464,8 +471,8 @@ static int dijkstra(Map *m, Point p, Entity *e)
         // printf("check right\n");
         pnt = (Point) {.x = pth->pos[1] + 1, .y = pth->pos[0]};
         if ((path[pnt.y][pnt.x].hn) && w->alt[pnt.y][pnt.x] < 99
-            && (path[pnt.y][pnt.x].cost > ((pth->cost + get_stress(w, e, (Point) {.x=pth->pos[1], .y=pth->pos[0]}))))) {    //right
-                path[pnt.y][pnt.x].cost = pth->cost + get_stress(w, e, (Point) {.x=pth->pos[1], .y=pth->pos[0]});
+            && (path[pnt.y][pnt.x].cost > ((pth->cost + find_stress(w, e, (Point) {.x=pth->pos[1], .y=pth->pos[0]}))))) {    //right
+                path[pnt.y][pnt.x].cost = pth->cost + find_stress(w, e, (Point) {.x=pth->pos[1], .y=pth->pos[0]});
                 //from stuff for drawing nodes, don't need for part 3
                 path[pnt.y][pnt.x].from[0] = pth->pos[0];
                 path[pnt.y][pnt.x].from[1] = pth->pos[1];
@@ -475,8 +482,8 @@ static int dijkstra(Map *m, Point p, Entity *e)
         // printf("check bottom\n");
         pnt = (Point) {.x = pth->pos[1], .y = pth->pos[0] + 1};
         if ((path[pnt.y][pnt.x].hn) && w->alt[pnt.y][pnt.x] < 99
-            && (path[pnt.y][pnt.x].cost > ((pth->cost + get_stress(w, e, (Point) {.x=pth->pos[1], .y=pth->pos[0]}))))) {    //bottom
-                path[pnt.y][pnt.x].cost = pth->cost + get_stress(w, e, (Point) {.x=pth->pos[1], .y=pth->pos[0]});
+            && (path[pnt.y][pnt.x].cost > ((pth->cost + find_stress(w, e, (Point) {.x=pth->pos[1], .y=pth->pos[0]}))))) {    //bottom
+                path[pnt.y][pnt.x].cost = pth->cost + find_stress(w, e, (Point) {.x=pth->pos[1], .y=pth->pos[0]});
                 //from stuff for drawing nodes, don't need for part 3
                 path[pnt.y][pnt.x].from[0] = pth->pos[0];
                 path[pnt.y][pnt.x].from[1] = pth->pos[1];
@@ -486,8 +493,8 @@ static int dijkstra(Map *m, Point p, Entity *e)
         // printf("check BL\n");
         pnt = (Point) {.x = pth->pos[1] - 1, .y = pth->pos[0] + 1};
         if ((path[pnt.y][pnt.x].hn) && w->alt[pnt.y][pnt.x] < 99
-            && (path[pnt.y][pnt.x].cost > ((pth->cost + get_stress(w, e, (Point) {.x=pth->pos[1], .y=pth->pos[0]}))))) {    //BL
-                path[pnt.y][pnt.x].cost = pth->cost + get_stress(w, e, (Point) {.x=pth->pos[1], .y=pth->pos[0]});
+            && (path[pnt.y][pnt.x].cost > ((pth->cost + find_stress(w, e, (Point) {.x=pth->pos[1], .y=pth->pos[0]}))))) {    //BL
+                path[pnt.y][pnt.x].cost = pth->cost + find_stress(w, e, (Point) {.x=pth->pos[1], .y=pth->pos[0]});
                 //from stuff for drawing nodes, don't need for part 3
                 path[pnt.y][pnt.x].from[0] = pth->pos[0];
                 path[pnt.y][pnt.x].from[1] = pth->pos[1];
@@ -497,8 +504,8 @@ static int dijkstra(Map *m, Point p, Entity *e)
         // printf("check BR\n");
         pnt = (Point) {.x = pth->pos[1] + 1, .y = pth->pos[0] + 1};
         if ((path[pnt.y][pnt.x].hn) && w->alt[pnt.y][pnt.x] < 99
-            && (path[pnt.y][pnt.x].cost > ((pth->cost + get_stress(w, e, (Point) {.x=pth->pos[1], .y=pth->pos[0]}))))) {    //BR
-                path[pnt.y][pnt.x].cost = pth->cost + get_stress(w, e, (Point) {.x=pth->pos[1], .y=pth->pos[0]});
+            && (path[pnt.y][pnt.x].cost > ((pth->cost + find_stress(w, e, (Point) {.x=pth->pos[1], .y=pth->pos[0]}))))) {    //BR
+                path[pnt.y][pnt.x].cost = pth->cost + find_stress(w, e, (Point) {.x=pth->pos[1], .y=pth->pos[0]});
                 //from stuff for drawing nodes, don't need for part 3
                 path[pnt.y][pnt.x].from[0] = pth->pos[0];
                 path[pnt.y][pnt.x].from[1] = pth->pos[1];
