@@ -19,7 +19,7 @@ test: gen_world
 	./world_generator
 
 test-v: gen_world
-	valgrind --leak-check=full ./world_generator -f --log-file=valgrind-log.txt
+	valgrind --leak-check=full --log-file=valgrind-log.txt ./world_generator 
 
 
 clean:

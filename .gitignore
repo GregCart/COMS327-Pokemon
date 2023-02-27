@@ -27,5 +27,8 @@ vgcore.*
 *.nfs*
 hist.txt
 CHANGELOG
+*/hist.txt
+*/CHANGELOG
 hist.txt
 CHANGELOG
+valgrind-log.txt
