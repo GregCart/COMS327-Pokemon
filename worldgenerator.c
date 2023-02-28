@@ -37,27 +37,27 @@
 #define COLOR_BORDER  "\x1b[37m"
 
 #define PLAYER  '@'
-#define HIKER   'H'
-#define RIVAL   'R'
-#define PACER   'P'
-#define WANDERER    'W'
-#define SENTRY  'S'
-#define EXPLORER    'E'
-#define SWIMMER 'M'
+#define HIKER   'h'
+#define RIVAL   'r'
+#define PACER   'p'
+#define WANDERER    'w'
+#define SENTRY  's'
+#define EXPLORER    'e'
+#define SWIMMER 'm'
 
 
 //enums
 typedef enum terrain_e {
-    R,
-    T,
+    RCK,
+    TRE,
     GT,
-    W,
+    WTR,
     GS,
-    G,
-    P,
-    M,
-    C,
-    B,
+    GTE,
+    PTH,
+    MRT,
+    CTR,
+    BDR,
     num_types_ter
 } Terrain_e;
 
@@ -328,7 +328,7 @@ static int dijkstra(Map *m, Point p, Entity *e)
     // printf("fill heap\n");
     for (y = 1; y < BOUNDS_Y - 1; y++) {
         for (x = 1; x < BOUNDS_X - 1; x++) {
-            // if (m->terrain[y][x] == M || m->terrain[y][x] == C)
+            // if (m->terrain[y][x] == MRT || m->terrain[y][x] == CTR)
             //     printf("x:%d, y:%d, str:%d  ", x, y, STRESS[e.chr][m->terrain[y][x]]);
             if (find_stress(w, e, (Point){.x=x, .y=y}) != D_MAX) {
                 path[y][x].hn = heap_insert(&h, &path[y][x]);
@@ -448,27 +448,12 @@ static int dijkstra(Map *m, Point p, Entity *e)
     return 0;
 }
 
-//initializers
-Trainer* init_trainer(Trainer_e te, Point p) 
-{
-    int x, y;
-    Trainer* t = malloc(sizeof(*t));
-
-    if (t != NULL) {
-        t->e.chr = te;
-        t->e.pos = p;
-        
-    }
-
-    return t;
-}
-
 //checkers
 int valid_pos_list(Trainer_e e, Terrain_e t, int i)
 {
     // printf("e:%d, t:%d\n", e, t);
     // printf("\tstrss:%d\n", STRESS[e][t]);
-    if (t == G || t == B || t == M || t == C) {
+    if (t == GTE || t == BDR || t == MRT || t == CTR) {
         return 1;
     }
 
@@ -482,7 +467,7 @@ int valid_pos_list(Trainer_e e, Terrain_e t, int i)
             break;
         case PACR:
         case WAND:
-            return (t == startTer[i] && t != W);
+            return (t == startTer[i] && t != WTR);
             break;
         case SENT:
             return 0;
@@ -497,7 +482,7 @@ int valid_pos(Trainer_e e, Terrain_e t)
 {
     // printf("e:%d, t:%d\n", e, t);
     // printf("\tstrss:%d\n", STRESS[e][t]);
-    if (t == G || t == B || t == M || t == C) {
+    if (t == GTE || t == BDR || t == MRT || t == CTR) {
         return 1;
     }
     return (STRESS[e][t] != D_MAX);
@@ -510,7 +495,6 @@ int check_map(Map *m)
 
     return 0;
 }
-
 
 //getters
 int find_stress(Map *m, Entity *e, Point p)
@@ -569,16 +553,16 @@ int make_boundary(Map *m)
     
     //bounds X
     for (i = 0; i < BOUNDS_X; i++) {
-        m->terrain[0][i] = B;
-        m->terrain[BOUNDS_Y-1][i] = B;
+        m->terrain[0][i] = BDR;
+        m->terrain[BOUNDS_Y-1][i] = BDR;
         m->alt[0][i] = 99;
         m->alt[BOUNDS_Y-1][i] = 99;
     }
 
     //bounds Y
     for (i = 0; i < BOUNDS_Y; i++) {
-        m->terrain[i][0] = B;
-        m->terrain[i][BOUNDS_X-1] = B;
+        m->terrain[i][0] = BDR;
+        m->terrain[i][BOUNDS_X-1] = BDR;
         m->alt[i][0] = 99;
         m->alt[i][BOUNDS_X-1] = 99;
     }
@@ -586,22 +570,22 @@ int make_boundary(Map *m)
     //set paths
     if (curPos.x > 2) {
         m->alt[x[3]][0] = 25;
-        m->terrain[x[3]][0] = G;
+        m->terrain[x[3]][0] = GTE;
         m->w = x[3];
     }
     if (curPos.x < WORLD_SIZE - 1) {
         m->alt[x[2]][BOUNDS_X-1] = 25;
-        m->terrain[x[2]][BOUNDS_X-1] = G;
+        m->terrain[x[2]][BOUNDS_X-1] = GTE;
         m->e = x[2]-1;
     }
     if (curPos.y < WORLD_SIZE - 1) {
         m->alt[BOUNDS_Y-1][x[1]] = 25;
-        m->terrain[BOUNDS_Y-1][x[1]] = G;
+        m->terrain[BOUNDS_Y-1][x[1]] = GTE;
         m->s = x[1];
     }
     if (curPos.y > 1) {
         m->alt[0][x[0]] = 25;
-        m->terrain[0][x[0]] = G;
+        m->terrain[0][x[0]] = GTE;
         m->n = x[0];
     }
     // print_display(m);
@@ -624,18 +608,18 @@ int add_terrain(Map *m, int x, int y, Terrain_e c)
         } else if (*alt > 43) {
             int tmp = (rand() % 3);
             if (tmp == 1) {
-                *chr = T;
+                *chr = TRE;
             } else if(tmp == 0) {
-                *chr = R;
+                *chr = RCK;
             } else {
                 *chr = GS;
             }
         } else if (*alt > 30) {
             int tmp = (rand() % 4);
             if (tmp == 1) {
-                *chr = T;
+                *chr = TRE;
             } else if(tmp == 0) {
-                *chr = R;
+                *chr = RCK;
             } else if (tmp == 2) {
                 *chr = GT;
             } else {
@@ -644,7 +628,7 @@ int add_terrain(Map *m, int x, int y, Terrain_e c)
         } else if (*alt > 25) {
             int tmp = (rand() % 3);
             if (tmp == 1) {
-                *chr = T;
+                *chr = TRE;
             } else if (tmp == 2) {
                 *chr = GT;
             } else {
@@ -662,10 +646,10 @@ int add_terrain(Map *m, int x, int y, Terrain_e c)
             if (tmp == 1) {
                 *chr = GT;
             } else {
-                *chr = W;
+                *chr = WTR;
             }
         } else {
-            *chr = W;
+            *chr = WTR;
         }
     }
 
@@ -738,14 +722,14 @@ int trailblaze(Map *m)
     //left
     for (i = 0; i < u; i++) {
         // printf("%d, %d\n", m->w, m->w+i);
-        m->terrain[m->w][1+i] = P;
+        m->terrain[m->w][1+i] = PTH;
         m->alt[m->w][1+i] = 25;
     }
     l = i;
     // right
     while (i < BOUNDS_X) {
         // printf("%d, %d\n", m->e, 0+i);
-        m->terrain[m->e][BOUNDS_X-1+i] = P;
+        m->terrain[m->e][BOUNDS_X-1+i] = PTH;
         m->alt[m->e][BOUNDS_X-1+i] = 25;
         i++;
     }
@@ -755,7 +739,7 @@ int trailblaze(Map *m)
     i = 0;
     while (j + i <= k) {
         // printf("%d, %d, %d\n", j, l, k);
-        m->terrain[j+i][l] = P;
+        m->terrain[j+i][l] = PTH;
         m->alt[j+i][l] = 25;
         i++;
     }
@@ -763,9 +747,9 @@ int trailblaze(Map *m)
     //top
     b = 1;
     // printf("%d, %d\n", 0 + b, m->n);
-    while (m->terrain[0 + b][m->n] != P) {
+    while (m->terrain[0 + b][m->n] != PTH) {
         // printf("%d, %d\n", 0 + m, m);
-        m->terrain[0+b][m->n] = P;
+        m->terrain[0+b][m->n] = PTH;
         m->alt[0+b][m->n] = 25;
         b++;
     }
@@ -773,9 +757,9 @@ int trailblaze(Map *m)
     //bottom
     b = 1;
     // printf("%d, %d\n", BOUNDS_Y-1 - b, m->s);
-    while (m->terrain[BOUNDS_Y-1 - b][m->s] != P) {
+    while (m->terrain[BOUNDS_Y-1 - b][m->s] != PTH) {
         // printf("%d, %d\n", BOUNDS_Y-1 - b, b);
-        m->terrain[BOUNDS_Y-1-b][m->s] = P;
+        m->terrain[BOUNDS_Y-1-b][m->s] = PTH;
         m->alt[BOUNDS_Y-1-b][m->s] = 25;
         b++;
     }
@@ -791,47 +775,47 @@ int trailblaze(Map *m)
     if ((rand() % 100) < p) {
         if(j >= 14) j -= 2;
         //Add PokemartMart
-        m->terrain[j+2][l-1] = M;
+        m->terrain[j+2][l-1] = MRT;
         m->alt[j+2][l-1] = 99;
-        m->terrain[j+3][l-2] = M;
+        m->terrain[j+3][l-2] = MRT;
         m->alt[j+3][l-2] = 99;
-        m->terrain[j+2][l-2] = M;
+        m->terrain[j+2][l-2] = MRT;
         m->alt[j+2][l-2] = 99;
-        m->terrain[j+3][l-1] = M;
+        m->terrain[j+3][l-1] = MRT;
         m->alt[j+3][l-1] = 99;
         //road
-        m->terrain[j+2][l-3] = P;
+        m->terrain[j+2][l-3] = PTH;
         m->alt[j+2][l-3] = 25;
-        m->terrain[j+3][l-3] = P;
+        m->terrain[j+3][l-3] = PTH;
         m->alt[j+3][l-3] = 25;
-        m->terrain[j+4][l-3] = P;
+        m->terrain[j+4][l-3] = PTH;
         m->alt[j+4][l-3] = 25;
-        m->terrain[j+4][l-1] = P;
+        m->terrain[j+4][l-1] = PTH;
         m->alt[j+4][l-1] = 25;
-        m->terrain[j+4][l-2] = P;
+        m->terrain[j+4][l-2] = PTH;
         m->alt[j+4][l-2] = 25;
-        m->terrain[j+4][l] = P;
+        m->terrain[j+4][l] = PTH;
         m->alt[j+4][l] = 25;
-        m->terrain[j+5][l] = P;
+        m->terrain[j+5][l] = PTH;
         m->alt[j+5][l] = 25;
-        m->terrain[j+3][l] = P;
+        m->terrain[j+3][l] = PTH;
         m->alt[j+3][l] = 25;
-        m->terrain[j+2][l] = P;
+        m->terrain[j+2][l] = PTH;
         m->alt[j+2][l] = 25;
-        m->terrain[j+6][l] = P;
+        m->terrain[j+6][l] = PTH;
         m->alt[j+6][l] = 25;
-        m->terrain[j+5][l-3] = P;
+        m->terrain[j+5][l-3] = PTH;
         m->alt[j+5][l-3] = 25;
-        m->terrain[j+6][l-3] = P;
+        m->terrain[j+6][l-3] = PTH;
         m->alt[j+6][l-3] = 25;
         //Pokecenter
-        m->terrain[j+5][l-1] = C;
+        m->terrain[j+5][l-1] = CTR;
         m->alt[j+5][l-1] = 99;
-        m->terrain[j+6][l-2] = C;
+        m->terrain[j+6][l-2] = CTR;
         m->alt[j+6][l-2] = 99;
-        m->terrain[j+5][l-2] = C;
+        m->terrain[j+5][l-2] = CTR;
         m->alt[j+5][l-2] = 99;
-        m->terrain[j+6][l-1] = C;
+        m->terrain[j+6][l-1] = CTR;
         m->alt[j+6][l-1] = 99;
     }
 
@@ -893,7 +877,7 @@ int create_map(Map *m)
         //water
         x[0] = (rand() % (BOUNDS_X - 5)) + 3;
         x[1] = (rand() % (BOUNDS_Y - 5)) + 3;
-        m->terrain[x[1]][x[0]] = W;
+        m->terrain[x[1]][x[0]] = WTR;
         m->alt[x[1]][x[0]] = (rand() % 18);
         queue_enqueue(qx, x[0]);
         queue_enqueue(qy, x[1]);
@@ -934,6 +918,23 @@ int create_map(Map *m)
 
     return 0;
 }
+
+//initializers
+Trainer* init_trainer(Trainer_e te, Point p) 
+{
+    int x, y;
+    Trainer* t = malloc(sizeof(*t));
+
+    if (t != NULL) {
+        t->e.chr = te;
+        t->e.pos = p;
+        t->e.move = movement[te];
+        t->e.dir = get_lower_alt(p, world[curPos.y][curPos.x]);
+    }
+
+    return t;
+}
+
 
 //map updates
 int add_trainer(Trainer *t, char map[BOUNDS_Y][BOUNDS_X][10])
@@ -1226,11 +1227,13 @@ int main(int argc, char *argv[])
         char in[15];
         char c;
         int nx = 0, ny = 0;
-        printf("Current Position: (%d, %d). Enter Move:  ", curPos.x - 200, curPos.y - 200);
-        fgets(in, sizeof(in), stdin);
+        // printf("Current Position: (%d, %d). Enter Move:  ", curPos.x - 200, curPos.y - 200);
+        // fgets(in, sizeof(in), stdin);
         if (in != NULL) {
             sscanf(in, "%c %d %d", &c, &nx, &ny);
         }
+
+        
 
         printf("check moves\n");
         switch (c) {
@@ -1262,7 +1265,7 @@ int main(int argc, char *argv[])
             case 'q':
                 return 0;
             default:
-                if (c == '\0' || c == '\n') {
+                if (c == '\0' || c == '\n' || c == NULL) {
                     printf("\n");
                     break;
                 }
