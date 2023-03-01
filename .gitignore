@@ -32,3 +32,4 @@ CHANGELOG
 hist.txt
 CHANGELOG
 valgrind-log.txt
+*.core.*

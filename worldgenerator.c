@@ -315,11 +315,16 @@ int valid_pos_list(Trainer_e e, Terrain_e t, int i)
     return 1;
 }
 
+int valid_ter(Terrain_e t)
+{
+    return !(t == GTE || t == BDR);
+}
+
 int valid_pos(Trainer_e e, Terrain_e t)
 {
     // printf("e:%d, t:%d\n", e, t);
     // printf("\tstrss:%d\n", STRESS[e][t]);
-    if (t == GTE || t == BDR || t == MRT || t == CTR) {
+    if (!valid_ter(t) || t == MRT || t == CTR) {
         return 1;
     }
     return (STRESS[e][t] != D_MAX);
@@ -359,7 +364,7 @@ Point get_next_position(Point p, Dir_e d)
         case SE:
             return (Point) {.x = p.x + 1, .y = p.y + 1};
         default:
-            fprintf(stderr, "Error getting next position from (%d, %d) in direction %d", p.x, p.y, d);
+            fprintf(stderr, "Error getting next position from (%d, %d) in direction %d\n", p.x, p.y, d);
             return (Point) {-1, -1};
     }
 }
@@ -367,10 +372,10 @@ Point get_next_position(Point p, Dir_e d)
 Dir_e get_lower_alt(Point p, Map *m)
 {
     int i;
-    Point q;
+    Point q = get_next_position(p, 1);
 
     for (i = 1; i < num_dir; i++) {
-        if (m->alt[q.x][q.y] && m->alt[p.x][p.y]) {
+        if (m->alt[q.x][q.y] && m->alt[p.x][p.y] && valid_ter(m->alt[q.x][q.y]) && valid_ter(m->alt[p.x][p.y])) {
             q = get_next_position(p, i);
             if (m->alt[q.x][q.y] <= m->alt[p.x][p.y]) {
                 return i;
@@ -829,7 +834,20 @@ int trailblaze(Map *m)
 int create_map(Map *m)
 {
     queue_t *qx, *qy;
-    int i, j;
+    int i, j, n, s, e, w;
+
+    m = malloc(sizeof(*m));
+
+    n = 1 + (rand() % (BOUNDS_X - 2));
+    s = 1 + (rand() % (BOUNDS_X - 2));
+    e = 1 + (rand() % (BOUNDS_Y - 2));
+    w = 1 + (rand() % (BOUNDS_Y - 2));
+
+    // printf("n:%d s:%d e:%d w:%d\n", n, s, e, w);
+    m->n = n;
+    m->s = s;
+    m->e = e;
+    m->w = w;
 
     // printf("setting map\n");
     for (i = 0; i < BOUNDS_Y; i++) {
@@ -850,8 +868,6 @@ int create_map(Map *m)
         qx = qy = malloc(sizeof(queue_t));
         queue_init(qx);
         queue_init(qy);
-
-        // printf("%d %d\n", qx->length, qy->length);
 
         //seed
         r = rand() % 2;
@@ -906,20 +922,18 @@ int create_map(Map *m)
         spread_seed(m, qx, qy);
         // printf("Fill Map\n");
         fill_map(m);
-        // print_display(m);
         // printf("Add Paths\n");
         // pathfind(m, 0);
         trailblaze(m);
-        // print_display(m);
     } else {
-        printf("There was an error generating the map");
+        fprintf(stderr, "There was an error generating the map\n");
         return 1;
     }
 
     // printf("Begin cleanup\n");
     queue_destroy(qx);
     queue_destroy(qy);
-
+    
     return 0;
 }
 
@@ -1024,7 +1038,7 @@ int update_map_trainer(Map *m, char map[BOUNDS_Y][BOUNDS_X][10], Entity *e)
             return 0;
         }
     }
-    fprintf(stderr, "Could not update trainer position on map.");
+    fprintf(stderr, "Could not update trainer position on map.\n");
     return 1;
 }
 
@@ -1201,7 +1215,7 @@ int main(int argc, char *argv[])
     int i, j, n, s, e, w;
     int count = 0, r;
     int numTrainers = 10, moved;
-    PC *player = init_trainer(PLAY, (Point) {.x=5, .y=5});
+    PC *player;
     Trainer **trainers;
     Entity *ent;
     heap_t order;
@@ -1229,36 +1243,27 @@ int main(int argc, char *argv[])
 
     heap_init(&order, entity_cmp, NULL);
     
-    n = 1 + (rand() % (BOUNDS_X - 2));
-    s = 1 + (rand() % (BOUNDS_X - 2));
-    e = 1 + (rand() % (BOUNDS_Y - 2));
-    w = 1 + (rand() % (BOUNDS_Y - 2));
-    // printf("n:%d s:%d e:%d w:%d\n", n, s, e, w);
-
-   
-    world[curPos.y][curPos.x] = malloc(sizeof(*world[curPos.y][curPos.x]));
-    world[curPos.y][curPos.x]->n = n;
-    world[curPos.y][curPos.x]->s = s;
-    world[curPos.y][curPos.x]->e = e;
-    world[curPos.y][curPos.x]->w = w;
     // printf("Create Starting Map\n");
     r = create_map(world[curPos.y][curPos.x]);
+    print_map_terrain(world[curPos.y][curPos.x]);
     map_chars(world[curPos.y][curPos.x], display);
-    player->e.pos = (Point) {.x = world[curPos.y][curPos.x]->s, .y = BOUNDS_Y - 2};
+
+    player  = init_trainer(PLAY, (Point) {.x=5, .y=5});
     player->e.hn = heap_insert(&order, &player->e);
     add_trainer(player, display);
 
     startTer = malloc(sizeof(Terrain_e) * numTrainers);
     trainers = add_trainers(numTrainers);
 
-    printf("NumTrainers: %d\n", numTrainers);
+    // printf("NumTrainers: %d\n", numTrainers);
     for (i = 0; i < numTrainers; i++) {
+        printf("pos: %d\n", i);
         startTer[i] = world[curPos.y][curPos.x]->terrain[trainers[i]->e.pos.y][trainers[i]->e.pos.x];
         while (!valid_pos_list(trainers[i]->e.chr, world[curPos.y][curPos.x]->terrain[trainers[i]->e.pos.y][trainers[i]->e.pos.x], i)) {
             trainers[i]->e.pos = (Point) {.x = 2 + (rand() % (BOUNDS_X - 3)), 2 + (rand() % (BOUNDS_Y - 3))};
             startTer[i] = world[curPos.y][curPos.x]->terrain[trainers[i]->e.pos.y][trainers[i]->e.pos.x];
         }
-        // printf("Trainer char: %c, pos: (%d, %d)\n", ALL_TRAINERS[trainers[i]->e.chr], trainers[i]->e.pos.x, trainers[i]->e.pos.y);
+        printf("Trainer char: %c, pos: (%d, %d)\n", ALL_TRAINERS[trainers[i]->e.chr], trainers[i]->e.pos.x, trainers[i]->e.pos.y);
         trainers[i]->e.hn = heap_insert(&order, &trainers[i]->e);
         add_trainer(trainers[i], display);
     }
@@ -1374,13 +1379,12 @@ int main(int argc, char *argv[])
 
         printf("nullcheck spot\n");
         if (world[curPos.y][curPos.x] == NULL) {
-            world[curPos.y][curPos.x] = malloc(sizeof(*world[curPos.y][curPos.x]));
+            r = create_map(world[curPos.y][curPos.x]);
             world[curPos.y][curPos.x]->n = n;
             world[curPos.y][curPos.x]->s = s;
             world[curPos.y][curPos.x]->e = e;
             world[curPos.y][curPos.x]->w = w;
             // check_map(world[curPos.y][curPos.x]);
-            r = create_map(world[curPos.y][curPos.x]);
         }
 
         map_chars(world[curPos.y][curPos.x], display);
