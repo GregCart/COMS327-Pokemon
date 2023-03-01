@@ -1,4 +1,4 @@
-CFLAGS = -Wall -Werror -ggdb -funroll-loops -DTERM=Fall2023 -lm
+CFLAGS = -Wall -Werror -ggdb -funroll-loops -DTERM=Fall2023 -lm -lcurses
 OBJS = worldgenerator.c lib/heap.o lib/queue.o
 
 all: gen_world

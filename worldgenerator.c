@@ -45,6 +45,7 @@
 #define EXPLORER    'e'
 #define SWIMMER 'm'
 
+typedef struct entity Entity;
 
 //enums
 typedef enum terrain_e {
@@ -105,10 +106,12 @@ typedef struct path {
 } Path;
 
 typedef struct entity {
+    heap_node_t *hn;
     Point pos;
     int chr;
+    int nextTime;
     Dir_e dir;
-    Point (*move)(Entity *, const Point p);
+    int (*move)(Entity *);
 } Entity;
 
 typedef struct trainer {
@@ -121,21 +124,21 @@ typedef Trainer Hiker;
 typedef Trainer Rival;
 
 //movment prototypes
-int move_player(Entity self);
-int move_hiker(Entity self);
-int move_rival(Entity self);
-int move_pacer(Entity self);
-int move_wanderer(Entity self);
-int move_sentry(Entity self);
-int move_explorer(Entity self);
-int move_swimmer(Entity self);
+int move_player(Entity *self);
+int move_hiker(Entity *self);
+int move_rival(Entity *self);
+int move_pacer(Entity *self);
+int move_wanderer(Entity *self);
+int move_sentry(Entity *self);
+int move_explorer(Entity *self);
+int move_swimmer(Entity *self);
 
 const char TERRAIN[] = {ROCK, TREE, GRASS_T, WATER, GRASS_S};
 const char ALL_TERRAIN[] = {ROCK, TREE, GRASS_T, WATER, GRASS_S, GATE, PATH, MART, CENTER, BORDER};
-const char* ALL_COLORS[] = {COLOR_ROCK, COLOR_TREE, COLOR_GRASS_T, COLOR_WATER, COLOR_GRASS_S, COLOR_GATE, COLOR_PATH, COLOR_MART, COLOR_CENTER, COLOR_BORDER};
+const char* TERRAIN_COLORS[] = {COLOR_ROCK, COLOR_TREE, COLOR_GRASS_T, COLOR_WATER, COLOR_GRASS_S, COLOR_GATE, COLOR_PATH, COLOR_MART, COLOR_CENTER, COLOR_BORDER};
 const char ALL_TRAINERS[] = {PLAYER, HIKER, RIVAL, PACER, WANDERER, SENTRY, EXPLORER, SWIMMER};
 const int ALTITUDE[][2] = {{50, 30}, {43, 25}, {45, 15}, {18, 0}, {45, 20}};
-const int (*movement[]) (Entity e) = {move_player, move_hiker, move_rival, move_pacer, move_wanderer, move_sentry, move_explorer, move_swimmer};
+const int (*movement[]) (Entity *e) = {move_player, move_hiker, move_rival, move_pacer, move_wanderer, move_sentry, move_explorer, move_swimmer};
 /*
  * rock, tree, tgrass, water, sgrass, gate, path, mart, center
  * player, hiker, rival, pacer, wanderer, sentry, explorer, swimmer
@@ -223,8 +226,6 @@ int print_cost_map(Map *m)
 
 int print_entity(Entity *e) 
 {
-    int i;
-
     printf("Entity: {\n");
     printf("\tChar: %c\n", e->chr);
     printf("\tPos: (%d, %d),\n", e->pos.x, e->pos.y);
@@ -236,7 +237,9 @@ int print_entity(Entity *e)
 
 int print_trainer(Trainer *t)
 {
-    print_entity(t->e);
+    print_entity(&t->e);
+
+    return 0;
 }
 
 //coppiers
@@ -279,7 +282,103 @@ static int32_t path_cmp(const void *key, const void *with)
 
 static int32_t entity_cmp(const void *key, const void *with) 
 {
-  return ((Entity *) key)->dir - ((Entity *) with)->dir;
+  return ((Entity *) key)->nextTime - ((Entity *) with)->nextTime;
+}
+
+//checkers
+int valid_pos_list(Trainer_e e, Terrain_e t, int i)
+{
+    // printf("e:%d, t:%d\n", e, t);
+    // printf("\tstrss:%d\n", STRESS[e][t]);
+    if (t == GTE || t == BDR || t == MRT || t == CTR) {
+        return 1;
+    }
+
+    switch (e){
+        case PLAY:
+        case RIVL:
+        case HIKR:
+        case SWIM:
+        case EXPL:
+            return (STRESS[e][t] != D_MAX);
+            break;
+        case PACR:
+        case WAND:
+            return (t == startTer[i] && t != WTR);
+            break;
+        case SENT:
+            return 0;
+            break;
+        default:
+            return 1;
+    }
+    return 1;
+}
+
+int valid_pos(Trainer_e e, Terrain_e t)
+{
+    // printf("e:%d, t:%d\n", e, t);
+    // printf("\tstrss:%d\n", STRESS[e][t]);
+    if (t == GTE || t == BDR || t == MRT || t == CTR) {
+        return 1;
+    }
+    return (STRESS[e][t] != D_MAX);
+}
+
+int check_map(Map *m) 
+{
+    printf("terrain: %ld x %ld\n", sizeof(m->terrain[0])/sizeof(Terrain_e), sizeof(m->terrain)/sizeof(m->terrain[0])/sizeof(char));
+    printf("n:%d s:%d e:%d w:%d\n", m->n, m->s, m->e, m->w);
+
+    return 0;
+}
+
+//getters
+int find_stress(Map *m, Entity *e, Point p)
+{
+    return STRESS[e->chr][m->terrain[p.y][p.x]];
+}
+
+Point get_next_position(Point p, Dir_e d)
+{
+    switch (d) {
+        case NW:
+            return (Point) {.x = p.x - 1, .y = p.y - 1};
+        case N:
+            return (Point) {.x = p.x, .y = p.y - 1};
+        case NE:
+            return (Point) {.x = p.x + 1, .y = p.y - 1};
+        case W:
+            return (Point) {.x = p.x - 1, .y = p.y};
+        case E:
+            return (Point) {.x = p.x + 1, .y = p.y};
+        case SW:
+            return (Point) {.x = p.x - 1, .y = p.y + 1};
+        case S:
+            return (Point) {.x = p.x, .y = p.y + 1};
+        case SE:
+            return (Point) {.x = p.x + 1, .y = p.y + 1};
+        default:
+            fprintf(stderr, "Error getting next position from (%d, %d) in direction %d", p.x, p.y, d);
+            return (Point) {-1, -1};
+    }
+}
+
+Dir_e get_lower_alt(Point p, Map *m)
+{
+    int i;
+    Point q;
+
+    for (i = 1; i < num_dir; i++) {
+        if (m->alt[q.x][q.y] && m->alt[p.x][p.y]) {
+            q = get_next_position(p, i);
+            if (m->alt[q.x][q.y] <= m->alt[p.x][p.y]) {
+                return i;
+            }
+        }
+    }
+
+    return -1;
 }
 
 //distance finders
@@ -448,101 +547,6 @@ static int dijkstra(Map *m, Point p, Entity *e)
     return 0;
 }
 
-//checkers
-int valid_pos_list(Trainer_e e, Terrain_e t, int i)
-{
-    // printf("e:%d, t:%d\n", e, t);
-    // printf("\tstrss:%d\n", STRESS[e][t]);
-    if (t == GTE || t == BDR || t == MRT || t == CTR) {
-        return 1;
-    }
-
-    switch (e){
-        case PLAY:
-        case RIVL:
-        case HIKR:
-        case SWIM:
-        case EXPL:
-            return (STRESS[e][t] != D_MAX);
-            break;
-        case PACR:
-        case WAND:
-            return (t == startTer[i] && t != WTR);
-            break;
-        case SENT:
-            return 0;
-            break;
-        default:
-            return 1;
-    }
-    return 1;
-}
-
-int valid_pos(Trainer_e e, Terrain_e t)
-{
-    // printf("e:%d, t:%d\n", e, t);
-    // printf("\tstrss:%d\n", STRESS[e][t]);
-    if (t == GTE || t == BDR || t == MRT || t == CTR) {
-        return 1;
-    }
-    return (STRESS[e][t] != D_MAX);
-}
-
-int check_map(Map *m) 
-{
-    printf("terrain: %ld x %ld\n", sizeof(m->terrain[0])/sizeof(Terrain_e), sizeof(m->terrain)/sizeof(m->terrain[0])/sizeof(char));
-    printf("n:%d s:%d e:%d w:%d\n", m->n, m->s, m->e, m->w);
-
-    return 0;
-}
-
-//getters
-int find_stress(Map *m, Entity *e, Point p)
-{
-    return STRESS[e->chr][m->terrain[p.y][p.x]];
-}
-
-Point get_next_position(Point p, Dir_e d)
-{
-    switch (d) {
-        case NW:
-            return (Point) {.x = p.x - 1, .y = p.y - 1};
-        case N:
-            return (Point) {.x = p.x, .y = p.y - 1};
-        case NE:
-            return (Point) {.x = p.x + 1, .y = p.y - 1};
-        case W:
-            return (Point) {.x = p.x - 1, .y = p.y};
-        case E:
-            return (Point) {.x = p.x + 1, .y = p.y};
-        case SW:
-            return (Point) {.x = p.x - 1, .y = p.y + 1};
-        case S:
-            return (Point) {.x = p.x, .y = p.y + 1};
-        case SE:
-            return (Point) {.x = p.x + 1, .y = p.y + 1};
-        default:
-            fprintf(stderr, "Error getting next position from (%d, %d) in direction %d", p.x, p.y, d);
-            return (Point) {-1, -1};
-    }
-}
-
-Dir_e get_lower_alt(Point p, Map *m)
-{
-    int i, cost;
-    Point q;
-
-    for (i = 1; i < num_dir; i++) {
-        if (m->alt[q.x][q.y] && m->alt[p.x][p.y]) {
-            q = get_next_position(p, i);
-            if (m->alt[q.x][q.y] <= m->alt[p.x][p.y]) {
-                return i;
-            }
-        }
-    }
-
-    return -1;
-}
 
 //map creations
 int make_boundary(Map *m)
@@ -920,16 +924,29 @@ int create_map(Map *m)
 }
 
 //initializers
+Entity* init_entity(int i, Point p) 
+{
+    Entity* e = malloc(sizeof(*e));
+
+    if (e != NULL) {
+        e->chr = i;
+        e->pos = p;
+        e->nextTime = 0;
+        e->hn = NULL;
+        e->move = NULL;
+        e->dir = get_lower_alt(p, world[curPos.y][curPos.x]);
+    }
+
+    return e;
+}
+
 Trainer* init_trainer(Trainer_e te, Point p) 
 {
-    int x, y;
     Trainer* t = malloc(sizeof(*t));
 
     if (t != NULL) {
-        t->e.chr = te;
-        t->e.pos = p;
+        t->e = *(init_entity(te, p));
         t->e.move = movement[te];
-        t->e.dir = get_lower_alt(p, world[curPos.y][curPos.x]);
     }
 
     return t;
@@ -937,6 +954,13 @@ Trainer* init_trainer(Trainer_e te, Point p)
 
 
 //map updates
+int add_entity_trainer(Entity *e, char map[BOUNDS_Y][BOUNDS_X][10])
+{
+    strcpy(map[e->pos.y][e->pos.x], (char[2]) {ALL_TRAINERS[e->chr], '\0'});
+
+    return 0;
+}
+
 int add_trainer(Trainer *t, char map[BOUNDS_Y][BOUNDS_X][10])
 {
     strcpy(map[t->e.pos.y][t->e.pos.x], (char[2]) {ALL_TRAINERS[t->e.chr], '\0'});
@@ -974,6 +998,8 @@ int update_trails(PC *player, Trainer** t)
     for (i = 1; i < num_types_tra; i++) {
         dijkstra(trails[i], player->e.pos, &t[i]->e);
     }
+
+    return 0;
 }
 
 int map_chars(Map *from, char map[BOUNDS_Y][BOUNDS_X][10])
@@ -982,7 +1008,8 @@ int map_chars(Map *from, char map[BOUNDS_Y][BOUNDS_X][10])
 
     for (i = 0; i < BOUNDS_Y; i++) {
         for (j = 0; j < BOUNDS_X; j++) {
-            strcpy(map[i][j], (char[2]) {ALL_TERRAIN[from->terrain[i][j]], '\0'});
+            strcpy(map[i][j], TERRAIN_COLORS[from->terrain[i][j]]);
+            strcat(map[i][j], (char[2]) {ALL_TERRAIN[from->terrain[i][j]], '\0'});
             // printf("x:%d, y:%d, chr:%c\n", j, i, ALL_TERRAIN[from->terrain[i][j]]);
         }
     }
@@ -990,6 +1017,16 @@ int map_chars(Map *from, char map[BOUNDS_Y][BOUNDS_X][10])
     return 0;
 }
 
+int update_map_trainer(Map *m, char map[BOUNDS_Y][BOUNDS_X][10], Entity *e)
+{
+    if (map_chars(m, map)){
+        if (add_entity_trainer(e, map)) {
+            return 0;
+        }
+    }
+    fprintf(stderr, "Could not update trainer position on map.");
+    return 1;
+}
 
 //movement utility
 Dir_e change_direction(int x, Dir_e d)
@@ -1022,24 +1059,24 @@ Dir_e change_direction(int x, Dir_e d)
 }
 
 //movement functions
-int move_player(Entity self)
+int move_player(Entity *self)
 {
     return 0;
 }
 
-int move_hiker(Entity self)
+int move_hiker(Entity *self)
 {
     Map *m = trails[HIKR];
-    Point q = get_next_position(self.pos, self.dir);
+    Point q = get_next_position(self->pos, self->dir);
     Dir_e d;
 
-    if (m->alt[q.y][q.x] <= m->alt[self.pos.y][self.pos.x] || rand() % 500 == 0) {
-        self.pos = q;
+    if (m->alt[q.y][q.x] <= m->alt[self->pos.y][self->pos.x] || rand() % 500 == 0) {
+        self->pos = q;
     } else {
-        d = get_lower_alt(self.pos, m);
+        d = get_lower_alt(self->pos, m);
         if (d > 0) {
-            self.pos = get_next_position(self.pos, d);
-            self.dir = d;
+            self->pos = get_next_position(self->pos, d);
+            self->dir = d;
         } else {
             fprintf(stderr, "Hiker stuck\n");
             return 1;
@@ -1049,19 +1086,19 @@ int move_hiker(Entity self)
     return 0;
 }
 
-int move_rival(Entity self)
+int move_rival(Entity *self)
 {
     Map *m = trails[RIVL];
-    Point q = get_next_position(self.pos, self.dir);
+    Point q = get_next_position(self->pos, self->dir);
     Dir_e d;
 
-    if (m->alt[q.y][q.x] <= m->alt[self.pos.y][self.pos.x] || rand() % 500 == 0) {
-        self.pos = q;
+    if (m->alt[q.y][q.x] <= m->alt[self->pos.y][self->pos.x] || rand() % 500 == 0) {
+        self->pos = q;
     } else {
-        d = get_lower_alt(self.pos, m);
+        d = get_lower_alt(self->pos, m);
         if(d > 0) {
-            self.pos = get_next_position(self.pos, d);
-            self.dir = d;
+            self->pos = get_next_position(self->pos, d);
+            self->dir = d;
         } else {
             fprintf(stderr, "Rival stuck\n");
             return 1;
@@ -1071,33 +1108,33 @@ int move_rival(Entity self)
     return 0;
 }
 
-int move_pacer(Entity self)
+int move_pacer(Entity *self)
 {
     Map *m = world[curPos.y][curPos.x];
-    Point q = get_next_position(self.pos, self.dir);
+    Point q = get_next_position(self->pos, self->dir);
 
-    if (m->terrain[self.pos.y][self.pos.x] == m->terrain[q.y][q.x]) {
-        self.pos = q;
+    if (m->terrain[self->pos.y][self->pos.x] == m->terrain[q.y][q.x]) {
+        self->pos = q;
     } else {
-        self.pos = get_next_position(self.pos, change_direction(0, self.dir));
+        self->pos = get_next_position(self->pos, change_direction(0, self->dir));
     }
 
     return 0;
 }
 
-int move_wanderer(Entity self)
+int move_wanderer(Entity *self)
 {
     Map *m = world[curPos.y][curPos.x];
-    Point q = get_next_position(self.pos, self.dir);
-    int i, c = 0;
+    Point q = get_next_position(self->pos, self->dir);
+    int i;
 
-    if (m->terrain[self.pos.y][self.pos.x] == m->terrain[q.y][q.x]) {
-        self.pos = q;
+    if (m->terrain[self->pos.y][self->pos.x] == m->terrain[q.y][q.x]) {
+        self->pos = q;
     } else {
         for (i = 0; i < num_dir; i++) {
-            q = get_next_position(self.pos, change_direction(rand(), self.dir));
-            if (m->alt[q.x][q.y] && m->alt[self.pos.x][self.pos.y] && m->terrain[self.pos.y][self.pos.x] == m->terrain[q.y][q.x]) {
-                self.pos = q;
+            q = get_next_position(self->pos, change_direction(rand(), self->dir));
+            if (m->alt[q.x][q.y] && m->alt[self->pos.x][self->pos.y] && m->terrain[self->pos.y][self->pos.x] == m->terrain[q.y][q.x]) {
+                self->pos = q;
                 break;
             }
         }
@@ -1106,26 +1143,26 @@ int move_wanderer(Entity self)
     return 0;
 }
 
-int move_sentry(Entity self)
+int move_sentry(Entity *self)
 {
     //no
     return 0;
 }
 
-int move_explorer(Entity self)
+int move_explorer(Entity *self)
 {
     Map *m = world[curPos.y][curPos.x];
-    Point q = get_next_position(self.pos, self.dir);
-    int i, c = 0;
+    Point q = get_next_position(self->pos, self->dir);
+    int i;
 
-    if (m->terrain[self.pos.y][self.pos.x] == m->terrain[q.y][q.x]) {
-        self.pos = q;
+    if (m->terrain[self->pos.y][self->pos.x] == m->terrain[q.y][q.x]) {
+        self->pos = q;
         return 0;
     } else {
         for (i = 0; i < num_dir; i++) {
-            q = get_next_position(self.pos, change_direction(rand(), self.dir));
+            q = get_next_position(self->pos, change_direction(rand(), self->dir));
             if (valid_pos(EXPL, m->terrain[q.y][q.x])) {
-                self.pos = q;
+                self->pos = q;
                 return 0;
             }
         }
@@ -1135,24 +1172,26 @@ int move_explorer(Entity self)
     return 1;
 }
 
-int move_swimmer(Entity self)
+int move_swimmer(Entity *self)
 {
     Map *m = trails[SWIM];
-    Point q = get_next_position(self.pos, self.dir);
+    Point q = get_next_position(self->pos, self->dir);
     Dir_e d;
 
-    if (m->alt[q.y][q.x] <= m->alt[self.pos.y][self.pos.x] || rand() % 10 == 0) {
-        self.pos = q;
+    if (m->alt[q.y][q.x] <= m->alt[self->pos.y][self->pos.x] || rand() % 10 == 0) {
+        self->pos = q;
     } else {
-        d = get_lower_alt(self.pos, m);
+        d = get_lower_alt(self->pos, m);
         if (d > 0) {
-            self.pos = get_next_position(self.pos, d);
-            self.dir = d;
+            self->pos = get_next_position(self->pos, d);
+            self->dir = d;
         } else {
             fprintf(stderr, "Swimmer stuck\n");
             return 1;
         }
     }
+
+    return 0;
 }
 
 int main(int argc, char *argv[])
@@ -1164,6 +1203,7 @@ int main(int argc, char *argv[])
     int numTrainers = 10, moved;
     PC *player = init_trainer(PLAY, (Point) {.x=5, .y=5});
     Trainer **trainers;
+    Entity *ent;
     heap_t order;
     char display[BOUNDS_Y][BOUNDS_X][10];
 
@@ -1205,6 +1245,7 @@ int main(int argc, char *argv[])
     r = create_map(world[curPos.y][curPos.x]);
     map_chars(world[curPos.y][curPos.x], display);
     player->e.pos = (Point) {.x = world[curPos.y][curPos.x]->s, .y = BOUNDS_Y - 2};
+    player->e.hn = heap_insert(&order, &player->e);
     add_trainer(player, display);
 
     startTer = malloc(sizeof(Terrain_e) * numTrainers);
@@ -1213,15 +1254,16 @@ int main(int argc, char *argv[])
     printf("NumTrainers: %d\n", numTrainers);
     for (i = 0; i < numTrainers; i++) {
         startTer[i] = world[curPos.y][curPos.x]->terrain[trainers[i]->e.pos.y][trainers[i]->e.pos.x];
-        while (!valid_pos(trainers[i]->e.chr, world[curPos.y][curPos.x]->terrain[trainers[i]->e.pos.y][trainers[i]->e.pos.x], i)) {
+        while (!valid_pos_list(trainers[i]->e.chr, world[curPos.y][curPos.x]->terrain[trainers[i]->e.pos.y][trainers[i]->e.pos.x], i)) {
             trainers[i]->e.pos = (Point) {.x = 2 + (rand() % (BOUNDS_X - 3)), 2 + (rand() % (BOUNDS_Y - 3))};
             startTer[i] = world[curPos.y][curPos.x]->terrain[trainers[i]->e.pos.y][trainers[i]->e.pos.x];
         }
-        printf("Trainer char: %c, pos: (%d, %d)\n", ALL_TRAINERS[trainers[i]->e.chr], trainers[i]->e.pos.x, trainers[i]->e.pos.y);
+        // printf("Trainer char: %c, pos: (%d, %d)\n", ALL_TRAINERS[trainers[i]->e.chr], trainers[i]->e.pos.x, trainers[i]->e.pos.y);
+        trainers[i]->e.hn = heap_insert(&order, &trainers[i]->e);
         add_trainer(trainers[i], display);
     }
     update_trails(player, trainers);
-    
+
     r = print_display(display);
     while (r == 0) {
         char in[15];
@@ -1229,48 +1271,59 @@ int main(int argc, char *argv[])
         int nx = 0, ny = 0;
         // printf("Current Position: (%d, %d). Enter Move:  ", curPos.x - 200, curPos.y - 200);
         // fgets(in, sizeof(in), stdin);
-        if (in != NULL) {
-            sscanf(in, "%c %d %d", &c, &nx, &ny);
-        }
+        sscanf(in, "%c %d %d", &c, &nx, &ny);
 
-        
 
-        printf("check moves\n");
-        switch (c) {
-            case 'n':
-                player->e.pos = (Point) {.x = world[curPos.y][curPos.x]->n, .y = BOUNDS_Y - 2 };
-                curPos.y += 1;
-                count++;
-                break;
-            case 's':
-                player->e.pos = (Point) {.x = world[curPos.y][curPos.x]->s, .y = 1 };
-                curPos.y -= 1;
-                count++;
-                break;
-            case 'e':
-                player->e.pos = (Point) {.x = BOUNDS_X - 2, .y = world[curPos.y][curPos.x]->e };
-                curPos.x += 1;
-                count++;
-                break;
-            case 'w':
-                player->e.pos = (Point) {.x = 1, .y = world[curPos.y][curPos.x]->w };
-                curPos.x -= 1;
-                count++;
-                break;
-            case 'f':
-                curPos.y = ny + 200;
-                curPos.x = nx + 200;
-                count++;
-                break;
-            case 'q':
-                return 0;
-            default:
-                if (c == '\0' || c == '\n' || c == NULL) {
-                    printf("\n");
+        printf("check world moves\n");
+        if (c) {
+            switch (c) {
+                case 'n':
+                    player->e.pos = (Point) {.x = world[curPos.y][curPos.x]->n, .y = BOUNDS_Y - 2 };
+                    curPos.y += 1;
+                    count++;
                     break;
+                case 's':
+                    player->e.pos = (Point) {.x = world[curPos.y][curPos.x]->s, .y = 1 };
+                    curPos.y -= 1;
+                    count++;
+                    break;
+                case 'e':
+                    player->e.pos = (Point) {.x = BOUNDS_X - 2, .y = world[curPos.y][curPos.x]->e };
+                    curPos.x += 1;
+                    count++;
+                    break;
+                case 'w':
+                    player->e.pos = (Point) {.x = 1, .y = world[curPos.y][curPos.x]->w };
+                    curPos.x -= 1;
+                    count++;
+                    break;
+                case 'f':
+                    curPos.y = ny + 200;
+                    curPos.x = nx + 200;
+                    count++;
+                    break;
+                case 'q':
+                    return 0;
+                default:
+                    if (c == '\0' || c == '\n') {
+                        printf("\n");
+                        break;
+                    }
+                    printf("Command Not Found\n");
+                    break;
+            }
+        }
+        
+        //check time, get lowest, increase by next move, then put back into heap, repeat.
+        for (i = 0; i < numTrainers; i++) {
+            ent = heap_remove_min(&order);
+            ent->hn = NULL;
+            if(ent->move) {
+                if (update_map_trainer(world[curPos.y][curPos.x], display, ent)) {
+                    ent->nextTime += STRESS[ent->chr][world[curPos.y][curPos.x]->terrain[ent->pos.y][ent->pos.x]];
                 }
-                printf("Command Not Found\n");
-                break;
+            }
+            ent->hn = heap_insert(&order, &e);
         }
 
         printf("valid check\n");
@@ -1336,7 +1389,7 @@ int main(int argc, char *argv[])
         printf("NumTrainers: %d\n", numTrainers);
         for (i = 0; i < numTrainers; i++) {
             startTer[i] = world[curPos.y][curPos.x]->terrain[trainers[i]->e.pos.y][trainers[i]->e.pos.x];
-            while (!valid_pos(trainers[i]->e.chr, world[curPos.y][curPos.x]->terrain[trainers[i]->e.pos.y][trainers[i]->e.pos.x], i)) {
+            while (!valid_pos_list(trainers[i]->e.chr, world[curPos.y][curPos.x]->terrain[trainers[i]->e.pos.y][trainers[i]->e.pos.x], i)) {
                 trainers[i]->e.pos = (Point) {.x = 2 + (rand() % (BOUNDS_X - 3)), 2 + (rand() % (BOUNDS_Y - 3))};
                 startTer[i] = world[curPos.y][curPos.x]->terrain[trainers[i]->e.pos.y][trainers[i]->e.pos.x];
             }
