@@ -19,6 +19,15 @@ HW3:
     Malloc error still present.
     Program crashes if you try to move. Several TAs as well as the professor haven't been able to identify the cause.
 
-To build and run: make
+HW4:
+    All the errors of before x100
+    NOTES:
+        Characters sometimes flee instead of moving towards PC fsr (I think i figured this problem out)
+        Characters sometimes teleport arround for no reason or skip turns.
+        Will randomly stop or segfault in the middle of a run (idk why)
+    All trianers have a random chance to spayn barring hiker and rival which will spawn if numtrainers >= 2
+
+To build: make
+To tun: make test
 TO clean: make clean
 To package into tarball: make package
