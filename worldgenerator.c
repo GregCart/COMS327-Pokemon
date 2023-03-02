@@ -109,8 +109,8 @@ typedef struct path {
 typedef struct entity {
     heap_node_t *hn;
     Point pos;
-    int chr;
     int nextTime;
+    int chr;
     int order;
     Dir_e dir;
     int (*move)(Entity *);
@@ -305,7 +305,7 @@ static int32_t path_cmp(const void *key, const void *with)
 static int32_t entity_cmp(const void *key, const void *with) 
 {
   int ret;
-  
+
   ret = ((Entity *) key)->nextTime - ((Entity *) with)->nextTime;
   if (ret == 0) {
     ret = ((Entity *) key)->order - ((Entity *) with)->order;
@@ -576,6 +576,8 @@ static int dijkstra(Map *m, Point p, Entity *e)
             m->alt[y][x] = path[y][x].cost;
         }
     }
+
+    heap_delete(&h);
 
     return 0;
 }
@@ -1042,7 +1044,7 @@ int update_trails(PC *player, Trainer** t)
     int numTrainers;
 
     numTrainers = sizeof(**t)/sizeof(Trainer);
-    printf("numTrainers: %d\n", numTrainers);
+    // printf("numTrainers: %d\n", numTrainers);
 
     dijkstra(trails[PLAY], player->e.pos, &player->e);
     for (i = 0; i < numTrainers; i++) {
@@ -1065,17 +1067,6 @@ int map_chars(Map *from, char map[BOUNDS_Y][BOUNDS_X][10])
     }
 
     return 0;
-}
-
-int update_map_trainer(Map *m, char map[BOUNDS_Y][BOUNDS_X][10], Entity *e)
-{
-    if (!map_chars(m, map)){
-        if (!add_entity_trainer(e, map)) {
-            return 0;
-        }
-    }
-    fprintf(stderr, "Could not update trainer position on map.\n");
-    return 1;
 }
 
 //movement utility
@@ -1292,7 +1283,7 @@ int main(int argc, char *argv[])
     map_chars(world[curPos.y][curPos.x], display);
 
     player = init_trainer(PLAY, (Point) {.x=world[curPos.y][curPos.x]->s, .y=BOUNDS_Y - 3});
-    player->e.hn = heap_insert(&order, &player->e);
+    player->e.hn = heap_insert(&order, &(player->e));
     add_trainer(player, display);
 
     startTer = malloc(sizeof(Terrain_e) * numTrainers);
@@ -1311,7 +1302,7 @@ int main(int argc, char *argv[])
             startTer[i] = world[curPos.y][curPos.x]->terrain[trainers[i]->e.pos.y][trainers[i]->e.pos.x];
         }
         // printf("Trainer char: %c, pos: (%d, %d)\n", ALL_TRAINERS[trainers[i]->e.chr], trainers[i]->e.pos.x, trainers[i]->e.pos.y);
-        trainers[i]->e.hn = heap_insert(&order, &trainers[i]->e);
+        trainers[i]->e.hn = heap_insert(&order, &(trainers[i]->e));
         add_trainer(trainers[i], display);
     }
     update_trails(player, trainers);
@@ -1368,15 +1359,21 @@ int main(int argc, char *argv[])
         //check time, get lowest, increase by next move, then put back into heap, repeat.
 
         printf("Do NPC move\n");
-        heap_peek_min(&order);
-        ent = heap_remove_min(&order);
-        ent->hn = NULL;
-        if(ent->move) {
-            if (update_map_trainer(world[curPos.y][curPos.x], display, ent)) {
+        for (i = 0; i < numTrainers; i++) {
+            ent = heap_remove_min(&order);
+            ent->hn = NULL;
+            printf("trainer: %c, move: %d\n", ALL_TRAINERS[ent->chr], ent->nextTime);
+            printf("\tOld pos:");
+            print_point(ent->pos);
+            if(!ent->move(ent)) {
+                printf("NPC moved\n");
+                printf("\tNew pos:");
+                print_point(ent->pos);
                 ent->nextTime += STRESS[ent->chr][world[curPos.y][curPos.x]->terrain[ent->pos.y][ent->pos.x]];
+            } else {
+                fprintf(stderr, "NPC failed to move\n");
             }
         }
-        heap_decrease_key_no_replace(&order, trainers[ent->order]->e.hn);
 
         // printf("valid check\n");
         while (curPos.y >= WORLD_SIZE) {
@@ -1433,21 +1430,26 @@ int main(int argc, char *argv[])
             world[curPos.y][curPos.x]->e = e;
             world[curPos.y][curPos.x]->w = w;
             // check_map(world[curPos.y][curPos.x]);
+            for (i = 0; i < numTrainers; i++) {
+                // printf("pos: %d\n", i);
+                startTer[i] = world[curPos.y][curPos.x]->terrain[trainers[i]->e.pos.y][trainers[i]->e.pos.x];
+                while (!valid_pos_list(trainers[i]->e.chr, world[curPos.y][curPos.x]->terrain[trainers[i]->e.pos.y][trainers[i]->e.pos.x], i)) {
+                    trainers[i]->e.pos = (Point) {.x = 2 + (rand() % (BOUNDS_X - 3)), 2 + (rand() % (BOUNDS_Y - 3))};
+                    startTer[i] = world[curPos.y][curPos.x]->terrain[trainers[i]->e.pos.y][trainers[i]->e.pos.x];
+                }
+                // printf("Trainer char: %c, pos: (%d, %d)\n", ALL_TRAINERS[trainers[i]->e.chr], trainers[i]->e.pos.x, trainers[i]->e.pos.y);
+            }
+            update_trails(player, trainers);
         }
 
         map_chars(world[curPos.y][curPos.x], display);
 
         add_trainer(player, display);
-        // printf("NumTrainers: %d\n", numTrainers);
         for (i = 0; i < numTrainers; i++) {
-            startTer[i] = world[curPos.y][curPos.x]->terrain[trainers[i]->e.pos.y][trainers[i]->e.pos.x];
-            while (!valid_pos_list(trainers[i]->e.chr, world[curPos.y][curPos.x]->terrain[trainers[i]->e.pos.y][trainers[i]->e.pos.x], i)) {
-                trainers[i]->e.pos = (Point) {.x = 2 + (rand() % (BOUNDS_X - 3)), 2 + (rand() % (BOUNDS_Y - 3))};
-                startTer[i] = world[curPos.y][curPos.x]->terrain[trainers[i]->e.pos.y][trainers[i]->e.pos.x];
-            }
-            // printf("Trainer char: %c, pos: (%d, %d)\n", ALL_TRAINERS[trainers[i]->e.chr], trainers[i]->e.pos.x, trainers[i]->e.pos.y);
+            trainers[i]->e.hn = heap_insert(&order, &(trainers[i]->e));
             add_trainer(trainers[i], display);
         }
+        
 
         if (moved) {
             update_trails(player, trainers);

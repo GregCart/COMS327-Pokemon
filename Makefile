@@ -23,7 +23,7 @@ test-v: gen_world
 
 
 clean:
-	rm -f map_generator world_generator */*.o *~ core *.exe *.stackdump vgcore.*
+	rm -f map_generator world_generator */*.o *~ core *.exe *.stackdump vgcore.* valgrind-log.txt.*
 
 package:
 	make clean
