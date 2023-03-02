@@ -370,7 +370,26 @@ int check_map(Map *m)
 //getters
 int find_stress(Map *m, Entity *e, Point p)
 {
-    return STRESS[e->chr][m->terrain[p.y][p.x]];
+    switch (e->chr){
+        case PLAY:
+        case RIVL:
+        case HIKR:
+        case SWIM:
+        case EXPL:
+            return STRESS[e->chr][m->terrain[p.y][p.x]];
+            break;
+        case PACR:
+        case WAND:
+            return m->terrain[p.y][p.x] == startTer[startTer[e->order]]? STRESS[0][m->terrain[p.y][p.x]]: STRESS[e->chr][m->terrain[p.y][p.x]];
+            break;
+        case SENT:
+            return D_MAX;
+            break;
+        default:
+            fprintf(stderr, "Error finding stress for %c\n", ALL_TRAINERS[e->chr]);
+            return -1;
+    }
+    return -1;
 }
 
 Point get_next_position(Point p, Dir_e d)
@@ -393,8 +412,8 @@ Point get_next_position(Point p, Dir_e d)
         case SE:
             return (Point) {.x = p.x + 1, .y = p.y + 1};
         default:
-            fprintf(stderr, "Error getting next position from (%d, %d) in direction %d\n", p.x, p.y, d);
-            return (Point) {-1, -1};
+            // fprintf(stderr, "Error getting next position from (%d, %d) in direction %d\n", p.x, p.y, d);
+            return p;
     }
 }
 
@@ -576,8 +595,6 @@ static int dijkstra(Map *m, Point p, Entity *e)
             m->alt[y][x] = path[y][x].cost;
         }
     }
-
-    heap_delete(&h);
 
     return 0;
 }
@@ -979,7 +996,7 @@ Entity* init_entity(int i, Point p)
         e->nextTime = 0;
         e->hn = NULL;
         e->move = NULL;
-        e->dir = get_lower_alt(p, world[curPos.y][curPos.x]);
+        e->dir = rand() % num_dir;
     }
 
     return e;
@@ -1048,7 +1065,7 @@ int update_trails(PC *player, Trainer** t)
 
     dijkstra(trails[PLAY], player->e.pos, &player->e);
     for (i = 0; i < numTrainers; i++) {
-        dijkstra(trails[t[i]->e.chr], player->e.pos, &t[i]->e);
+        dijkstra(trails[t[i]->e.chr], player->e.pos, &t[i]->e);\
     }
 
     return 0;
@@ -1111,7 +1128,10 @@ int move_hiker(Entity *self)
     Point q = get_next_position(self->pos, self->dir);
     Dir_e d;
 
+    // printf("Current space cost: %d\n", m->alt[self->pos.y][self->pos.x]);
     if (m->alt[q.y][q.x] <= m->alt[self->pos.y][self->pos.x] || rand() % 500 == 0) {
+        // print_point(q);
+        // printf("new cost: %d\n", m->alt[q.y][q.x]);
         self->pos = q;
     } else {
         d = get_lower_alt(self->pos, m);
@@ -1133,7 +1153,10 @@ int move_rival(Entity *self)
     Point q = get_next_position(self->pos, self->dir);
     Dir_e d;
 
+    // printf("Current space cost: %d\n", m->alt[self->pos.y][self->pos.x]);
     if (m->alt[q.y][q.x] <= m->alt[self->pos.y][self->pos.x] || rand() % 500 == 0) {
+        // print_point(q);
+        // printf("new cost: %d\n", m->alt[q.y][q.x]);
         self->pos = q;
     } else {
         d = get_lower_alt(self->pos, m);
@@ -1154,7 +1177,7 @@ int move_pacer(Entity *self)
     Map *m = world[curPos.y][curPos.x];
     Point q = get_next_position(self->pos, self->dir);
 
-    if (m->terrain[self->pos.y][self->pos.x] == m->terrain[q.y][q.x]) {
+    if (m->terrain[q.y][q.x] == startTer[self->order]) {
         self->pos = q;
     } else {
         self->pos = get_next_position(self->pos, change_direction(0, self->dir));
@@ -1196,7 +1219,7 @@ int move_explorer(Entity *self)
     Point q = get_next_position(self->pos, self->dir);
     int i;
 
-    if (m->terrain[self->pos.y][self->pos.x] == m->terrain[q.y][q.x]) {
+    if (valid_move_ter(world[curPos.y][curPos.y]->terrain[q.y][q.x]) && (m->terrain[self->pos.y][self->pos.x] == m->terrain[q.y][q.x])) {
         self->pos = q;
         return 0;
     } else {
@@ -1219,7 +1242,7 @@ int move_swimmer(Entity *self)
     Point q = get_next_position(self->pos, self->dir);
     Dir_e d;
 
-    if (m->alt[q.y][q.x] <= m->alt[self->pos.y][self->pos.x] || rand() % 10 == 0) {
+    if (valid_pos(self->chr, world[curPos.y][curPos.y]->terrain[q.y][q.x]) && (m->alt[q.y][q.x] <= m->alt[self->pos.y][self->pos.x] || rand() % 10 == 0)) {
         self->pos = q;
     } else {
         d = get_lower_alt(self->pos, m);
@@ -1358,17 +1381,17 @@ int main(int argc, char *argv[])
         
         //check time, get lowest, increase by next move, then put back into heap, repeat.
 
-        printf("Do NPC move\n");
+        // printf("Do NPC move\n");
         for (i = 0; i < numTrainers; i++) {
             ent = heap_remove_min(&order);
             ent->hn = NULL;
-            printf("trainer: %c, move: %d\n", ALL_TRAINERS[ent->chr], ent->nextTime);
-            printf("\tOld pos:");
-            print_point(ent->pos);
+            // printf("trainer: %c, move: %d\n", ALL_TRAINERS[ent->chr], ent->nextTime);
+            // printf("\tOld pos:");
+            // print_point(ent->pos);
             if(!ent->move(ent)) {
-                printf("NPC moved\n");
-                printf("\tNew pos:");
-                print_point(ent->pos);
+                // printf("NPC moved\n");
+                // printf("\tNew pos:");
+                // print_point(ent->pos);
                 ent->nextTime += STRESS[ent->chr][world[curPos.y][curPos.x]->terrain[ent->pos.y][ent->pos.x]];
             } else {
                 fprintf(stderr, "NPC failed to move\n");
@@ -1445,6 +1468,7 @@ int main(int argc, char *argv[])
         map_chars(world[curPos.y][curPos.x], display);
 
         add_trainer(player, display);
+        player->e.hn = heap_insert(&order, &(player->e));
         for (i = 0; i < numTrainers; i++) {
             trainers[i]->e.hn = heap_insert(&order, &(trainers[i]->e));
             add_trainer(trainers[i], display);
