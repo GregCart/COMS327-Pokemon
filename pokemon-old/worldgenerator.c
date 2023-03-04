@@ -585,6 +585,7 @@ static int dijkstra(Map *m, Point p, Entity *e)
                 c++;
         }
 
+        // printf("X: %d, y:%d, cost:%d\n", pth->pos[0], pth->pos[1], path[y][x].cost);
     }
     // printf("#less: %d\n", c);
 
@@ -1039,7 +1040,7 @@ Trainer** init_trainers(const int num)
     return trainers;
 }
 
-//map updates
+//display updates
 int add_entity_trainer(Entity *e, char map[BOUNDS_Y][BOUNDS_X][10])
 {
     strcpy(map[e->pos.y][e->pos.x], COLOR_RESET);
@@ -1128,10 +1129,10 @@ int move_hiker(Entity *self)
     Point q = get_next_position(self->pos, self->dir);
     Dir_e d;
 
-    // printf("Current space cost: %d\n", m->alt[self->pos.y][self->pos.x]);
+    printf("Current space cost: %d\n", m->alt[self->pos.y][self->pos.x]);
     if (m->alt[q.y][q.x] <= m->alt[self->pos.y][self->pos.x] || rand() % 500 == 0) {
         // print_point(q);
-        // printf("new cost: %d\n", m->alt[q.y][q.x]);
+        printf("new cost: %d\n", m->alt[q.y][q.x]);
         self->pos = q;
     } else {
         d = get_lower_alt(self->pos, m);
@@ -1153,10 +1154,10 @@ int move_rival(Entity *self)
     Point q = get_next_position(self->pos, self->dir);
     Dir_e d;
 
-    // printf("Current space cost: %d\n", m->alt[self->pos.y][self->pos.x]);
+    printf("Current space cost: %d\n", m->alt[self->pos.y][self->pos.x]);
     if (m->alt[q.y][q.x] <= m->alt[self->pos.y][self->pos.x] || rand() % 500 == 0) {
         // print_point(q);
-        // printf("new cost: %d\n", m->alt[q.y][q.x]);
+        printf("new cost: %d\n", m->alt[q.y][q.x]);
         self->pos = q;
     } else {
         d = get_lower_alt(self->pos, m);
