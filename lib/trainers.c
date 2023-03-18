@@ -1,33 +1,103 @@
-#include "utils-misc.c"
+#include "utils-misc.h"
+#include "trainers.h"
 
 
+//constants
+const int (*movement[]) (Entity *e, Map *m) = {move_player, move_hiker, move_rival, move_pacer, move_wanderer, move_sentry, move_explorer, move_swimmer};
+
+//globals
 Map *trails[num_types_tra];
-Terrain_e *startTer;
+
 
 //movement functions
-int move_player(Entity *self, Map *m)
+int move_player(Entity *self, Map *wrld)
 {
+    char c;
+    Dir_e d;
+    Point p;
+
+
+    c = getch();
+
+
+    switch (c) {
+        case '7':
+        case 'y':
+            d = NW; 
+            break;
+        case '8':
+        case 'k':
+            d = N;
+            break;
+        case '9':
+        case 'u':
+            d = NE;
+            break;
+        case '6':
+        case 'l':
+            d = E; 
+            break;
+        case '3':
+        case 'n':
+            d = SE;
+            break;
+        case '2':
+        case 'j':
+            d = S;
+            break;
+        case '1':
+        case 'b':
+            d = SW;
+            break;
+        case '4':
+        case 'h':
+            d = W;
+            break;
+        case '>':
+            //enter building
+            d = self->dir;
+            break;
+        case '5':
+        case ' ':
+        case '.':
+            d = NONE;
+            break;
+        case 'q':
+        default:
+            return 1;
+    }
+
+    p = get_next_position(self->pos, d);
+    if (self->pos.x != p.x || self->pos.y != p.y) {
+        if (valid_pos(self->chr, wrld->terrain[p.y][p.x])) {
+            self->pos = p;
+            self->dir = d;
+        } else {
+            return 1;
+        }
+    } else {
+        return 1;
+    }
+
     return 0;
 }
 
-int move_hiker(Entity *self, Map *m)
+int move_hiker(Entity *self, Map *wrld)
 {
-    Map *m = trails[HIKR];
+    Map *t = trails[HIKR];
     Point q = get_next_position(self->pos, self->dir);
     Dir_e d;
 
-    printf("Current space cost: %d\n", m->alt[self->pos.y][self->pos.x]);
-    if (m->alt[q.y][q.x] <= m->alt[self->pos.y][self->pos.x] || rand() % 500 == 0) {
-        // print_point(q);
-        printf("new cost: %d\n", m->alt[q.y][q.x]);
+    
+    if (t->alt[q.y][q.x] <= t->alt[self->pos.y][self->pos.x] || rand() % 500 == 0) {
         self->pos = q;
     } else {
-        d = get_lower_alt(self->pos, m);
+        d = get_lower_alt(self->pos, t);
         if (d > 0) {
             self->pos = get_next_position(self->pos, d);
             self->dir = d;
         } else {
-            fprintf(stderr, "Hiker stuck\n");
+            printw("Hiker stuck\n");
             return 1;
         }
     }
@@ -35,16 +105,16 @@ int move_hiker(Entity *self, Map *m)
     return 0;
 }
 
-int move_rival(Entity *self, Map *m)
+int move_rival(Entity *self, Map *wrld)
 {
     Map *m = trails[RIVL];
     Point q = get_next_position(self->pos, self->dir);
     Dir_e d;
 
-    printf("Current space cost: %d\n", m->alt[self->pos.y][self->pos.x]);
+    // printw("Current space cost: %d\n", m->alt[self->pos.y][self->pos.x]);
     if (m->alt[q.y][q.x] <= m->alt[self->pos.y][self->pos.x] || rand() % 500 == 0) {
         // print_point(q);
-        printf("new cost: %d\n", m->alt[q.y][q.x]);
+        // printw("new cost: %d\n", m->alt[q.y][q.x]);
         self->pos = q;
     } else {
         d = get_lower_alt(self->pos, m);
@@ -52,7 +122,7 @@ int move_rival(Entity *self, Map *m)
             self->pos = get_next_position(self->pos, d);
             self->dir = d;
         } else {
-            fprintf(stderr, "Rival stuck\n");
+            printw( "Rival stuck\n");
             return 1;
         }
     }
@@ -60,12 +130,12 @@ int move_rival(Entity *self, Map *m)
     return 0;
 }
 
-int move_pacer(Entity *self, Map *m)
+int move_pacer(Entity *self, Map *wrld)
 {
     Map *m = m;
     Point q = get_next_position(self->pos, self->dir);
 
-    if (m->terrain[q.y][q.x] == startTer[self->order]) {
+    if (m->terrain[q.y][q.x] == self->start) {
         self->pos = q;
     } else {
         self->pos = get_next_position(self->pos, change_direction(0, self->dir));
@@ -74,7 +144,7 @@ int move_pacer(Entity *self, Map *m)
     return 0;
 }
 
-int move_wanderer(Entity *self, Map *m)
+int move_wanderer(Entity *self, Map *wrld)
 {
     Map *m = m;
     Point q = get_next_position(self->pos, self->dir);
@@ -95,14 +165,15 @@ int move_wanderer(Entity *self, Map *m)
     return 0;
 }
 
-int move_sentry(Entity *self, Map *m)
+int move_sentry(Entity *self, Map *wrld)
 {
     //no
     return 0;
 }
 
-int move_explorer(Entity *self, Map *m)
+int move_explorer(Entity *self, Map *wrld)
 {
+    Map *m = wrld;
     Point q = get_next_position(self->pos, self->dir);
     int i;
 
@@ -119,11 +190,11 @@ int move_explorer(Entity *self, Map *m)
         }
     }
 
-    fprintf(stderr, "Explorer stuck\n");
+    printw( "Explorer stuck\n");
     return 1;
 }
 
-int move_swimmer(Entity *self, Map *m)
+int move_swimmer(Entity *self, Map *wrld)
 {
     Map *m = trails[SWIM];
     Point q = get_next_position(self->pos, self->dir);
@@ -137,7 +208,7 @@ int move_swimmer(Entity *self, Map *m)
             self->pos = get_next_position(self->pos, d);
             self->dir = d;
         } else {
-            fprintf(stderr, "Swimmer stuck\n");
+            printw( "Swimmer stuck\n");
             return 1;
         }
     }
@@ -145,35 +216,32 @@ int move_swimmer(Entity *self, Map *m)
     return 0;
 }
 
-const int (*movement[]) (Entity *e) = {move_player, move_hiker, move_rival, move_pacer, move_wanderer, move_sentry, move_explorer, move_swimmer};
-
 //initializers
-Entity* init_entity(int i, Point p) 
+Entity* init_entity(int i, Point p, Terrain_e st) 
 {
     Entity* e = malloc(sizeof(*e));
-
-    // print_map_terrain(m);
-    // printf("\n");
+    
 
     if (e != NULL) {
         e->chr = i;
         e->pos = p;
+        e->start = st;
         e->nextTime = 0;
         e->hn = NULL;
-        e->move = NULL;
+        e->do_move = NULL;
         e->dir = rand() % num_dir;
     }
 
     return e;
 }
 
-Trainer* init_trainer(Trainer_e te, Point p) 
+Trainer* init_trainer(Trainer_e te, Point p, Terrain_e st) 
 {
     Trainer* t = malloc(sizeof(*t));
 
     if (t != NULL) {
-        t->e = *(init_entity(te, p));
-        t->e.move = movement[te];
+        t->e = *(init_entity(te, p, st));
+        t->e.do_move = movement[te];
     }
 
     return t;
@@ -185,8 +253,8 @@ Trainer** init_trainers(const int num)
     Trainer **trainers = malloc(sizeof(Trainer) * num);
 
     if (num >= 2) {
-        Hiker *h = init_trainer(HIKR, (Point) {.x = 2 + (rand() % (BOUNDS_X - 3)), 2 + (rand() % (BOUNDS_Y - 3))});
-        Rival *r = init_trainer(RIVL, (Point) {.x = 2 + (rand() % (BOUNDS_X - 3)), 2 + (rand() % (BOUNDS_Y - 3))});
+        Hiker *h = init_trainer(HIKR, (Point) {.x = 2 + (rand() % (BOUNDS_X - 3)), 2 + (rand() % (BOUNDS_Y - 3))}, num_types_ter);
+        Rival *r = init_trainer(RIVL, (Point) {.x = 2 + (rand() % (BOUNDS_X - 3)), 2 + (rand() % (BOUNDS_Y - 3))}, num_types_ter);
         h->e.order = 0;
         r->e.order = 1;
         trainers[0] = h;
@@ -195,7 +263,7 @@ Trainer** init_trainers(const int num)
     }
 
     while (i < num) {
-        Trainer *t = init_trainer(1 + (rand() % (num_types_tra - 1)), (Point) {.x = 2 + (rand() % (BOUNDS_X - 3)), 2 + (rand() % (BOUNDS_Y - 3))});
+        Trainer *t = init_trainer(1 + (rand() % (num_types_tra - 1)), (Point) {.x = 2 + (rand() % (BOUNDS_X - 3)), 2 + (rand() % (BOUNDS_Y - 3))}, num_types_ter);
         t->e.order = i;
         trainers[i] = t;
         i++;

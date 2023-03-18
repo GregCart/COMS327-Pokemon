@@ -1,3 +1,7 @@
+#ifndef ENUMS_H
+#define ENUMS_H
+
+
 typedef enum terrain_e {
     RCK,
     TRE,
@@ -36,3 +40,5 @@ typedef enum direction_e{
     SE,
     num_dir
 } Dir_e;
+
+#endif

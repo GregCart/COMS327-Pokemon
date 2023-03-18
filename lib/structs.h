@@ -1,15 +1,14 @@
-#include "lib/heap.h"
+#ifndef STRUCTS_H
+#define STRUCTS_H
 
-#include "constants.c"
+
+#include "heap.h"
+#include "constants.h"
 
 
 //structs
-typedef struct map {
-    Terrain_e terrain[BOUNDS_Y][BOUNDS_X];
-    Trainer **trainers;
-    int alt[BOUNDS_Y][BOUNDS_X];
-    int n, s, e, w;
-} Map;
+typedef struct entity Entity;
+typedef struct map Map;
 
 typedef struct point {
     int x, y;
@@ -25,18 +24,28 @@ typedef struct path {
 typedef struct entity {
     heap_node_t *hn;
     Point pos;
+    Terrain_e start;
     int nextTime;
     int chr;
     int order;
     Dir_e dir;
-    int (*move)(Entity *);
+    int (*do_move)(Entity *, Map *m);
 } Entity;
 
 typedef struct trainer {
     Entity e;
 } Trainer;
 
+typedef struct map {
+    Terrain_e terrain[BOUNDS_Y][BOUNDS_X];
+    Trainer **trainers;
+    int alt[BOUNDS_Y][BOUNDS_X];
+    int n, s, e, w;
+} Map;
+
 //specific examples
 typedef Trainer PC;
 typedef Trainer Hiker;
 typedef Trainer Rival;
+
+#endif

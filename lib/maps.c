@@ -1,9 +1,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "lib/queue.h"
-#include "lib/heap.h"
-#include "utils-misc.c"
+#include "queue.h"
+#include "heap.h"
+#include "utils-misc.h"
+#include "maps.h"
 
 
 //globals
@@ -17,9 +18,10 @@ int print_map_alt(Map *m)
 
     for (i = 0; i < BOUNDS_Y; i++) {
         for (j = 0; j < BOUNDS_X; j++) {
-            printf("%d ", m->alt[i][j]);
+            mvprintw(0, 0, "Printing (%d, %d): %d\n", j, i, m->alt[i][j]);
+            mvprintw(45 + i, j * 2, "%d|", m->alt[i][j]);
         }
-        printf("\n");
+        printw("\n");
     }
 
     return 0;
@@ -29,18 +31,18 @@ int print_map_terrain(Map *m)
 {
     int i , j;
 
-    printf(" \t");
+    mvprintw(22, 0, " \t");
     for (j = 0; j < BOUNDS_X; j++) {
-        printf("%d ", j % 10);
+        printw("%d ", j % 10);
     }
-    printf("\n\n");
+    printw("\n\n");
 
     for (i = 0; i < BOUNDS_Y; i++) {
-        printf("%d\t", i);
+        printw("%d\t", i);
         for (j = 0; j < BOUNDS_X; j++) {
-            printf("%d ", m->terrain[i][j]);
+            printw("%d ", m->terrain[i][j]);
         }
-        printf("\n");
+        printw("\n");
     }
 
     return 0;
@@ -48,7 +50,7 @@ int print_map_terrain(Map *m)
 
 int print_map(Map *m)
 {
-    return (print_map_terrain(m) && print_map_alt(m));
+    return (!print_map_terrain(m) && !print_map_alt(m));
 }
 
 int print_cost_map(Map *m) 
@@ -71,7 +73,8 @@ int print_cost_map(Map *m)
 }
 
 //-cats
-int copy_map_terrain(Map *from, Map *to) {
+int copy_map_terrain(Map *from, Map *to)
+ {
     int i, j;
 
     for (i = 0; i < BOUNDS_Y; i++) {
@@ -83,11 +86,14 @@ int copy_map_terrain(Map *from, Map *to) {
     return 0;
 }
 
-int copy_map_alt(Map *from, Map *to) {
+int copy_map_alt(Map *from, Map *to)
+ {
     int i, j;
+
 
     for (i = 0; i < BOUNDS_Y; i++) {
         for (j = 0; j < BOUNDS_X; j++) {
+            mvprintw(0, 0, "Copy (%d, %d): %d", j, i, from->alt[i][j]);
             to->alt[i][j] = from->alt[i][j];
         }
     }
@@ -95,7 +101,8 @@ int copy_map_alt(Map *from, Map *to) {
     return 0;
 }
 
-int copy_map(Map *from, Map *to) {
+int copy_map(Map *from, Map *to)
+ {
     copy_map_alt(from, to);
     copy_map_terrain(from, to);
 
@@ -167,9 +174,9 @@ int add_terrain(Map *m, int x, int y, Terrain_e c)
 
     if ((rand() % 137) != 0) {
         *chr = c;
-        alt = alt - (rand() % 6) + 1;
+        *alt = *alt - (rand() % 6) + 1;
     } else {
-        alt = alt - ((rand() % 3) - 1) * (rand() % 3);
+        *alt = *alt - ((rand() % 3) - 1) * (rand() % 3);
         if (*alt > 45) {
             *chr = ROCK;
         } else if (*alt > 43) {
@@ -229,17 +236,14 @@ int spread_seed(Map *m, queue_t *qx, queue_t *qy)
     int i, x, y;
     Terrain_e chr;
 
-    queue_dequeue(qx, &x);
-    queue_dequeue(qy, &y);
+    // queue_dequeue(qx, &x);
+    // queue_dequeue(qy, &y);
 
     while (!queue_is_empty(qx)) {
         queue_dequeue(qx, &x);
         queue_dequeue(qy, &y);
 
         chr = m->terrain[y][x];
-        // alt = map[x][y][1];
-        // print_display(map, 0);
-        // printf("Length: %d, Char: %c\n", queue_length(qx), chr);
 
         for (i = -1; i < 2; i++) {
             if (i != 0) {
@@ -392,7 +396,7 @@ int trailblaze(Map *m, Point curPos, Point center)
 int create_map(Map *m, Point curPos, Point center)
 {
     queue_t *qx, *qy;
-    int i, j, n, s, e, w;
+    int i, j, n, s, e, w, ret;
 
     n = 1 + (rand() % (BOUNDS_X - 2));
     s = 1 + (rand() % (BOUNDS_X - 2));
@@ -409,19 +413,19 @@ int create_map(Map *m, Point curPos, Point center)
     for (i = 0; i < BOUNDS_Y; i++) {
         for (j = 0; j < BOUNDS_X; j++) {
             m->terrain[i][j] = -1;
-            // printf("%c", m->terrain[i][j]);
+            m->alt[i][j] = 25;
         }
-        // printf("\n");
     }
 
 
     // printf("trying boundary\n");
-    if (!make_boundary(m, curPos)) {
+    if (!(ret = make_boundary(m, curPos))) {
         int i, r;
         int x[2];
 
         // printf("Making queues\n");
-        qx = qy = malloc(sizeof(queue_t));
+        qx = malloc(sizeof(*qx));
+        qy = malloc(sizeof(*qy));
         queue_init(qx);
         queue_init(qy);
 
@@ -475,20 +479,23 @@ int create_map(Map *m, Point curPos, Point center)
 
         // print_display(m);
         // printf("Begin spreading\n");
-        spread_seed(m, qx, qy);
+        ret = spread_seed(m, qx, qy) || ret;
         // printf("Fill Map\n");
-        fill_map(m);
+        ret = fill_map(m) || ret;
         // printf("Add Paths\n");
         // pathfind(m, 0);
-        trailblaze(m, curPos, center);
+        ret = trailblaze(m, curPos, center) || ret;
+        queue_destroy(qx);
+        queue_destroy(qy);
     } else {
-        fprintf(stderr, "There was an error generating the map\n");
-        return 1;
+        mvprintw(0, 0, "There was an error generating the map border\n");
     }
 
-    // printf("Begin cleanup\n");
-    queue_destroy(qx);
-    queue_destroy(qy);
-    
-    return 0;
+    if (ret) {
+        mvprintw(0, 0, "There was an error generating the map.\n");
+    } else {
+        mvprintw(0, 0, "Created map.\n");
+    }
+
+    return ret;
 }

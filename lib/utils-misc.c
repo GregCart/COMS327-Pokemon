@@ -2,18 +2,72 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "lib/queue.h"
+#include "queue.h"
+#include "structs.h"
+#include "maps.h"
+#include "utils-misc.h"
 
-#include "structs.c"
+
+//constants
+const char TERRAIN[] = {ROCK, TREE, GRASS_T, WATER, GRASS_S};
+const char ALL_TERRAIN[] = {ROCK, TREE, GRASS_T, WATER, GRASS_S, GATE, PATH, MART, CENTER, BORDER};
+const char ALL_TRAINERS[] = {PLAYER, HIKER, RIVAL, PACER, WANDERER, SENTRY, EXPLORER, SWIMMER};
+const int ALTITUDE[][2] = {{50, 30}, {43, 25}, {45, 15}, {18, 0}, {45, 20}};
+
+/*
+ * rock, tree, tgrass, water, sgrass, gate, path, mart, center, border
+ * player, hiker, rival, pacer, wanderer, sentry, explorer, swimmer
+ */
+const int STRESS[num_types_tra][num_types_ter] = {
+    {D_MAX, D_MAX, 20, D_MAX, 10, 10, 10, 10, 10, D_MAX},
+    {15, 15, 15, D_MAX, 10, D_MAX, 10, 50, 50, D_MAX},
+    {D_MAX, D_MAX, 20, D_MAX, 10, D_MAX, 10, 50, 50, D_MAX},
+    {D_MAX, D_MAX, D_MAX, D_MAX, D_MAX, D_MAX, D_MAX, D_MAX, D_MAX, D_MAX},
+    {D_MAX, D_MAX, D_MAX, D_MAX, D_MAX, D_MAX, D_MAX, D_MAX, D_MAX, D_MAX},
+    {D_MAX, D_MAX, D_MAX, D_MAX, D_MAX, D_MAX, D_MAX, D_MAX, D_MAX, D_MAX},
+    {D_MAX, D_MAX, 20, D_MAX, 15, D_MAX, 10, 50, 50, D_MAX},
+    {D_MAX, D_MAX, D_MAX, 7, D_MAX, D_MAX, D_MAX, D_MAX, D_MAX, D_MAX}
+};
+
+
+//movement utility
+Dir_e change_direction(int x, Dir_e d)
+{
+    if (x == 0) {
+        switch (d) {
+            case NW:
+                return SE;
+            case N:
+                return S;
+            case NE:
+                return SW;
+            case W:
+                return E;
+            case E:
+                return W;
+            case SW:
+                return NE;
+            case S:
+                return S;
+            case SE:
+                return NW;
+            default:
+                printw("Error reversing direction %d", d);
+                return NONE;
+        }
+    } else {
+        return (x * rand()) % num_dir;
+    }
+}
 
 
 //comperators
-static int32_t path_cmp(const void *key, const void *with) 
+int32_t path_cmp(const void *key, const void *with) 
 {
   return ((Path *) key)->cost - ((Path *) with)->cost;
 }
 
-static int32_t entity_cmp(const void *key, const void *with) 
+int32_t entity_cmp(const void *key, const void *with) 
 {
   int ret;
 
@@ -25,9 +79,51 @@ static int32_t entity_cmp(const void *key, const void *with)
   return ret;
 }
 
-//getters
-int find_stress(Map *m, Entity *e, Point p, Terrain_e *startTer)
+//!chess
+int valid_move_ter(Terrain_e t)
 {
+    return !(t == GTE || t == BDR);
+}
+
+int valid_pos_list(Trainer_e e, Terrain_e t, Terrain_e start)
+{
+    if (!valid_move_ter(t) || t == MRT || t == CTR) {
+        return 1;
+    }
+
+    switch (e){
+        case PLAY:
+        case RIVL:
+        case HIKR:
+        case SWIM:
+        case EXPL:
+            return (STRESS[e][t] != D_MAX);
+            break;
+        case PACR:
+        case WAND:
+            return (t == start && t != WTR);
+            break;
+        case SENT:
+            return (t != WTR && t != RCK);
+            break;
+        default:
+            return 1;
+    }
+    return 1;
+}
+
+int valid_pos(Trainer_e e, Terrain_e t)
+{
+    if (!valid_move_ter(t) || t == MRT || t == CTR) {
+        return 1;
+    }
+    return (STRESS[e][t] != D_MAX);
+}
+
+//getters
+int find_stress(Map *m, Entity *e, Point p)
+{
+    mvprintw(0, 0, "Finding Stress at (%d, %d) for Entity %d at terrain %d\n", p.x, p.y, e->chr, m->terrain[p.y][p.x]);
     switch (e->chr){
         case PLAY:
         case RIVL:
@@ -38,13 +134,13 @@ int find_stress(Map *m, Entity *e, Point p, Terrain_e *startTer)
             break;
         case PACR:
         case WAND:
-            return m->terrain[p.y][p.x] == startTer[startTer[e->order]]? STRESS[0][m->terrain[p.y][p.x]]: STRESS[e->chr][m->terrain[p.y][p.x]];
+            return m->terrain[p.y][p.x] == e->start? STRESS[0][m->terrain[p.y][p.x]]: STRESS[e->chr][m->terrain[p.y][p.x]];
             break;
         case SENT:
             return D_MAX;
             break;
         default:
-            fprintf(stderr, "Error finding stress for %c\n", ALL_TRAINERS[e->chr]);
+            mvprintw(0, 0, "Error finding stress for %c\n", ALL_TRAINERS[e->chr]);
             return -1;
     }
     return -1;
@@ -79,7 +175,6 @@ Dir_e get_lower_alt(Point p, Map *m)
 {
     int i;
     Point q = get_next_position(p, 1);
-    // print_point(p);
 
     for (i = 1; i < num_dir; i++) {
         // print_point(q);
@@ -94,19 +189,58 @@ Dir_e get_lower_alt(Point p, Map *m)
     return -1;
 }
 
+//HP's
+int print_display(char map[BOUNDS_Y][BOUNDS_X][10])
+{
+    int i, j;
+
+    for (i = 0; i < BOUNDS_Y; i++) {
+        for (j = 0; j < BOUNDS_X; j++) {
+            mvprintw(i + 1, j, "%s", map[i][j]);
+        }
+    }
+    refresh();
+
+    return 0;
+}
+
+int print_entity(Entity *e) 
+{
+    printw("Entity: {\n");
+    printw("\tChar: %c\n", ALL_TRAINERS[e->chr]);
+    printw("\tPos: (%d, %d),\n", e->pos.x, e->pos.y);
+    printw("\tStart: %d\n", e->start);
+    printw("\tTime: %d\n", e->nextTime);
+    printw("\tHn? %d\n", e->hn == NULL);
+    printw("\tMove? %d\n", e->do_move == NULL);
+    printw("\tCurrent direction: %d\n", e->dir);
+    printw("}\n");
+
+    return 0;
+}
+
+int print_point(Point p)
+{
+    printw("(%d, %d)\n", p.x, p.y);
+
+    return 0;
+}
+
 //distance finders
 int manhattan(Point p, Point q)
 {
     int ret;
-    // printf("(%d, %d) and (%d, %d)\n", p.x, p.y, q.x, q.y);
+
+
     ret = abs(p.x - q.x) + abs(p.y - q.y);
-    // printf("ret:%d\n", ret);
+
+
     return ret;
 }
 
-static int dijkstra(Map *m, Map *w, Point p, Entity *e, Terrain_e startTer)
+int dijkstra(Map *m, Map *w, Point p, Entity *e)
 {
-    // printf("Start Dijk's\n");
+    // printw("Start Dijk's\n");
     static Path path[BOUNDS_Y][BOUNDS_X], *pth;
     static int init = 0;
     heap_t h;
@@ -121,176 +255,127 @@ static int dijkstra(Map *m, Map *w, Point p, Entity *e, Terrain_e startTer)
             }
         }
         init = 1;
+        mvprintw(0, 0, "Initialized Path positions\n");
     }
+    
 
-    // printf("Init paths\n");
     for (y = 0; y < BOUNDS_Y; y++) {
         for (x = 0; x < BOUNDS_X; x++) {
             path[y][x].cost = D_MAX;
         }
     }
+    mvprintw(0, 0, "Initialized Path costs.\n");
 
     path[p.y][p.x].cost = 0;
+    mvprintw(0, 0, "Set point cost to 0\n");
 
     heap_init(&h, path_cmp, NULL);
+    mvprintw(0, 0, "Initialized Heap\n");
 
-    // printf("fill heap\n");
     for (y = 1; y < BOUNDS_Y - 1; y++) {
         for (x = 1; x < BOUNDS_X - 1; x++) {
-            if (find_stress(w, e, (Point){.x=x, .y=y}, startTer) != D_MAX) {
+            if (find_stress(w, e, (Point) {.x=x, .y=y}) != D_MAX) {
+                mvprintw(0, 0, "Heap Node at (%d, %d): %d\n", x, y, path[y][x].hn == NULL);
                 path[y][x].hn = heap_insert(&h, &path[y][x]);
-                // printf("In\t\t");
             }
         }
-        // printf("\n");
     }
-    // printf("\n");
+    mvprintw(0, 0, "Filled Heap\n");
 
-    // printf("loop start\n");
     c = 0;
     while ((pth = heap_remove_min(&h))) {
         pth->hn = NULL;
         Point here = (Point) {.x = pth->pos[1], .y = pth->pos[0]};
+        mvprintw(0, 0, "%d\n", c);
 
-        // printf("check above\n");//above
+        mvprintw(0, 10, "T\n");
         pnt = (Point) {.x = pth->pos[1], .y = pth->pos[0] - 1};
         if ((path[pnt.y][pnt.x].hn) && w->alt[pnt.y][pnt.x] < 99 
-            && (path[pnt.y][pnt.x].cost > ((pth->cost + find_stress(w, e, here, startTer))))) {
-                path[pnt.y][pnt.x].cost = pth->cost + find_stress(w, e, here, startTer);
+            && (path[pnt.y][pnt.x].cost > ((pth->cost + find_stress(w, e, here))))) {
+                path[pnt.y][pnt.x].cost = pth->cost + find_stress(w, e, here);
                 //from stuff for drawing nodes, don't need for part 3
                 path[pnt.y][pnt.x].from[0] = pth->pos[0];
                 path[pnt.y][pnt.x].from[1] = pth->pos[1];
                 heap_decrease_key_no_replace(&h, path[pnt.y][pnt.x].hn);
-                c++;
         }
-        // printf("check TL\n");
+        mvprintw(0, 10, "TL\n");
         pnt = (Point) {.x = pth->pos[1] - 1, .y = pth->pos[0] - 1};
         if ((path[pnt.y][pnt.x].hn) && w->alt[pnt.y][pnt.x] < 99 
-            && (path[pnt.y][pnt.x].cost > ((pth->cost + find_stress(w, e, here, startTer))))) {    //TL
-                path[pnt.y][pnt.x].cost = pth->cost + find_stress(w, e, here, startTer);
+            && (path[pnt.y][pnt.x].cost > ((pth->cost + find_stress(w, e, here))))) {    //TL
+                path[pnt.y][pnt.x].cost = pth->cost + find_stress(w, e, here);
                 //from stuff for drawing nodes, don't need for part 3
                 path[pnt.y][pnt.x].from[0] = pth->pos[0];
                 path[pnt.y][pnt.x].from[1] = pth->pos[1];
                 heap_decrease_key_no_replace(&h, path[pnt.y][pnt.x].hn);
-                c++;
         }
-        // printf("check TR\n");
+        mvprintw(0, 10, "TR\n");
         pnt = (Point) {.x = pth->pos[1] + 1, .y = pth->pos[0] - 1};
         if ((path[pnt.y][pnt.x].hn) && w->alt[pnt.y][pnt.x] < 99
-            && (path[pnt.y][pnt.x].cost > ((pth->cost + find_stress(w, e, here, startTer))))) {    //TR
-                path[pnt.y][pnt.x].cost = pth->cost + find_stress(w, e, here, startTer);
+            && (path[pnt.y][pnt.x].cost > ((pth->cost + find_stress(w, e, here))))) {    //TR
+                path[pnt.y][pnt.x].cost = pth->cost + find_stress(w, e, here);
                 //from stuff for drawing nodes, don't need for part 3
                 path[pnt.y][pnt.x].from[0] = pth->pos[0];
                 path[pnt.y][pnt.x].from[1] = pth->pos[1];
                 heap_decrease_key_no_replace(&h, path[pnt.y][pnt.x].hn);
-                c++;
         }
-        // printf("check left\n");
+        mvprintw(0, 10, "L\n");
         pnt = (Point) {.x = pth->pos[1] - 1, .y = pth->pos[0]};
         if ((path[pnt.y][pnt.x].hn) && w->alt[pnt.y][pnt.x] < 99
-            && (path[pnt.y][pnt.x].cost > ((pth->cost + find_stress(w, e, here, startTer))))) {    //left
-                path[pnt.y][pnt.x].cost = pth->cost + find_stress(w, e, here, startTer);
+            && (path[pnt.y][pnt.x].cost > ((pth->cost + find_stress(w, e, here))))) {    //left
+                path[pnt.y][pnt.x].cost = pth->cost + find_stress(w, e, here);
                 //from stuff for drawing nodes, don't need for part 3
                 path[pnt.y][pnt.x].from[0] = pth->pos[0];
                 path[pnt.y][pnt.x].from[1] = pth->pos[1];
                 heap_decrease_key_no_replace(&h, path[pnt.y][pnt.x].hn);
-                c++;
         }
-        // printf("check right\n");
+        mvprintw(0, 10, "R\n");
         pnt = (Point) {.x = pth->pos[1] + 1, .y = pth->pos[0]};
         if ((path[pnt.y][pnt.x].hn) && w->alt[pnt.y][pnt.x] < 99
-            && (path[pnt.y][pnt.x].cost > ((pth->cost + find_stress(w, e, here, startTer))))) {    //right
-                path[pnt.y][pnt.x].cost = pth->cost + find_stress(w, e, here, startTer);
+            && (path[pnt.y][pnt.x].cost > ((pth->cost + find_stress(w, e, here))))) {    //right
+                path[pnt.y][pnt.x].cost = pth->cost + find_stress(w, e, here);
                 //from stuff for drawing nodes, don't need for part 3
                 path[pnt.y][pnt.x].from[0] = pth->pos[0];
                 path[pnt.y][pnt.x].from[1] = pth->pos[1];
                 heap_decrease_key_no_replace(&h, path[pnt.y][pnt.x].hn);
-                c++;
         }
-        // printf("check bottom\n");
+        mvprintw(0, 10, "B\n");
         pnt = (Point) {.x = pth->pos[1], .y = pth->pos[0] + 1};
         if ((path[pnt.y][pnt.x].hn) && w->alt[pnt.y][pnt.x] < 99
-            && (path[pnt.y][pnt.x].cost > ((pth->cost + find_stress(w, e, here, startTer))))) {    //bottom
-                path[pnt.y][pnt.x].cost = pth->cost + find_stress(w, e, here, startTer);
+            && (path[pnt.y][pnt.x].cost > ((pth->cost + find_stress(w, e, here))))) {    //bottom
+                path[pnt.y][pnt.x].cost = pth->cost + find_stress(w, e, here);
                 //from stuff for drawing nodes, don't need for part 3
                 path[pnt.y][pnt.x].from[0] = pth->pos[0];
                 path[pnt.y][pnt.x].from[1] = pth->pos[1];
                 heap_decrease_key_no_replace(&h, path[pnt.y][pnt.x].hn);
-                c++;
         }
-        // printf("check BL\n");
+        mvprintw(0, 10, "BL\n");
         pnt = (Point) {.x = pth->pos[1] - 1, .y = pth->pos[0] + 1};
         if ((path[pnt.y][pnt.x].hn) && w->alt[pnt.y][pnt.x] < 99
-            && (path[pnt.y][pnt.x].cost > ((pth->cost + find_stress(w, e, here, startTer))))) {    //BL
-                path[pnt.y][pnt.x].cost = pth->cost + find_stress(w, e, here, startTer);
+            && (path[pnt.y][pnt.x].cost > ((pth->cost + find_stress(w, e, here))))) {    //BL
+                path[pnt.y][pnt.x].cost = pth->cost + find_stress(w, e, here);
                 //from stuff for drawing nodes, don't need for part 3
                 path[pnt.y][pnt.x].from[0] = pth->pos[0];
                 path[pnt.y][pnt.x].from[1] = pth->pos[1];
                 heap_decrease_key_no_replace(&h, path[pnt.y][pnt.x].hn);
-                c++;
         }
-        // printf("check BR\n");
+        mvprintw(0, 10, "BR\n");
         pnt = (Point) {.x = pth->pos[1] + 1, .y = pth->pos[0] + 1};
         if ((path[pnt.y][pnt.x].hn) && w->alt[pnt.y][pnt.x] < 99
-            && (path[pnt.y][pnt.x].cost > ((pth->cost + find_stress(w, e, here, startTer))))) {    //BR
-                path[pnt.y][pnt.x].cost = pth->cost + find_stress(w, e, here, startTer);
+            && (path[pnt.y][pnt.x].cost > ((pth->cost + find_stress(w, e, here))))) {    //BR
+                path[pnt.y][pnt.x].cost = pth->cost + find_stress(w, e, here);
                 //from stuff for drawing nodes, don't need for part 3
                 path[pnt.y][pnt.x].from[0] = pth->pos[0];
                 path[pnt.y][pnt.x].from[1] = pth->pos[1];
                 heap_decrease_key_no_replace(&h, path[pnt.y][pnt.x].hn);
-                c++;
         }
-
-        // printf("X: %d, y:%d, cost:%d\n", pth->pos[0], pth->pos[1], path[y][x].cost);
+        c++;
     }
-    // printf("#less: %d\n", c);
 
-    // printf("fill cost map\n");
     for (y = 0; y < BOUNDS_Y; y++) {
         for (x = 0; x < BOUNDS_X; x++) {
-            // printf("X: %d, y:%d, cost:%d\n", x, y, path[y][x].cost);
             m->alt[y][x] = path[y][x].cost;
         }
     }
 
     return 0;
-}
-
-//HP's
-int print_display(char map[BOUNDS_Y][BOUNDS_X][10])
-{
-    int i, j;
-
-    for (i = 0; i < BOUNDS_Y; i++) {
-        for (j = 0; j < BOUNDS_X; j++) {
-            printf("%s", map[i][j]);
-        }
-        printf("\n");
-    }
-
-    return 0;
-}
-
-int print_entity(Entity *e) 
-{
-    printf("Entity: {\n");
-    printf("\tChar: %c\n", ALL_TRAINERS[e->chr]);
-    printf("\tPos: (%d, %d),\n", e->pos.x, e->pos.y);
-    printf("\tCurrent direction: %d\n", e->dir);
-    printf("}\n");
-
-    return 0;
-}
-
-int print_point(Point p)
-{
-    printf("(%d, %d)\n", p.x, p.y);
-
-    return 0;
-}
-
-//!chess
-int valid_move_ter(Terrain_e t)
-{
-    return !(t == GTE || t == BDR);
 }
