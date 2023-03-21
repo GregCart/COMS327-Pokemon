@@ -20,6 +20,7 @@ int32_t entity_cmp(const void *key, const void *with);
 int valid_move_ter(Terrain_e t);
 int valid_pos_list(Trainer_e e, Terrain_e t, Terrain_e st);
 int valid_pos(Trainer_e e, Terrain_e t);
+int containes_trainer(Point p, char map[BOUNDS_Y][BOUNDS_X][10]);
 
 //getters
 int find_stress(Map *m, Entity *e, Point p);

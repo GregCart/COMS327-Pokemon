@@ -3,14 +3,14 @@
 
 
 //constants
-const int (*movement[]) (Entity *e, Map *m) = {move_player, move_hiker, move_rival, move_pacer, move_wanderer, move_sentry, move_explorer, move_swimmer};
+const int (*movement[]) (Entity *e, Map *m, char map[BOUNDS_Y][BOUNDS_X][10]) = {move_player, move_hiker, move_rival, move_pacer, move_wanderer, move_sentry, move_explorer, move_swimmer};
 
 //globals
 Map *trails[num_types_tra];
 
 
 //movement functions
-int move_player(Entity *self, Map *wrld)
+int move_player(Entity *self, Map *wrld, char map[BOUNDS_Y][BOUNDS_X][10])
 {
     int ret = 0;
     char c;
@@ -90,7 +90,7 @@ int move_player(Entity *self, Map *wrld)
     return ret;
 }
 
-int move_hiker(Entity *self, Map *wrld)
+int move_hiker(Entity *self, Map *wrld, char map[BOUNDS_Y][BOUNDS_X][10])
 {
     Map *t = trails[HIKR];
     Point q = get_next_position(self->pos, self->dir);
@@ -113,7 +113,7 @@ int move_hiker(Entity *self, Map *wrld)
     return 0;
 }
 
-int move_rival(Entity *self, Map *wrld)
+int move_rival(Entity *self, Map *wrld, char map[BOUNDS_Y][BOUNDS_X][10])
 {
     Map *m = trails[RIVL];
     Point q = get_next_position(self->pos, self->dir);
@@ -138,7 +138,7 @@ int move_rival(Entity *self, Map *wrld)
     return 0;
 }
 
-int move_pacer(Entity *self, Map *wrld)
+int move_pacer(Entity *self, Map *wrld, char map[BOUNDS_Y][BOUNDS_X][10])
 {
     Map *m = m;
     Point q = get_next_position(self->pos, self->dir);
@@ -152,7 +152,7 @@ int move_pacer(Entity *self, Map *wrld)
     return 0;
 }
 
-int move_wanderer(Entity *self, Map *wrld)
+int move_wanderer(Entity *self, Map *wrld, char map[BOUNDS_Y][BOUNDS_X][10])
 {
     Map *m = wrld;
     Point q = get_next_position(self->pos, self->dir);
@@ -173,13 +173,13 @@ int move_wanderer(Entity *self, Map *wrld)
     return 0;
 }
 
-int move_sentry(Entity *self, Map *wrld)
+int move_sentry(Entity *self, Map *wrld, char map[BOUNDS_Y][BOUNDS_X][10])
 {
     //no
     return 0;
 }
 
-int move_explorer(Entity *self, Map *wrld)
+int move_explorer(Entity *self, Map *wrld, char map[BOUNDS_Y][BOUNDS_X][10])
 {
     Map *m = wrld;
     Point q = get_next_position(self->pos, self->dir);
@@ -202,13 +202,15 @@ int move_explorer(Entity *self, Map *wrld)
     return 1;
 }
 
-int move_swimmer(Entity *self, Map *wrld)
+int move_swimmer(Entity *self, Map *wrld, char map[BOUNDS_Y][BOUNDS_X][10])
 {
     Map *m = trails[SWIM];
     Point q = get_next_position(self->pos, self->dir);
     Dir_e d;
 
-    if (valid_pos(self->chr, m->terrain[q.y][q.x]) && (m->alt[q.y][q.x] <= m->alt[self->pos.y][self->pos.x] || rand() % 10 == 0)) {
+    if (valid_pos(self->chr, m->terrain[q.y][q.x]) && 
+        (m->alt[q.y][q.x] <= m->alt[self->pos.y][self->pos.x] || rand() % 10 == 0) &&
+        !containes_trainer(q, map)) {
         self->pos = q;
     } else {
         d = get_lower_alt(self->pos, m);
@@ -216,7 +218,7 @@ int move_swimmer(Entity *self, Map *wrld)
             self->pos = get_next_position(self->pos, d);
             self->dir = d;
         } else {
-            printw( "Swimmer stuck\n");
+            mvprintw(0, 0, "Swimmer stuck\n");
             return 1;
         }
     }

@@ -30,7 +30,7 @@ typedef struct entity {
     int chr;
     int order;
     Dir_e dir;
-    int (*do_move)(Entity *, Map *m);
+    int (*do_move)(Entity *, Map *m, char map[BOUNDS_Y][BOUNDS_X][10]);
 } Entity;
 
 typedef struct trainer {

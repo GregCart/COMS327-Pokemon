@@ -237,8 +237,9 @@ int gameloop(int numTrainers)
             p = ent->pos;
             if (!ent->defeted) {
                 if (!ret && check_battle(m, ent, player)) {
+                    mvprintw(0, 0, "Battle Between %c and The Player!\n", ALL_TRAINERS[ent->chr]);
                     initiate_battle(ent, player);
-                } else if(!(code = ent->do_move(ent, m))) {
+                } else if(!(code = ent->do_move(ent, m, display))) {
                     ent->nextTime += STRESS[ent->chr][world[curPos.y][curPos.x]->terrain[ent->pos.y][ent->pos.x]];
                     ret = map_char(m, display, p) || ret;
                     ret = add_entity_trainer(ent, display) || ret;
@@ -250,10 +251,9 @@ int gameloop(int numTrainers)
                 } else if (code) {
                     ret = code;
                 }
+                ent->hn = heap_insert(&order, ent);
             }
             
-            
-            ent->hn = heap_insert(&order, ent);
             refresh();
         }
     } else {

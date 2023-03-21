@@ -120,6 +120,21 @@ int valid_pos(Trainer_e e, Terrain_e t)
     return (STRESS[e][t] != D_MAX);
 }
 
+int containes_trainer(Point p, char map[BOUNDS_Y][BOUNDS_X][10]) {
+    int i, ret = 0;
+
+
+    for (i = 0; i < num_types_tra; i++) {
+        if ( (char) map[p.y][p.x][0] == ALL_TRAINERS[i]) {
+            ret = 1;
+            break;
+        }
+    }
+
+
+    return ret;
+}
+
 //getters
 int find_stress(Map *m, Entity *e, Point p)
 {
@@ -450,7 +465,7 @@ int check_battle(Map *wrld, Entity *e, PC *player)
 
     for(i = 0; i < num_dir; i++) {
         p = get_next_position(e->pos, i);
-        if (p.x == player->e.pos.x && p.x == player->e.pos.x) {
+        if (p.x == player->e.pos.x && p.y == player->e.pos.y) {
             if (e->dir == i) {
                 ret = 1;
             }
@@ -461,3 +476,5 @@ int check_battle(Map *wrld, Entity *e, PC *player)
     
     return ret;
 }
+
+
