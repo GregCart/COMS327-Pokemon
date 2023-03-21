@@ -32,6 +32,14 @@ int dijkstra(Map *m, Map *w, Point p, Entity *e);
 
 //HP's
 int print_display(char map[BOUNDS_Y][BOUNDS_X][10]);
+int color_display(Map *m, Trainer **ts, int numTrainers);
 int print_entity(Entity *e);
+
+//new screen manipulation
+int enter_building(Terrain_e t);
+int initiate_battle(Entity *trainer, PC *player);
+
+//misc
+int check_battle(Map *wrld, Entity *e, PC *player);
 
 #endif

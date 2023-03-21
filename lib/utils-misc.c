@@ -82,7 +82,7 @@ int32_t entity_cmp(const void *key, const void *with)
 //!chess
 int valid_move_ter(Terrain_e t)
 {
-    return !(t == GTE || t == BDR);
+    return (t != GTE && t != BDR);
 }
 
 int valid_pos_list(Trainer_e e, Terrain_e t, Terrain_e start)
@@ -114,7 +114,7 @@ int valid_pos_list(Trainer_e e, Terrain_e t, Terrain_e start)
 
 int valid_pos(Trainer_e e, Terrain_e t)
 {
-    if (!valid_move_ter(t) || t == MRT || t == CTR) {
+    if (valid_move_ter(t) && t != MRT && t != CTR) {
         return 1;
     }
     return (STRESS[e][t] != D_MAX);
@@ -174,12 +174,12 @@ Point get_next_position(Point p, Dir_e d)
 Dir_e get_lower_alt(Point p, Map *m)
 {
     int i;
-    Point q = get_next_position(p, 1);
+    Point q;
 
     for (i = 1; i < num_dir; i++) {
         // print_point(q);
+        q = get_next_position(p, i);
         if (q.x > 0 && q.x < (BOUNDS_X - 1) && q.y > 0 && q.y < (BOUNDS_Y - 1) && valid_move_ter(m->terrain[q.x][q.y])) {
-            q = get_next_position(p, i);
             if (m->alt[q.x][q.y] <= m->alt[p.x][p.y]) {
                 return i;
             }
@@ -199,7 +199,25 @@ int print_display(char map[BOUNDS_Y][BOUNDS_X][10])
             mvprintw(i + 1, j, "%s", map[i][j]);
         }
     }
-    refresh();
+
+    return 0;
+}
+
+int color_display(Map *m, Trainer **ts, int numTrainers)
+{
+    int i, j;
+
+
+    for (i = 0; i < BOUNDS_Y; i++) {
+        for (j = 0; j < BOUNDS_X; j++) {
+            mvchgat(i + 1, j, 1, A_NORMAL, m->terrain[i][j] + 1, NULL);
+        }
+    }
+
+    for (i = 0; i < numTrainers; i++) {
+        mvchgat(ts[i]->e.pos.y + 1, ts[i]->e.pos.x, 1, A_NORMAL, 11, NULL);
+    }
+
 
     return 0;
 }
@@ -378,4 +396,68 @@ int dijkstra(Map *m, Map *w, Point p, Entity *e)
     }
 
     return 0;
+}
+
+//new screen manipulation
+WINDOW *create_newwin(int height, int width, int starty, int startx)
+{	WINDOW *local_win;
+
+	local_win = newwin(height, width, starty, startx);
+	wrefresh(local_win);		
+
+	return local_win;
+}
+
+int enter_building(Terrain_e t)
+{
+    WINDOW *map = malloc(sizeof(*map));
+
+
+    map = dupwin(stdscr);
+    clear();
+    mvprintw(1, 0, "This interface is not implemented yet.");
+    getch();
+    overwrite(map, stdscr);
+    free(map);
+
+
+    return 0;
+}
+
+int initiate_battle(Entity *trainer, PC *player)
+{
+    WINDOW *map = malloc(sizeof(*map));
+
+
+    map = dupwin(stdscr);
+    clear();
+    mvprintw(1, 0, "This interface is not implemented yet.");
+    getch();
+    overwrite(map, stdscr);
+    free(map);
+    trainer->defeted = 1;
+
+
+    return 0;
+}
+
+//battle stuff
+int check_battle(Map *wrld, Entity *e, PC *player)
+{
+    int i, ret = 0;
+    Point p;
+
+
+    for(i = 0; i < num_dir; i++) {
+        p = get_next_position(e->pos, i);
+        if (p.x == player->e.pos.x && p.x == player->e.pos.x) {
+            if (e->dir == i) {
+                ret = 1;
+            }
+            break;
+        }
+    }
+
+    
+    return ret;
 }

@@ -25,6 +25,7 @@ typedef struct entity {
     heap_node_t *hn;
     Point pos;
     Terrain_e start;
+    int defeted;
     int nextTime;
     int chr;
     int order;

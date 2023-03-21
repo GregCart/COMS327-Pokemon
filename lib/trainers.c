@@ -12,6 +12,7 @@ Map *trails[num_types_tra];
 //movement functions
 int move_player(Entity *self, Map *wrld)
 {
+    int ret = 0;
     char c;
     Dir_e d;
     Point p;
@@ -54,7 +55,7 @@ int move_player(Entity *self, Map *wrld)
             d = W;
             break;
         case '>':
-            //enter building
+            enter_building(wrld->terrain[self->pos.y][self->pos.x]);
             d = self->dir;
             break;
         case '5':
@@ -63,23 +64,30 @@ int move_player(Entity *self, Map *wrld)
             d = NONE;
             break;
         case 'q':
+            mvprintw(0, 0, "Quitting app.\n");
+            getch();
+            ret = 3;
+            break;
         default:
-            return 1;
+            d = NONE;
     }
 
-    p = get_next_position(self->pos, d);
-    if (self->pos.x != p.x || self->pos.y != p.y) {
-        if (valid_pos(self->chr, wrld->terrain[p.y][p.x])) {
-            self->pos = p;
-            self->dir = d;
-        } else {
-            return 1;
+    if (ret == 0) {
+        p = get_next_position(self->pos, d);
+        mvprintw(0, 0, "Input: %c, Next position: (%d, %d)\n", c, p.x, p.y);
+        if (self->pos.x != p.x || self->pos.y != p.y) {
+            if (valid_pos(self->chr, wrld->terrain[p.y][p.x])) {
+                self->pos = p;
+                self->dir = d;
+            } else {
+                mvprintw(0, 0, "Failed to move player\n");
+                ret = 2;
+            }
         }
-    } else {
-        return 1;
     }
+    
 
-    return 0;
+    return ret;
 }
 
 int move_hiker(Entity *self, Map *wrld)
@@ -146,7 +154,7 @@ int move_pacer(Entity *self, Map *wrld)
 
 int move_wanderer(Entity *self, Map *wrld)
 {
-    Map *m = m;
+    Map *m = wrld;
     Point q = get_next_position(self->pos, self->dir);
     int i;
 
@@ -155,7 +163,7 @@ int move_wanderer(Entity *self, Map *wrld)
     } else {
         for (i = 0; i < num_dir; i++) {
             q = get_next_position(self->pos, change_direction(rand(), self->dir));
-            if (m->alt[q.x][q.y] && m->alt[self->pos.x][self->pos.y] && m->terrain[self->pos.y][self->pos.x] == m->terrain[q.y][q.x]) {
+            if (m->terrain[self->pos.y][self->pos.x] == m->terrain[q.y][q.x]) {
                 self->pos = q;
                 break;
             }
@@ -227,6 +235,7 @@ Entity* init_entity(int i, Point p, Terrain_e st)
         e->pos = p;
         e->start = st;
         e->nextTime = 0;
+        e->defeted = 0;
         e->hn = NULL;
         e->do_move = NULL;
         e->dir = rand() % num_dir;
