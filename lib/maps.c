@@ -60,13 +60,13 @@ int print_cost_map(Map *m)
     for (i = 0; i < BOUNDS_Y; i++) {
         for (j = 0; j < BOUNDS_X; j++) {
             if (m->alt[i][j] < D_MAX) {
-                printf("%02d ", m->alt[i][j] % 100);
+                mvprintw(BOUNDS_Y + 4 + i, j*3, "%02d", m->alt[i][j] % 100);
             } else {
-                printf("   ");
+                mvprintw(BOUNDS_Y + 4 + i, j, "   ");
             }
             
         }
-        printf("\n");
+        printw("\n");
     }
 
     return 0;

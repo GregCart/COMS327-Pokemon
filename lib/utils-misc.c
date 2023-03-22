@@ -7,6 +7,8 @@
 #include "maps.h"
 #include "utils-misc.h"
 
+//globals
+int numTrainers;
 
 //constants
 const char TERRAIN[] = {ROCK, TREE, GRASS_T, WATER, GRASS_S};
@@ -191,6 +193,7 @@ Dir_e get_lower_alt(Point p, Map *m)
     int i;
     Point q;
 
+
     for (i = 1; i < num_dir; i++) {
         // print_point(q);
         q = get_next_position(p, i);
@@ -218,7 +221,7 @@ int print_display(char map[BOUNDS_Y][BOUNDS_X][10])
     return 0;
 }
 
-int color_display(Map *m, Trainer **ts, int numTrainers)
+int color_display(Map *m, PC *player, Trainer **ts)
 {
     int i, j;
 
@@ -232,6 +235,8 @@ int color_display(Map *m, Trainer **ts, int numTrainers)
     for (i = 0; i < numTrainers; i++) {
         mvchgat(ts[i]->e.pos.y + 1, ts[i]->e.pos.x, 1, A_NORMAL, 11, NULL);
     }
+
+    mvchgat(player->e.pos.y + 1, player->e.pos.x, 1, A_NORMAL, 11, NULL);
 
 
     return 0;
@@ -248,6 +253,40 @@ int print_entity(Entity *e)
     printw("\tMove? %d\n", e->do_move == NULL);
     printw("\tCurrent direction: %d\n", e->dir);
     printw("}\n");
+
+    return 0;
+}
+
+int print_entity_trainer_inline(Entity *e, Entity *player, int y, int x)
+{
+    int dist_x, dist_y;
+    char *compas_x, *compas_y, *def;
+
+
+    dist_x = player->pos.x - e->pos.x;
+    dist_y = player->pos.y - e->pos.y;
+
+    if (dist_x > 0) {
+        compas_x = "west";
+    } else {
+        dist_x = -dist_x;
+        compas_x = "east";
+    }
+
+    if (dist_y > 0) {
+        compas_y = "north";
+    } else {
+        dist_y = -dist_y;
+        compas_y = "south";
+    }
+
+    def = "\r";
+    if (e->defeted) {
+        def = "DEFEATED";
+    }
+
+    mvprintw(y, x, "Entity %c, %d %s and %d %s %s", ALL_TRAINERS[e->chr], dist_y, compas_y, dist_x, compas_x, def);
+
 
     return 0;
 }
@@ -452,6 +491,46 @@ int initiate_battle(Entity *trainer, PC *player)
     free(map);
     trainer->defeted = 1;
 
+
+    return 0;
+}
+
+int display_trainer_list(Map *m, Entity *player, int y, int x)
+{
+    int i;
+
+
+    i = 0;
+    mvprintw(y, x, "Displaying list of trainers\n");
+    while (i < numTrainers) {
+        refresh();
+        print_entity_trainer_inline(&m->trainers[i]->e, player, y, x);
+        // c = getch();
+
+        switch (getch()) {
+            case KEY_UP:
+                i--;
+                break;
+            case KEY_DOWN:
+                i++;
+                break;
+            case 'q':
+                i = numTrainers;
+                break;
+            default:
+                mvprintw(0, 0, "Invalid input detected.\n");
+        }
+
+        if (i >= numTrainers) {
+            i = numTrainers;
+            mvprintw(y, x, "End of the list, press any jey to exit\n");
+            getch();
+        } else if(i < 0) {
+            i = 0;
+            mvprintw(y, x, "Top of the list.\n");
+            getch();
+        }
+    }
 
     return 0;
 }

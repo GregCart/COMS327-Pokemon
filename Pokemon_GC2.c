@@ -30,20 +30,22 @@ int add_trainer(Trainer *t, char map[BOUNDS_Y][BOUNDS_X][10])
     return ret;
 }
 
-int update_trails(PC *player, Trainer** t, int numTrainers)
+int update_trails(PC *player, Trainer** t)
 {
     int i, ret = 1;
     Map *w = world[curPos.y][curPos.x];
 
     
-    mvprintw(0, 0, "numTrainers: %d\n", numTrainers);
+    mvprintw(0, 0, "numTrainers: %d\n");
 
     ret = dijkstra(trails[PLAY], w, player->e.pos, &player->e);
     mvprintw(0, 0, "Updated Player trail.\n");
     for (i = 0; i < numTrainers; i++) {
         mvprintw(0, 0, "Updating Trail for Entity %d\n", t[i]->e.chr);
-        ret = dijkstra(trails[t[i]->e.chr], w, t[i]->e.pos, &t[i]->e) || ret;
+        ret = dijkstra(trails[t[i]->e.chr], w, player->e.pos, &t[i]->e) || ret;
         mvprintw(0, 0, "Updated Trail %d\n", i);
+        // print_cost_map(trails[t[i]->e.chr]);
+        // getch();
     }
 
 
@@ -108,6 +110,7 @@ int ncurses_start()
     initscr();
     noecho();
     curs_set(0);
+    keypad(stdscr, TRUE);
     start_color();
     clear();
     refresh();
@@ -127,7 +130,7 @@ int init_colors()
     ret = init_pair(4, COLOR_BLUE, COLOR_BLACK) || ret;
     ret = init_pair(5, COLOR_GREEN, COLOR_BLACK) || ret;
     ret = init_pair(6, COLOR_YELLOW, COLOR_BLACK) || ret;
-    ret = init_pair(7, COLOR_WHITE, COLOR_BLACK) || ret;
+    ret = init_pair(7, COLOR_YELLOW, COLOR_BLACK) || ret;
     ret = init_pair(8, COLOR_MAGENTA, COLOR_BLACK) || ret;
     ret = init_pair(9, COLOR_RED, COLOR_BLACK) || ret;
     ret = init_pair(10, COLOR_WHITE, COLOR_WHITE) || ret;
@@ -137,7 +140,7 @@ int init_colors()
     return ret;
 }
 
-int setup_game(PC *player, Trainer **trainers, heap_t *order, int numTrainers, char display[BOUNDS_Y][BOUNDS_X][10])
+int setup_game(PC *player, Trainer **trainers, heap_t *order, char display[BOUNDS_Y][BOUNDS_X][10])
 {
     int r, i, ret = 0;
 
@@ -155,7 +158,6 @@ int setup_game(PC *player, Trainer **trainers, heap_t *order, int numTrainers, c
         player->e.hn = heap_insert(order, &(player->e));
         player->e.pos = (Point) {.x=world[curPos.y][curPos.x]->s, .y=BOUNDS_Y-2};
         trails[player->e.chr] = malloc(sizeof(*trails[0]));
-        ret = add_trainer(player, display) || ret;
 
         for (i = 0; i < numTrainers; i++) {
             while (!valid_pos_list(trainers[i]->e.chr, world[curPos.y][curPos.x]->terrain[trainers[i]->e.pos.y][trainers[i]->e.pos.x], trainers[i]->e.start)) {
@@ -180,7 +182,7 @@ int setup_game(PC *player, Trainer **trainers, heap_t *order, int numTrainers, c
 }
 
 //cleaning crew
-int cleanup(Trainer **trainers, int numTrainers)
+int cleanup(Trainer **trainers)
 {
     int i, j;
 
@@ -225,11 +227,13 @@ int gameloop(int numTrainers)
     trainers = init_trainers(numTrainers);
 
 
-    if (!setup_game(player, trainers, &order, numTrainers, display)) {
+    if (!setup_game(player, trainers, &order, display)) {
         m = world[curPos.y][curPos.x];
         player->e.pos = (Point) {.x=m->s, .y=BOUNDS_Y-2};
+        ret = add_trainer(player, display) || ret;
         ret = print_display(display) || ret;
-        ret = color_display(m, trainers, numTrainers) || ret;
+        ret = color_display(m, player, trainers) || ret;
+        update_trails(player, trainers);
         while (!ret) {
             m = world[curPos.y][curPos.x];
             ent = heap_remove_min(&order);
@@ -244,7 +248,10 @@ int gameloop(int numTrainers)
                     ret = map_char(m, display, p) || ret;
                     ret = add_entity_trainer(ent, display) || ret;
                     ret = print_display(display) || ret;
-                    ret = color_display(m, trainers, numTrainers) || ret;
+                    ret = color_display(m, player, trainers) || ret;
+                    if (ent->chr == PLAY) {
+                        update_trails(player, trainers);
+                    }
                 } else if (ret == 1) {
                     mvprintw(0, 0, "Error %d: Entity %d (%c) failed to move. Press any key to quit.\n", ret, ent->chr, ALL_TRAINERS[ent->chr]);
                     getch();
@@ -268,7 +275,7 @@ int gameloop(int numTrainers)
     }
 
     free(player);
-    cleanup(trainers, numTrainers);
+    cleanup(trainers);
 
 
     return ret;
@@ -283,14 +290,15 @@ int testgame()
     Trainer **trainers;
 
 
+    numTrainers = 2;
     player = init_trainer(PLAY, (Point) {.x=BOUNDS_X - 3, .y=BOUNDS_Y - 3}, num_types_ter);
     trainers = init_trainers(2);
-    if (!(ret = setup_game(player, trainers, &order, 2, display))) {
+    if (!(ret = setup_game(player, trainers, &order, display))) {
         mvprintw(0, 0, "Did setup.\n");
-        ret = update_trails(player, trainers, 2) || ret;
+        ret = update_trails(player, trainers) || ret;
         mvprintw(0, 0, "Updated Trails.\n");
         ret = print_display(display) || ret;
-        color_display(world[curPos.y][curPos.x], trainers, 2);
+        color_display(world[curPos.y][curPos.x], player, trainers);
         refresh();
 
         getch();
@@ -302,7 +310,7 @@ int testgame()
 
 
     free(player);
-    ret = cleanup(trainers, 2) || ret;
+    ret = cleanup(trainers) || ret;
     return ret;
 }
 
@@ -310,7 +318,7 @@ int testgame()
 int main(int argc, char *argv[])
 {
     int ret = 1;
-    int numTrainers = 10;
+    numTrainers = 10;
 
     
     if (argc != 1 && argc != 3) {

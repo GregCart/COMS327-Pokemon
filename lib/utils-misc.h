@@ -8,6 +8,9 @@
 #include "queue.h"
 #include "structs.h"
 
+//globals
+extern int numTrainers;
+
 
 //movement utility
 Dir_e change_direction(int x, Dir_e d);
@@ -33,12 +36,13 @@ int dijkstra(Map *m, Map *w, Point p, Entity *e);
 
 //HP's
 int print_display(char map[BOUNDS_Y][BOUNDS_X][10]);
-int color_display(Map *m, Trainer **ts, int numTrainers);
+int color_display(Map *m, PC *player, Trainer **ts);
 int print_entity(Entity *e);
 
 //new screen manipulation
 int enter_building(Terrain_e t);
 int initiate_battle(Entity *trainer, PC *player);
+int display_trainer_list(Map *m, Entity *player, int y, int x);
 
 //misc
 int check_battle(Map *wrld, Entity *e, PC *player);
