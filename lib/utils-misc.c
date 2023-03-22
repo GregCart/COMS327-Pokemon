@@ -571,6 +571,7 @@ int display_trainer_list(Map *m, Entity *player, int y, int x)
                 i++;
                 break;
             case 'q':
+            case 27:
                 i = numTrainers;
                 break;
             default:
