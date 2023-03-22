@@ -33,19 +33,25 @@ int add_trainer(Trainer *t, char map[BOUNDS_Y][BOUNDS_X][10])
 int update_trails(PC *player, Trainer** t)
 {
     int i, ret = 1;
+    int visited[num_types_tra];
     Map *w = world[curPos.y][curPos.x];
 
     
-    mvprintw(0, 0, "numTrainers: %d\n");
+    // mvprintw(0, 0, "numTrainers: %d\n");
+    for (i = 0; i < num_types_tra; i++) {
+        visited[i] = 0;
+    }
 
     ret = dijkstra(trails[PLAY], w, player->e.pos, &player->e);
+    visited[0] = 1;
     mvprintw(0, 0, "Updated Player trail.\n");
     for (i = 0; i < numTrainers; i++) {
-        mvprintw(0, 0, "Updating Trail for Entity %d\n", t[i]->e.chr);
-        ret = dijkstra(trails[t[i]->e.chr], w, player->e.pos, &t[i]->e) || ret;
-        mvprintw(0, 0, "Updated Trail %d\n", i);
-        // print_cost_map(trails[t[i]->e.chr]);
-        // getch();
+        if (!visited[t[i]->e.chr]) {
+            mvprintw(0, 0, "Updating Trail for Entity %d\n", t[i]->e.chr);
+            ret = dijkstra(trails[t[i]->e.chr], w, player->e.pos, &t[i]->e) || ret;
+            mvprintw(0, 0, "Updated Trail %d\n", i);
+            visited[t[i]->e.chr] = 1;
+        }
     }
 
 
@@ -160,7 +166,7 @@ int setup_game(PC *player, Trainer **trainers, heap_t *order, char display[BOUND
         trails[player->e.chr] = malloc(sizeof(*trails[0]));
 
         for (i = 0; i < numTrainers; i++) {
-            while (!valid_pos_list(trainers[i]->e.chr, world[curPos.y][curPos.x]->terrain[trainers[i]->e.pos.y][trainers[i]->e.pos.x], trainers[i]->e.start)) {
+            while (!valid_pos_trainer(trainers[i]->e.chr, world[curPos.y][curPos.x]->terrain[trainers[i]->e.pos.y][trainers[i]->e.pos.x], trainers[i]->e.start)) {
                 trainers[i]->e.pos = (Point) {.x = 2 + (rand() % (BOUNDS_X - 3)), 2 + (rand() % (BOUNDS_Y - 3))};
                 trainers[i]->e.start = world[curPos.y][curPos.x]->terrain[trainers[i]->e.pos.y][trainers[i]->e.pos.x];
             }
@@ -220,7 +226,7 @@ int gameloop(int numTrainers)
     Trainer **trainers;
     Entity *ent;
     Map *m;
-    Point p;
+    Point p, q;
 
 
     player = init_trainer(PLAY, (Point) {.x=BOUNDS_X - 3, .y=BOUNDS_Y - 3}, num_types_ter);
@@ -256,7 +262,15 @@ int gameloop(int numTrainers)
                     mvprintw(0, 0, "Error %d: Entity %d (%c) failed to move. Press any key to quit.\n", ret, ent->chr, ALL_TRAINERS[ent->chr]);
                     getch();
                 } else if (code) {
-                    ret = code;
+                    if (code == 6) {
+                        mvprintw(0, 0, "Battle Between %c and The Player!\n", ALL_TRAINERS[ent->chr]);
+                        q = check_surroundings_trainer(p, display);
+                        if (q.x > 0) {
+                            initiate_battle(find_entity_pos(trainers, q), player);
+                        }
+                    } else {
+                        ret = code;
+                    }
                 }
                 ent->hn = heap_insert(&order, ent);
             }

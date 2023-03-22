@@ -18,17 +18,20 @@ Dir_e change_direction(int x, Dir_e d);
 //comperators
 int32_t path_cmp(const void *key, const void *with);
 int32_t entity_cmp(const void *key, const void *with);
+int32_t point_cmp(const void *key, const void *with);
 
 //!chess
 int valid_move_ter(Terrain_e t);
-int valid_pos_list(Trainer_e e, Terrain_e t, Terrain_e st);
+int valid_pos_trainer(Trainer_e e, Terrain_e t, Terrain_e start);
 int valid_pos(Trainer_e e, Terrain_e t);
 int containes_trainer(Point p, char map[BOUNDS_Y][BOUNDS_X][10]);
+Point check_surroundings_trainer(Point p, char map[BOUNDS_Y][BOUNDS_X][10]);
 
 //getters
 int find_stress(Map *m, Entity *e, Point p);
 Point get_next_position(Point p, Dir_e d);
 Dir_e get_lower_alt(Point p, Map *m);
+Entity* find_entity_pos(Trainer **t, Point p);
 
 //distance finders
 int manhattan(Point p, Point q);

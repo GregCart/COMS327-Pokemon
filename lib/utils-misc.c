@@ -81,13 +81,26 @@ int32_t entity_cmp(const void *key, const void *with)
   return ret;
 }
 
+int32_t point_cmp(const void *key, const void *with)
+{
+    int ret = 0;
+    
+    ret = ((Point *) key)->x - ((Point *) with)->x;
+    if (!ret) {
+        ret = ((Point *) key)->y - ((Point *) with)->y;
+    }
+
+
+    return ret;
+}
+
 //!chess
 int valid_move_ter(Terrain_e t)
 {
     return (t != GTE && t != BDR);
 }
 
-int valid_pos_list(Trainer_e e, Terrain_e t, Terrain_e start)
+int valid_pos_trainer(Trainer_e e, Terrain_e t, Terrain_e start)
 {
     if (!valid_move_ter(t) || t == MRT || t == CTR) {
         return 1;
@@ -135,6 +148,34 @@ int containes_trainer(Point p, char map[BOUNDS_Y][BOUNDS_X][10]) {
 
 
     return ret;
+}
+
+Point check_surroundings_trainer(Point p, char map[BOUNDS_Y][BOUNDS_X][10])
+{
+    int i;
+    Point q;
+
+
+    for (i = 1; i < num_dir; i++) {
+        q = get_next_position(p, i);
+        switch (map[q.y][q.x][0]) {
+            case PLAYER:
+            case HIKER:
+            case RIVAL:
+            case PACER:
+            case WANDERER:
+            case SENTRY:
+            case EXPLORER:
+            case SWIMMER:
+                return q;
+                break;
+            default:
+                return (Point) {-1, -1};
+            
+        }
+    }
+
+    return (Point) {-1, -1};
 }
 
 //getters
@@ -205,6 +246,21 @@ Dir_e get_lower_alt(Point p, Map *m)
     }
 
     return -1;
+}
+
+Entity* find_entity_pos(Trainer **t, Point p) 
+{
+    int i;
+
+
+    for (i = 0; i < numTrainers; i++) {
+        if (!point_cmp(&p, &t[i]->e.pos)) {
+            return &t[i]->e;
+        }
+    }
+
+
+    return NULL;
 }
 
 //HP's
