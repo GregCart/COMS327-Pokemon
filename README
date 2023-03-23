@@ -1,5 +1,6 @@
 Implements All map generation requirements with basic pathing generation. Commeneted code is
 for debugging, ease of use, and the remains of my attempt at dijksta's algorithm for generating a path.
+pokemon-old contains my solution pre HW5 requirements
 
 HW2:
     All commands implemented and working as of 2/7/23.
