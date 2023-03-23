@@ -9,3 +9,4 @@ valgrind-log.txt
 Pokemon_GC2
 .vscode/*
 lib/trainers.c
+hist.txt

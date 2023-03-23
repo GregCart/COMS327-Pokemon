@@ -8,12 +8,12 @@ MAIN = Pokemon_GC2
 
 .PHONY: depend clean
 
-all: build-$(MAIN) start-$(MAIN)
+all: build start
 
-build-$(MAIN): $(OBJS)
+build: $(OBJS)
 	$(CC) $(CFLAGS) $(INCLUDES) $(MAIN).c -o $(MAIN) $(OBJS) $(LFLAGS) $(LIBS)
 
-start-$(MAIN):
+start:
 	./$(MAIN)
 
 .c.o:
@@ -23,20 +23,19 @@ depend: $(SRCS)
 	makedepend $(INCLUDES) $^
 
 
-test: build-$(MAIN)
+test: build
 	./$(MAIN) 
 
-test-v: build-$(MAIN)
+test-v: build
 	valgrind --leak-check=full --log-file=valgrind-log.txt ./$(MAIN) 
 
 
 clean:
-	rm -f $(MAIN) */*.o *~ core *.exe *.stackdump vgcore.* valgrind-log.txt.*
+	rm -f $(MAIN) */*.o *~ core *.exe *.stackdump vgcore.* valgrind-log.*
 
-package:
-	make clean
+package: clean
 	\cp -r changes.txt CHANGELOG
 	git --no-pager log --reverse > hist.txt
 	cat hist.txt >> CHANGELOG
-	cd ..; rm -fr greg-carter_assignment-1.04 greg-carter_assignment-1.04.tar.gz;
-	cd ..; rsync -av --exclude=Pokemon/.git --exclude=Pokemon/.vscode Pokemon greg-carter_assignment-1.04; tar cvfz greg-carter_assignment-1.04.tar.gz greg-carter_assignment-1.04;
+	cd ..; rm -fr greg-carter_assignment-1.05 greg-carter_assignment-1.05.tar.gz;
+	cd ..; rsync -av --exclude=Pokemon/.git --exclude=Pokemon/.vscode Pokemon greg-carter_assignment-1.05; tar cvfz greg-carter_assignment-1.05.tar.gz greg-carter_assignment-1.05;
