@@ -112,14 +112,14 @@ int valid_pos_trainer(Trainer_e e, Terrain_e t, Terrain_e start)
         case HIKR:
         case SWIM:
         case EXPL:
-            return (STRESS[e][t] != D_MAX);
+            return (STRESS[e][t] == D_MAX);
             break;
         case PACR:
         case WAND:
-            return (t == start && t != WTR);
+            return (t != start && t == WTR);
             break;
         case SENT:
-            return (t != WTR && t != RCK);
+            return (t == WTR && t == RCK);
             break;
         default:
             return 1;
@@ -602,7 +602,7 @@ int check_battle(Map *wrld, Entity *e, PC *player)
     for(i = 0; i < num_dir; i++) {
         p = get_next_position(e->pos, i);
         if (p.x == player->e.pos.x && p.y == player->e.pos.y) {
-            if (e->dir == i) {
+            if (e->dir == i && player->e.dir == change_direction(0, i)) {
                 ret = 1;
             }
             break;

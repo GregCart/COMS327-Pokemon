@@ -166,7 +166,7 @@ int setup_game(PC *player, Trainer **trainers, heap_t *order, char display[BOUND
         trails[player->e.chr] = malloc(sizeof(*trails[0]));
 
         for (i = 0; i < numTrainers; i++) {
-            while (!valid_pos_trainer(trainers[i]->e.chr, world[curPos.y][curPos.x]->terrain[trainers[i]->e.pos.y][trainers[i]->e.pos.x], trainers[i]->e.start)) {
+            while (valid_pos_trainer(trainers[i]->e.chr, world[curPos.y][curPos.x]->terrain[trainers[i]->e.pos.y][trainers[i]->e.pos.x], trainers[i]->e.start)) {
                 trainers[i]->e.pos = (Point) {.x = 2 + (rand() % (BOUNDS_X - 3)), 2 + (rand() % (BOUNDS_Y - 3))};
                 trainers[i]->e.start = world[curPos.y][curPos.x]->terrain[trainers[i]->e.pos.y][trainers[i]->e.pos.x];
             }

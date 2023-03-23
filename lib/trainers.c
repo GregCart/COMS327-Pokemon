@@ -18,85 +18,98 @@ int move_player(Entity *self, Map *wrld, char map[BOUNDS_Y][BOUNDS_X][10])
     Point p;
 
 
-    c = getch();
+    do {
+        c = getch();
 
 
-    switch (c) {
-        case '7':
-        case 'y':
-            d = NW; 
-            break;
-        case '8':
-        case 'k':
-            d = N;
-            break;
-        case '9':
-        case 'u':
-            d = NE;
-            break;
-        case '6':
-        case 'l':
-            d = E; 
-            break;
-        case '3':
-        case 'n':
-            d = SE;
-            break;
-        case '2':
-        case 'j':
-            d = S;
-            break;
-        case '1':
-        case 'b':
-            d = SW;
-            break;
-        case '4':
-        case 'h':
-            d = W;
-            break;
-        case '>':
-            if (wrld->terrain[self->pos.y][self->pos.x] == MRT || wrld->terrain[self->pos.y][self->pos.x] == CTR) {
-                enter_building(wrld->terrain[self->pos.y][self->pos.x]);
-                d = self->dir;
-            } else {
-                mvprintw(0, 0, "That is not a building!\n");
-                ret = move_player(self, wrld, map);
-            }
-            break;
-        case '5':
-        case ' ':
-        case '.':
-            d = NONE;
-            break;
-        case 'q':
-            mvprintw(0, 0, "Quitting app.\n");
-            getch();
-            ret = 3;
-            break;
-        case 't':
-            display_trainer_list(wrld, self, BOUNDS_Y + 1, 0);
-            ret = move_player(self, wrld, map);
-            break;
-        default:
-            d = NONE;
-    }
+        switch (c) {
+            case '7':
+            case 'y':
+                d = NW;
+                ret = 8;
+                break;
+            case '8':
+            case 'k':
+                d = N;
+                ret = 8;
+                break;
+            case '9':
+            case 'u':
+                d = NE;
+                ret = 8;
+                break;
+            case '6':
+            case 'l':
+                d = E;
+                ret = 8; 
+                break;
+            case '3':
+            case 'n':
+                d = SE;
+                ret = 8;
+                break;
+            case '2':
+            case 'j':
+                d = S;
+                ret = 8;
+                break;
+            case '1':
+            case 'b':
+                d = SW;
+                ret = 8;
+                break;
+            case '4':
+            case 'h':
+                d = W;
+                ret = 8;
+                break;
+            case '>':
+                if (wrld->terrain[self->pos.y][self->pos.x] == MRT || wrld->terrain[self->pos.y][self->pos.x] == CTR) {
+                    enter_building(wrld->terrain[self->pos.y][self->pos.x]);
+                    d = self->dir;
+                    ret = 8;
+                } else {
+                    mvprintw(0, 0, "That is not a building!\n");
+                }
+                break;
+            case '5':
+            case ' ':
+            case '.':
+                d = NONE;
+                ret = 8;
+                break;
+            case 'q':
+                mvprintw(0, 0, "Quitting app.\n");
+                getch();
+                ret = 3;
+                break;
+            case 't':
+                display_trainer_list(wrld, self, BOUNDS_Y + 1, 0);
+                break;
+            default:
+                d = NONE;
+                mvprintw(0, 0, "Invalid input detected!\n");
+        }
 
-    if (ret == 0) {
-        p = get_next_position(self->pos, d);
-        mvprintw(0, 0, "Input: %c, Next position: (%d, %d)\n", c, p.x, p.y);
-        if (self->pos.x != p.x || self->pos.y != p.y) {
-            if (valid_pos(self->chr, wrld->terrain[p.y][p.x]) &&
-                !containes_trainer(p, map)) {
-                self->pos = p;
-                self->dir = d;
-            } else if (containes_trainer(p, map)) {
-                ret = 6;
-            } else {
-                mvprintw(0, 0, "Failed to move player\n");
-                ret = 2;
+        if (ret == 8) {
+            p = get_next_position(self->pos, d);
+            mvprintw(0, 0, "Input: %c, Next position: (%d, %d)\n", c, p.x, p.y);
+            if (self->pos.x != p.x || self->pos.y != p.y) {
+                if (valid_pos(self->chr, wrld->terrain[p.y][p.x])) {
+                    if (containes_trainer(p, map)) {
+                        ret = 6;
+                    } else {
+                        self->pos = p;
+                        self->dir = d;
+                        return 0;
+                    }
+                } else {
+                    mvprintw(0, 0, "Failed to move player\n");
+                    ret = 2;
+                }
             }
         }
-    }
+    } while (!ret);
     
 
     return ret;
@@ -113,7 +126,7 @@ int move_hiker(Entity *self, Map *wrld, char map[BOUNDS_Y][BOUNDS_X][10])
     // getch();
     if ((t->alt[q.y][q.x] <= t->alt[self->pos.y][self->pos.x] || rand() % 500 == 0) &&
         !containes_trainer(q, map) && 
-        valid_pos_trainer(self->chr, t->terrain[q.y][q.x], t->terrain[self->pos.y][self->pos.x])) {
+        !valid_pos_trainer(self->chr, t->terrain[q.y][q.x], t->terrain[self->pos.y][self->pos.x])) {
         self->pos = q;
         self->dir = d;
     } else {
@@ -121,7 +134,7 @@ int move_hiker(Entity *self, Map *wrld, char map[BOUNDS_Y][BOUNDS_X][10])
         q = get_next_position(self->pos, d);
         if (d > 0 && 
             !containes_trainer(q, map) && 
-            valid_pos_trainer(self->chr, t->terrain[q.y][q.x], t->terrain[self->pos.y][self->pos.x])) {
+            !valid_pos_trainer(self->chr, t->terrain[q.y][q.x], t->terrain[self->pos.y][self->pos.x])) {
             self->pos = q;
             self->dir = d;
         } else if (containes_trainer(q, map)) {
@@ -146,14 +159,14 @@ int move_rival(Entity *self, Map *wrld, char map[BOUNDS_Y][BOUNDS_X][10])
     // getch();
     if ((m->alt[q.y][q.x] <= m->alt[self->pos.y][self->pos.x] || rand() % 500 == 0) &&
         !containes_trainer(q, map) && 
-        valid_pos_trainer(self->chr, m->terrain[q.y][q.x], m->terrain[self->pos.y][self->pos.x])) {
+        !valid_pos_trainer(self->chr, m->terrain[q.y][q.x], m->terrain[self->pos.y][self->pos.x])) {
         self->pos = q;
         self->dir = d;
     } else {
         d = get_lower_alt(self->pos, m);
         q = get_next_position(self->pos, d);
         if (d > 0 && !containes_trainer(q, map) && 
-            valid_pos_trainer(self->chr, m->terrain[q.y][q.x], m->terrain[self->pos.y][self->pos.x])) {
+            !valid_pos_trainer(self->chr, m->terrain[q.y][q.x], m->terrain[self->pos.y][self->pos.x])) {
             self->pos = get_next_position(self->pos, d);
             self->dir = d;
         } else {
@@ -172,7 +185,7 @@ int move_pacer(Entity *self, Map *wrld, char map[BOUNDS_Y][BOUNDS_X][10])
 
     if (m->terrain[q.y][q.x] == self->start &&
         !containes_trainer(q, map) && 
-        valid_pos_trainer(self->chr, m->terrain[q.y][q.x], self->start)) {
+        !valid_pos_trainer(self->chr, m->terrain[q.y][q.x], self->start)) {
         self->pos = q;
     } else {
         d = change_direction(0, self->dir);
@@ -192,14 +205,14 @@ int move_wanderer(Entity *self, Map *wrld, char map[BOUNDS_Y][BOUNDS_X][10])
 
     if (m->terrain[self->pos.y][self->pos.x] == m->terrain[q.y][q.x] &&
         !containes_trainer(q, map) && 
-        valid_pos_trainer(self->chr, m->terrain[q.y][q.x], m->terrain[self->pos.y][self->pos.x])) {
+        !valid_pos_trainer(self->chr, m->terrain[q.y][q.x], m->terrain[self->pos.y][self->pos.x])) {
         self->pos = q;
     } else {
         for (i = 0; i < num_dir; i++) {
             d = change_direction(rand(), self->dir);
             q = get_next_position(self->pos, d);
             if (m->terrain[self->pos.y][self->pos.x] == m->terrain[q.y][q.x] && 
-                valid_pos_trainer(self->chr, m->terrain[q.y][q.x], m->terrain[self->pos.y][self->pos.x])) {
+                !valid_pos_trainer(self->chr, m->terrain[q.y][q.x], m->terrain[self->pos.y][self->pos.x])) {
                 self->pos = q;
                 self->dir = d;
                 break;
@@ -224,9 +237,8 @@ int move_explorer(Entity *self, Map *wrld, char map[BOUNDS_Y][BOUNDS_X][10])
     int i;
 
     if (valid_move_ter(m->terrain[q.y][q.x]) && 
-        (m->terrain[self->pos.y][self->pos.x] == m->terrain[q.y][q.x]) &&
-        !containes_trainer(q, map) && 
-        valid_pos_trainer(self->chr, m->terrain[q.y][q.x], m->terrain[self->pos.y][self->pos.x])) {
+        !valid_pos_trainer(self->chr, m->terrain[q.y][q.x], m->terrain[self->pos.y][self->pos.x]) &&
+        !containes_trainer(q, map)) {
         self->pos = q;
         return 0;
     } else {
@@ -234,7 +246,8 @@ int move_explorer(Entity *self, Map *wrld, char map[BOUNDS_Y][BOUNDS_X][10])
             d = change_direction(rand(), self->dir);
             q = get_next_position(self->pos, d);
             if (valid_pos(EXPL, m->terrain[q.y][q.x]) && 
-                valid_pos_trainer(self->chr, m->terrain[q.y][q.x], m->terrain[self->pos.y][self->pos.x])) {
+                !valid_pos_trainer(self->chr, m->terrain[q.y][q.x], m->terrain[self->pos.y][self->pos.x])) {
+                if (!containes_trainer(q, map))
                 self->pos = q;
                 self->dir = d;
                 return 0;
@@ -255,13 +268,13 @@ int move_swimmer(Entity *self, Map *wrld, char map[BOUNDS_Y][BOUNDS_X][10])
     if (valid_pos(self->chr, m->terrain[q.y][q.x]) && 
         (m->alt[q.y][q.x] <= m->alt[self->pos.y][self->pos.x] || rand() % 10 == 0) &&
         !containes_trainer(q, map) && 
-        valid_pos_trainer(self->chr, m->terrain[q.y][q.x], m->terrain[self->pos.y][self->pos.x])) {
+        !valid_pos_trainer(self->chr, m->terrain[q.y][q.x], m->terrain[self->pos.y][self->pos.x])) {
         self->pos = q;
         self->dir = d;
     } else {
         d = get_lower_alt(self->pos, m);
         if ((d > 0) && 
-            valid_pos_trainer(self->chr, m->terrain[q.y][q.x], m->terrain[self->pos.y][self->pos.x])) {
+            !valid_pos_trainer(self->chr, m->terrain[q.y][q.x], m->terrain[self->pos.y][self->pos.x])) {
             self->pos = get_next_position(self->pos, d);
             self->dir = d;
         } else {
