@@ -1,0 +1,12 @@
+CHANGELOG
+*/*.o
+vgcore.*
+*.nfs*
+*/hist.txt
+*/CHANGELOG
+valgrind-log.txt
+*.core.*
+Pokemon_GC2
+.vscode/*
+lib/trainers.c
+hist.txt
