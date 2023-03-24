@@ -1,6 +1,8 @@
 {
     "files.associations": {
-        "types.h": "c"
+        "types.h": "c",
+        "stdlib.h": "c",
+        "heap.h": "c"
     },
     "C_Cpp.errorSquiggles": "enabled"
 }

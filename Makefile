@@ -1,34 +1,41 @@
-CFLAGS = -Wall -Werror -ggdb -funroll-loops -DTERM=Fall2023 -lm -lcurses
-OBJS = worldgenerator.c lib/heap.o lib/queue.o
+CC = gcc
+CFLAGS = -Wall -Werror -ggdb -funroll-loops -DTERM=Fall2023 
+INCLUDES = -I/lib
+LFLAGS = -lm -lncurses -L/lib
+SRCS = heap.c maps.c queue.c trainers.c utils-misc.c
+OBJS = $(addprefix lib/, $(SRCS:.c=.o))
+MAIN = Pokemon_GC2
 
-all: gen_world
+.PHONY: depend clean
 
-gen_map: mapgenerator.c queue.o
-	gcc $(CFLAGS) mapgenerator.c -o map_generator
+all: build start
 
-gen_world: worldgenerator.c heap.o queue.o
-	gcc $(CFLAGS) $(OBJS) -o world_generator 
+build: $(OBJS)
+	$(CC) $(CFLAGS) $(INCLUDES) $(MAIN).c -o $(MAIN) $(OBJS) $(LFLAGS) $(LIBS)
 
-heap.o: lib/heap.c
-	cd lib; gcc $(CFLAGS) heap.c -c;
+start:
+	./$(MAIN)
 
-queue.o: lib/queue.c
-	cd lib; gcc $(CFLAGS) queue.c -c;
+.c.o:
+	$(CC) $(CFLAGS) $(INCLUDES) -c $<  -o $@
 
-test: gen_world
-	./world_generator
+depend: $(SRCS)
+	makedepend $(INCLUDES) $^
 
-test-v: gen_world
-	valgrind --leak-check=full --log-file=valgrind-log.txt ./world_generator 
+
+test: build
+	./$(MAIN) 
+
+test-v: build
+	valgrind --leak-check=full --log-file=valgrind-log.txt ./$(MAIN) 
 
 
 clean:
-	rm -f map_generator world_generator */*.o *~ core *.exe *.stackdump vgcore.* valgrind-log.txt.*
+	rm -f $(MAIN) */*.o *~ core *.exe *.stackdump vgcore.* valgrind-log.*
 
-package:
-	make clean
+package: clean
 	\cp -r changes.txt CHANGELOG
 	git --no-pager log --reverse > hist.txt
 	cat hist.txt >> CHANGELOG
-	cd ..; rm -fr greg-carter_assignment-1.04 greg-carter_assignment-1.04.tar.gz;
-	cd ..; rsync -av --exclude=Pokemon/.git --exclude=Pokemon/.vscode Pokemon greg-carter_assignment-1.04; tar cvfz greg-carter_assignment-1.04.tar.gz greg-carter_assignment-1.04;
+	cd ..; rm -fr greg-carter_assignment-1.05 greg-carter_assignment-1.05.tar.gz;
+	cd ..; rsync -av --exclude=Pokemon/.git --exclude=Pokemon/.vscode --exclude=Pokemon/pokemon-old Pokemon greg-carter_assignment-1.05; tar cvfz greg-carter_assignment-1.05.tar.gz greg-carter_assignment-1.05;
