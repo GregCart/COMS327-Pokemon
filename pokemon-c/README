@@ -1,0 +1,56 @@
+Implements All map generation requirements with basic pathing generation. Commeneted code is
+for debugging, ease of use, and the remains of my attempt at dijksta's algorithm for generating a path.
+pokemon-old contains my solution pre HW5 requirements
+
+HW2:
+    All commands implemented and working as of 2/7/23.
+    NOTES:
+        Map is opposite: (-200, -200) maps to upper left corner
+        Occasionally a malloc() error will occur on startup or during traversal. i looked into it and apparently it's to do with how malloc calls other functions and i'm not sure how to fix it.
+    Moves that go past map borders just set uyou at the map at that border.
+    Chance of buildings appearing decreases as you move out until +/-100, where it is locked at 5%.
+    Gates match up when they are generate adjacently to an already generated map.
+    No map is generated until it is visited.
+    World borders have no exit on the side that borders the world edge.
+
+HW3:
+    Can generate starting map with no uissues and display proper maps
+    NOTE:
+        Displays Hiker then Rival Maps
+    Malloc error still present.
+    Program crashes if you try to move. Several TAs as well as the professor haven't been able to identify the cause.
+
+HW4:
+    All the errors of before x100
+    NOTES:
+        Characters sometimes flee instead of moving towards PC fsr (I think i figured this problem out)
+        Characters sometimes teleport arround for no reason or skip turns.
+        Will randomly stop or segfault in the middle of a run (idk why)
+    All trianers have a random chance to spayn barring hiker and rival which will spawn if numtrainers >= 2
+
+HW5:
+    All Commands should work properly, but moving onto immovable terrain will cause the game to progress without you being able to do anything.
+    Should no longer randomly crash mid-run
+    NOTES:
+        Characters all flee or move randomly, with some just choosing not to move (no idea why)
+        It is really slow to run and idk why, but it will take a few seconds between each turn
+        Entering a building still sometimes ends the game
+        Battles only begin if characters are facing eachother
+        Sometimes defeating a trainer in battle will make you the one defeated (idk why) then the game willl progress without you
+        Sometimes the Battle interface will randomly trigger, and this breaks the game, so cntrl+c (idk why)
+    Trainer list displays 1 trainer at a time.
+    Colors should all work, with all trainers being white (for visibility, not a race thing)
+    Ive been trying to get most of the problems fixed, but with OHs being reschedueled it didnt work out with my schedule
+        (I added the link to the github, so if you've some free time i would appreciate any help with the trainers running away     
+            problem! I've spent a lot of time and effort trying to fix it and i still cant figure it out. It's also very slow to take your turn so any suggestions would be welcome!)
+
+
+To build and run: make
+To build: make build
+To run: make start
+To run test: make test
+To run test w/ Valgrind: make test-v
+TO clean: make clean
+To package into tarball: make package
+
+Github Repo with all changes (active branch is refactored): https://github.com/GregCart2/COMS327-Pokemon

@@ -2,7 +2,13 @@
     "files.associations": {
         "types.h": "c",
         "stdlib.h": "c",
-        "heap.h": "c"
+        "heap.h": "c",
+        "queue.h": "c",
+        "utils-misc.h": "c",
+        "structs.h": "c",
+        "time.h": "c",
+        "maps.h": "c",
+        "cstring": "cpp"
     },
     "C_Cpp.errorSquiggles": "enabled"
 }

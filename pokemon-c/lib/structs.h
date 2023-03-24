@@ -37,6 +37,13 @@ typedef struct trainer {
     Entity e;
 } Trainer;
 
+typedef struct map {
+    Terrain_e terrain[BOUNDS_Y][BOUNDS_X];
+    Trainer **trainers;
+    int alt[BOUNDS_Y][BOUNDS_X];
+    int n, s, e, w;
+} Map;
+
 //specific examples
 typedef Trainer PC;
 typedef Trainer Hiker;

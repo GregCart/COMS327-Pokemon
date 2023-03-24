@@ -1,10 +1,9 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-#include <iostream>
-#include <string>
-#include <stdio>
-#include <ncurses>
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
 
 #include "queue.h"
 #include "structs.h"
