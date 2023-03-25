@@ -1,11 +1,11 @@
-#include <stdlib.h>
+#include <stdlib>
 #include "queue.h"
 
 int queue_enqueue(queue_t *q, int i)
 {
     queue_node_t *n;
 
-    if (!(n = malloc(sizeof(*n)))) {
+    if (!(n = (queue_node_t *) malloc(sizeof(*n)))) {
         return 1;
     }
 

@@ -2,8 +2,6 @@
 #define CONSTANTS_H
 
 
-#include <ncurses>
-
 #include "enums.h"
 
 

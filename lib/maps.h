@@ -14,7 +14,7 @@ class Map {
         int gates[4];
 
 
-        Map(Terrain_e **t, int **a, int *g) const;
+        Map(Terrain_e **t, int **a, int *g);
     protected:
         //HPs
         int print_map_alt() const;
@@ -51,6 +51,11 @@ class Map {
 
         //Indi Beningi
         Map *create_map(const Point curPos, const Point center);
+
+
+        //tomodachi
+        friend int dijkstra(Map *m, Map *w, Point p, Entity *e);
+        friend Dir_e get_lower_alt(Point p, Map *m);
 };
 
 #endif

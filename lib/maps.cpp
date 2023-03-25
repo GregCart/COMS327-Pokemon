@@ -2,7 +2,7 @@
 
 
 //Bobs
-Map(Terrain_e **t, int **a, int *g) const
+Map(Terrain_e **t, int **a, int *g)
 {
     this->terrain = t;
     this->alt = a;

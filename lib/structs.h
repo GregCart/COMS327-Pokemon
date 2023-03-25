@@ -6,12 +6,10 @@
 #include "constants.h"
 
 
-//structs
-typedef struct entity Entity;
-typedef struct map Map;
-
 typedef struct point {
     int x, y;
+    Point(const int x, const int y) { this->x = x; this->y = y; }
+    Point();
 } Point;
 
 typedef struct path {
@@ -20,26 +18,5 @@ typedef struct path {
     int from[2];
     int cost;
 } Path;
-
-typedef struct entity {
-    heap_node_t *hn;
-    Point pos;
-    Terrain_e start;
-    int defeted;
-    int nextTime;
-    int chr;
-    int order;
-    Dir_e dir;
-    int (*do_move)(Entity *, Map *m, char map[BOUNDS_Y][BOUNDS_X][10]);
-} Entity;
-
-typedef struct trainer {
-    Entity e;
-} Trainer;
-
-//specific examples
-typedef Trainer PC;
-typedef Trainer Hiker;
-typedef Trainer Rival;
 
 #endif
