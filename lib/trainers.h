@@ -1,7 +1,6 @@
 #ifndef TRAINERS_H
 #define TRAINERS_H
 
-#include "utils-misc.h"
 #include "entity.h"
 
 
@@ -11,6 +10,7 @@ class Trainer : Entity {
         //HP's
         int print_trainer(Trainer *t);
     public:
+        Trainer();
         Trainer(Trainer_e te, Point p, Terrain_e st);
 
         //initializers

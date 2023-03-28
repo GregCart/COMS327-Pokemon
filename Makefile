@@ -1,5 +1,7 @@
 CC = gcc
+CXX = g++
 CFLAGS = -Wall -Werror -ggdb -funroll-loops -DTERM=Fall2023 
+CXXFLAGS = -Wall -Werror -ggdb -funroll-loops -DTERM=Fall2023 
 INCLUDES = -I/lib
 LFLAGS = -lm -lncurses -L/lib
 SRCS = heap.c maps.c queue.c trainers.c utils-misc.c
@@ -11,13 +13,16 @@ MAIN = Pokemon_GC2
 all: build start
 
 build: $(OBJS)
-	$(CC) $(CFLAGS) $(INCLUDES) $(MAIN).c -o $(MAIN) $(OBJS) $(LFLAGS) $(LIBS)
+	$(CXX) $(MAIN).c -o $(MAIN) $(OBJS) $(LFLAGS) $(LIBS)
 
 start:
 	./$(MAIN)
 
 .c.o:
 	$(CC) $(CFLAGS) $(INCLUDES) -c $<  -o $@
+
+.cpp.o:
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $<  -o $@
 
 depend: $(SRCS)
 	makedepend $(INCLUDES) $^

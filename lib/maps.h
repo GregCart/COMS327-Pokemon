@@ -1,9 +1,13 @@
 #ifndef MAPS_H
 #define MAPS_H
 
+#include <cstdlib>
 
 #include "heap.h"
-#include "utils-misc.h"
+#include "constants.h"
+#include "queue.h"
+#include "structs.h"
+#include "trainers.h"
 
 
 class Map {
@@ -33,16 +37,17 @@ class Map {
         int trailblaze(const Point curPos, const Point center);
 
         //glitch
-        Map *mapdup(Map *m) const;
+        Map *mapdup(const Map *m) const;
     public:
         Trainer **trainers;
         heap_t *order;
 
 
         //Bobs
+        Map();
         Map(const Point curPos, const Point center) { create_map(curPos, center); }
         Map(const Map *m) { mapdup(m); }
-        ~Map() { free(this); }
+        ~Map() {  }
 
         //-cats
         Terrain_e **copy_map_terrain() const;

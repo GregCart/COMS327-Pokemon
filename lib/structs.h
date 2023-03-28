@@ -8,8 +8,8 @@
 
 typedef struct point {
     int x, y;
-    Point(const int x, const int y) { this->x = x; this->y = y; }
-    Point();
+    point(const int x, const int y) { this->x = x; this->y = y; }
+    point() { this->x = 0; this->y = 0; };
 } Point;
 
 typedef struct path {

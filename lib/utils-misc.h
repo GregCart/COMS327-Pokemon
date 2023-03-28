@@ -3,7 +3,7 @@
 
 #include <iostream>
 #include <string>
-#include <ncurses>
+#include <ncurses.h>
 
 #include "queue.h"
 #include "structs.h"

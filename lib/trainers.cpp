@@ -1,7 +1,6 @@
 #include "trainers.h"
 
 
-
 //Bobs
 Trainer::Trainer(Trainer_e te, Point p, Terrain_e st)
 {

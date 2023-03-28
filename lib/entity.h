@@ -1,10 +1,14 @@
 #ifndef ENTITY_H
 #define ENTITY_H
 
+#include <cstdlib>
+
 #include "heap.h"
 #include "constants.h"
-#include "utils-misc.h"
+#include "structs.h"
 
+
+class Map;
 
 class Entity {
     private:
