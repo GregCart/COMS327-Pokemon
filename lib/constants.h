@@ -55,12 +55,6 @@
 #define SWIMMER 'm'
 
 
-extern const char TERRAIN[];
-extern const char ALL_TERRAIN[];
-extern const int TERRAIN_COLORS[];
-extern const char ALL_TRAINERS[];
-extern const int ALTITUDE[][2];
-
 /*
  * rock, tree, tgrass, water, sgrass, gate, path, mart, center, border
  * player, hiker, rival, pacer, wanderer, sentry, explorer, swimmer

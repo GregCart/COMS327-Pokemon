@@ -1,7 +1,20 @@
 #include "utils-misc.h"
 
+#include <iostream>
+#include <string>
+#include <ncurses.h>
+
+#include "maps.h"
+#include "trainers.h"
+#include "entity.h"
+
+
+//globals
+int numTrainers;
+Map *trails[num_types_tra];
+
 //constants
-static const int (*movement[]) (Entity *e, Map *m, char map[BOUNDS_Y][BOUNDS_X][10]) = {move_player, move_hiker, move_rival, move_pacer, move_wanderer, move_sentry, move_explorer, move_swimmer};
+int (*movement[]) (Entity *e, const Map *m,const  char map[BOUNDS_Y][BOUNDS_X][10]) = {move_player, move_hiker, move_rival, move_pacer, move_wanderer, move_sentry, move_explorer, move_swimmer};
 
 /*
  * rock, tree, tgrass, water, sgrass, gate, path, mart, center, border
@@ -169,24 +182,24 @@ Point check_surroundings_trainer(Point p, char map[BOUNDS_Y][BOUNDS_X][10])
 //getters
 int find_stress(Map *m, Entity *e, Point p)
 {
-    mvprintw(0, 0, "Finding Stress at (%d, %d) for Entity %d at terrain %d\n", p.x, p.y, e->chr, m->terrain[p.y][p.x]);
-    switch (e->chr){
+    mvprintw(0, 0, "Finding Stress at (%d, %d) for Entity %d at terrain %d\n", p.x, p.y, e->get_chr(), m->get_map_terrain()[p.y][p.x]);
+    switch (e->get_chr()){
         case PLAY:
         case RIVL:
         case HIKR:
         case SWIM:
         case EXPL:
-            return STRESS[e->chr][m->terrain[p.y][p.x]];
+            return STRESS[e->get_chr()][m->get_map_terrain()[p.y][p.x]];
             break;
         case PACR:
         case WAND:
-            return m->terrain[p.y][p.x] == e->start? STRESS[0][m->terrain[p.y][p.x]]: STRESS[e->chr][m->terrain[p.y][p.x]];
+            return m->get_map_terrain()[p.y][p.x] == e->start? STRESS[0][m->get_map_terrain()[p.y][p.x]]: STRESS[e->get_chr()][m->get_map_terrain()[p.y][p.x]];
             break;
         case SENT:
             return D_MAX;
             break;
         default:
-            mvprintw(0, 0, "Error finding stress for %c\n", ALL_TRAINERS[e->chr]);
+            mvprintw(0, 0, "Error finding stress for %c\n", ALL_TRAINERS[e->get_chr()]);
             return -1;
     }
     return -1;
@@ -227,14 +240,14 @@ Dir_e get_lower_alt(Point p, Map *m)
     for (i = 1; i < num_dir; i++) {
         d = static_cast<Dir_e>(i);
         q = get_next_position(p, d);
-        if (q.x > 0 && q.x < (BOUNDS_X - 1) && q.y > 0 && q.y < (BOUNDS_Y - 1) && valid_move_ter(m->terrain[q.x][q.y])) {
-            if (m->alt[q.x][q.y] <= m->alt[p.x][p.y]) {
+        if (q.x > 0 && q.x < (BOUNDS_X - 1) && q.y > 0 && q.y < (BOUNDS_Y - 1) && valid_move_ter(m->get_map_terrain()[q.x][q.y])) {
+            if (m->get_map_alt()[q.x][q.y] <= m->get_map_alt()[p.x][p.y]) {
                 return d;
             }
         }
     }
 
-    return -1;
+    return NONE;
 }
 
 Entity* find_entity_pos(Trainer **t, Point p) 
@@ -243,8 +256,8 @@ Entity* find_entity_pos(Trainer **t, Point p)
 
 
     for (i = 0; i < numTrainers; i++) {
-        if (!point_cmp(&p, &t[i]->e.pos)) {
-            return &t[i]->e;
+        if (!point_cmp(&p, &t[i]->pos)) {
+            return t[i];
         }
     }
 
@@ -307,10 +320,11 @@ int move_player(Entity *self, Map *wrld, char map[BOUNDS_Y][BOUNDS_X][10])
                 ret = 8;
                 break;
             case '>':
-                if (wrld->terrain[self->pos.y][self->pos.x] == MRT || wrld->terrain[self->pos.y][self->pos.x] == CTR) {
-                    enter_building(wrld->terrain[self->pos.y][self->pos.x]);
+                p = get_next_position(self->pos, self->dir);
+                if (wrld->get_map_terrain()[p.y][p.x] == MRT || wrld->get_map_terrain()[p.y][p.x] == CTR) {
+                    enter_building(wrld->get_map_terrain()[p.y][p.x]);
                     d = self->dir;
-                    ret = 8;
+                    ret = 0;
                 } else {
                     mvprintw(0, 0, "That is not a building!\n");
                 }
@@ -329,6 +343,21 @@ int move_player(Entity *self, Map *wrld, char map[BOUNDS_Y][BOUNDS_X][10])
             case 't':
                 display_trainer_list(wrld, self, BOUNDS_Y + 1, 0);
                 break;
+            case 'f':
+                ret = 10;
+                break;
+            // case 'n':
+            //     ret = 11;
+            //     break;
+            // case 's':
+            //     ret = 12;
+            //     break;
+            // case 'e':
+            //     ret = 13;
+            //     break;
+            // case 'w':
+            //     ret = 14;
+                break;
             default:
                 d = NONE;
                 mvprintw(0, 0, "Invalid input detected!\n");
@@ -338,13 +367,29 @@ int move_player(Entity *self, Map *wrld, char map[BOUNDS_Y][BOUNDS_X][10])
             p = get_next_position(self->pos, d);
             mvprintw(0, 0, "Input: %c, Next position: (%d, %d)\n", c, p.x, p.y);
             if (self->pos.x != p.x || self->pos.y != p.y) {
-                if (valid_pos(self->chr, wrld->terrain[p.y][p.x])) {
+                if (valid_pos((Trainer_e) self->get_chr(), wrld->get_map_terrain()[p.y][p.x])) {
                     if (containes_trainer(p, map)) {
                         ret = 6;
                     } else {
                         self->pos = p;
                         self->dir = d;
                         return 0;
+                    }
+                } else if(wrld->get_map_terrain()[p.y][p.x] == GTE) {
+                    switch (self->dir) {
+                        case N:
+                            ret = 11;
+                            break;
+                        case S:
+                            ret = 12;
+                            break;
+                        case E:
+                            ret = 13;
+                            break;
+                        case W:
+                            ret = 14;
+                        default:
+                            ret = 11;
                     }
                 } else {
                     mvprintw(0, 0, "Failed to move player\n");
@@ -365,11 +410,11 @@ int move_hiker(Entity *self, Map *wrld, char map[BOUNDS_Y][BOUNDS_X][10])
     Point q = get_next_position(self->pos, d);
 
     
-    // mvprintw(0, 0, "%c, %d\n", ALL_TRAINERS[self->chr], t->alt[self->pos.y][self->pos.x]);
+    // mvprintw(0, 0, "%c, %d\n", ALL_TRAINERS[(Trainer_e) self->get_chr()], t->get_map_alt()[self->pos.y][self->pos.x]);
     // getch();
-    if ((t->alt[q.y][q.x] <= t->alt[self->pos.y][self->pos.x] || rand() % 500 == 0) &&
+    if ((t->get_map_alt()[q.y][q.x] <= t->get_map_alt()[self->pos.y][self->pos.x] || rand() % 500 == 0) &&
         !containes_trainer(q, map) && 
-        !valid_pos_trainer(self->chr, t->terrain[q.y][q.x], t->terrain[self->pos.y][self->pos.x])) {
+        !valid_pos_trainer((Trainer_e) self->get_chr(), t->get_map_terrain()[q.y][q.x], t->get_map_terrain()[self->pos.y][self->pos.x])) {
         self->pos = q;
         self->dir = d;
     } else {
@@ -377,7 +422,7 @@ int move_hiker(Entity *self, Map *wrld, char map[BOUNDS_Y][BOUNDS_X][10])
         q = get_next_position(self->pos, d);
         if (d > 0 && 
             !containes_trainer(q, map) && 
-            !valid_pos_trainer(self->chr, t->terrain[q.y][q.x], t->terrain[self->pos.y][self->pos.x])) {
+            !valid_pos_trainer((Trainer_e) self->get_chr(), t->get_map_terrain()[q.y][q.x], t->get_map_terrain()[self->pos.y][self->pos.x])) {
             self->pos = q;
             self->dir = d;
         } else if (containes_trainer(q, map)) {
@@ -398,18 +443,18 @@ int move_rival(Entity *self, Map *wrld, char map[BOUNDS_Y][BOUNDS_X][10])
     Point q = get_next_position(self->pos, d);
 
 
-    // mvprintw(0, 0, "%c, %d\n", ALL_TRAINERS[self->chr], m->alt[self->pos.y][self->pos.x]);
+    // mvprintw(0, 0, "%c, %d\n", ALL_TRAINERS[(Trainer_e) self->get_chr()], m->get_map_alt()[self->pos.y][self->pos.x]);
     // getch();
-    if ((m->alt[q.y][q.x] <= m->alt[self->pos.y][self->pos.x] || rand() % 500 == 0) &&
+    if ((m->get_map_alt()[q.y][q.x] <= m->get_map_alt()[self->pos.y][self->pos.x] || rand() % 500 == 0) &&
         !containes_trainer(q, map) && 
-        !valid_pos_trainer(self->chr, m->terrain[q.y][q.x], m->terrain[self->pos.y][self->pos.x])) {
+        !valid_pos_trainer((Trainer_e) self->get_chr(), m->get_map_terrain()[q.y][q.x], m->get_map_terrain()[self->pos.y][self->pos.x])) {
         self->pos = q;
         self->dir = d;
     } else {
         d = get_lower_alt(self->pos, m);
         q = get_next_position(self->pos, d);
         if (d > 0 && !containes_trainer(q, map) && 
-            !valid_pos_trainer(self->chr, m->terrain[q.y][q.x], m->terrain[self->pos.y][self->pos.x])) {
+            !valid_pos_trainer((Trainer_e) self->get_chr(), m->get_map_terrain()[q.y][q.x], m->get_map_terrain()[self->pos.y][self->pos.x])) {
             self->pos = get_next_position(self->pos, d);
             self->dir = d;
         } else {
@@ -426,9 +471,9 @@ int move_pacer(Entity *self, Map *wrld, char map[BOUNDS_Y][BOUNDS_X][10])
     Point q = get_next_position(self->pos, self->dir);
     Dir_e d;
 
-    if (m->terrain[q.y][q.x] == self->start &&
+    if (m->get_map_terrain()[q.y][q.x] == self->start &&
         !containes_trainer(q, map) && 
-        !valid_pos_trainer(self->chr, m->terrain[q.y][q.x], self->start)) {
+        !valid_pos_trainer((Trainer_e) self->get_chr(), m->get_map_terrain()[q.y][q.x], self->start)) {
         self->pos = q;
     } else {
         d = change_direction(0, self->dir);
@@ -446,16 +491,16 @@ int move_wanderer(Entity *self, Map *wrld, char map[BOUNDS_Y][BOUNDS_X][10])
     Dir_e d;
     int i;
 
-    if (m->terrain[self->pos.y][self->pos.x] == m->terrain[q.y][q.x] &&
+    if (m->get_map_terrain()[self->pos.y][self->pos.x] == m->get_map_terrain()[q.y][q.x] &&
         !containes_trainer(q, map) && 
-        !valid_pos_trainer(self->chr, m->terrain[q.y][q.x], m->terrain[self->pos.y][self->pos.x])) {
+        !valid_pos_trainer((Trainer_e) self->get_chr(), m->get_map_terrain()[q.y][q.x], m->get_map_terrain()[self->pos.y][self->pos.x])) {
         self->pos = q;
     } else {
         for (i = 0; i < num_dir; i++) {
             d = change_direction(rand(), self->dir);
             q = get_next_position(self->pos, d);
-            if (m->terrain[self->pos.y][self->pos.x] == m->terrain[q.y][q.x] && 
-                !valid_pos_trainer(self->chr, m->terrain[q.y][q.x], m->terrain[self->pos.y][self->pos.x])) {
+            if (m->get_map_terrain()[self->pos.y][self->pos.x] == m->get_map_terrain()[q.y][q.x] && 
+                !valid_pos_trainer((Trainer_e) self->get_chr(), m->get_map_terrain()[q.y][q.x], m->get_map_terrain()[self->pos.y][self->pos.x])) {
                 self->pos = q;
                 self->dir = d;
                 break;
@@ -479,8 +524,8 @@ int move_explorer(Entity *self, Map *wrld, char map[BOUNDS_Y][BOUNDS_X][10])
     Dir_e d;
     int i;
 
-    if (valid_move_ter(m->terrain[q.y][q.x]) && 
-        !valid_pos_trainer(self->chr, m->terrain[q.y][q.x], m->terrain[self->pos.y][self->pos.x]) &&
+    if (valid_move_ter(m->get_map_terrain()[q.y][q.x]) && 
+        !valid_pos_trainer((Trainer_e) self->get_chr(), m->get_map_terrain()[q.y][q.x], m->get_map_terrain()[self->pos.y][self->pos.x]) &&
         !containes_trainer(q, map)) {
         self->pos = q;
         return 0;
@@ -488,8 +533,8 @@ int move_explorer(Entity *self, Map *wrld, char map[BOUNDS_Y][BOUNDS_X][10])
         for (i = 0; i < num_dir; i++) {
             d = change_direction(rand(), self->dir);
             q = get_next_position(self->pos, d);
-            if (valid_pos(EXPL, m->terrain[q.y][q.x]) && 
-                !valid_pos_trainer(self->chr, m->terrain[q.y][q.x], m->terrain[self->pos.y][self->pos.x])) {
+            if (valid_pos(EXPL, m->get_map_terrain()[q.y][q.x]) && 
+                !valid_pos_trainer((Trainer_e) self->get_chr(), m->get_map_terrain()[q.y][q.x], m->get_map_terrain()[self->pos.y][self->pos.x])) {
                 if (!containes_trainer(q, map))
                 self->pos = q;
                 self->dir = d;
@@ -508,16 +553,16 @@ int move_swimmer(Entity *self, Map *wrld, char map[BOUNDS_Y][BOUNDS_X][10])
     Dir_e d = get_lower_alt(self->pos, m);
     Point q = get_next_position(self->pos, d);
 
-    if (valid_pos(self->chr, m->terrain[q.y][q.x]) && 
-        (m->alt[q.y][q.x] <= m->alt[self->pos.y][self->pos.x] || rand() % 10 == 0) &&
+    if (valid_pos((Trainer_e) self->get_chr(), m->get_map_terrain()[q.y][q.x]) && 
+        (m->get_map_alt()[q.y][q.x] <= m->get_map_alt()[self->pos.y][self->pos.x] || rand() % 10 == 0) &&
         !containes_trainer(q, map) && 
-        !valid_pos_trainer(self->chr, m->terrain[q.y][q.x], m->terrain[self->pos.y][self->pos.x])) {
+        !valid_pos_trainer((Trainer_e) self->get_chr(), m->get_map_terrain()[q.y][q.x], m->get_map_terrain()[self->pos.y][self->pos.x])) {
         self->pos = q;
         self->dir = d;
     } else {
         d = get_lower_alt(self->pos, m);
         if ((d > 0) && 
-            !valid_pos_trainer(self->chr, m->terrain[q.y][q.x], m->terrain[self->pos.y][self->pos.x])) {
+            !valid_pos_trainer((Trainer_e) self->get_chr(), m->get_map_terrain()[q.y][q.x], m->get_map_terrain()[self->pos.y][self->pos.x])) {
             self->pos = get_next_position(self->pos, d);
             self->dir = d;
         } else {
@@ -551,31 +596,16 @@ int color_display(Map *m, PC *player, Trainer **ts)
 
     for (i = 0; i < BOUNDS_Y; i++) {
         for (j = 0; j < BOUNDS_X; j++) {
-            mvchgat(i + 1, j, 1, A_NORMAL, m->terrain[i][j] + 1, NULL);
+            mvchgat(i + 1, j, 1, A_NORMAL, m->get_map_terrain()[i][j] + 1, NULL);
         }
     }
 
     for (i = 0; i < numTrainers; i++) {
-        mvchgat(ts[i]->e.pos.y + 1, ts[i]->e.pos.x, 1, A_NORMAL, 11, NULL);
+        mvchgat(ts[i]->pos.y + 1, ts[i]->pos.x, 1, A_NORMAL, 11, NULL);
     }
 
-    mvchgat(player->e.pos.y + 1, player->e.pos.x, 1, A_NORMAL, 11, NULL);
+    mvchgat(player->pos.y + 1, player->pos.x, 1, A_NORMAL, 11, NULL);
 
-
-    return 0;
-}
-
-int print_entity(Entity *e) 
-{
-    printw("Entity: {\n");
-    printw("\tChar: %c\n", ALL_TRAINERS[e->chr]);
-    printw("\tPos: (%d, %d),\n", e->pos.x, e->pos.y);
-    printw("\tStart: %d\n", e->start);
-    printw("\tTime: %d\n", e->nextTime);
-    printw("\tHn? %d\n", e->hn == NULL);
-    printw("\tMove? %d\n", e->do_move == NULL);
-    printw("\tCurrent direction: %d\n", e->dir);
-    printw("}\n");
 
     return 0;
 }
@@ -583,7 +613,7 @@ int print_entity(Entity *e)
 int print_entity_trainer_inline(Entity *e, Entity *player, int y, int x)
 {
     int dist_x, dist_y;
-    char *compas_x, *compas_y, *def;
+    const char *compas_x, *compas_y, *def;
 
 
     dist_x = player->pos.x - e->pos.x;
@@ -604,11 +634,11 @@ int print_entity_trainer_inline(Entity *e, Entity *player, int y, int x)
     }
 
     def = "\r";
-    if (e->defeted) {
+    if (e->is_defeated()) {
         def = "DEFEATED";
     }
 
-    mvprintw(y, x, "Entity %c, %d %s and %d %s %s", ALL_TRAINERS[e->chr], dist_y, compas_y, dist_x, compas_x, def);
+    mvprintw(y, x, "Entity %c, %d %s and %d %s %s", ALL_TRAINERS[e->get_chr()], dist_y, compas_y, dist_x, compas_x, def);
 
 
     return 0;
@@ -685,7 +715,7 @@ int dijkstra(Map *m, Map *w, Point p, Entity *e)
 
         mvprintw(0, 10, "T\n");
         pnt = Point(pth->pos[1], pth->pos[0] - 1);
-        if ((path[pnt.y][pnt.x].hn) && w->alt[pnt.y][pnt.x] < 99 
+        if ((path[pnt.y][pnt.x].hn) && w->get_map_alt()[pnt.y][pnt.x] < 99 
             && (path[pnt.y][pnt.x].cost > ((pth->cost + find_stress(w, e, here))))) {
                 path[pnt.y][pnt.x].cost = pth->cost + find_stress(w, e, here);
                 //from stuff for drawing nodes, don't need for part 3
@@ -695,7 +725,7 @@ int dijkstra(Map *m, Map *w, Point p, Entity *e)
         }
         mvprintw(0, 10, "TL\n");
         pnt = Point(pth->pos[1] - 1, pth->pos[0] - 1);
-        if ((path[pnt.y][pnt.x].hn) && w->alt[pnt.y][pnt.x] < 99 
+        if ((path[pnt.y][pnt.x].hn) && w->get_map_alt()[pnt.y][pnt.x] < 99 
             && (path[pnt.y][pnt.x].cost > ((pth->cost + find_stress(w, e, here))))) {    //TL
                 path[pnt.y][pnt.x].cost = pth->cost + find_stress(w, e, here);
                 //from stuff for drawing nodes, don't need for part 3
@@ -705,7 +735,7 @@ int dijkstra(Map *m, Map *w, Point p, Entity *e)
         }
         mvprintw(0, 10, "TR\n");
         pnt = Point(pth->pos[1] + 1, pth->pos[0] - 1);
-        if ((path[pnt.y][pnt.x].hn) && w->alt[pnt.y][pnt.x] < 99
+        if ((path[pnt.y][pnt.x].hn) && w->get_map_alt()[pnt.y][pnt.x] < 99
             && (path[pnt.y][pnt.x].cost > ((pth->cost + find_stress(w, e, here))))) {    //TR
                 path[pnt.y][pnt.x].cost = pth->cost + find_stress(w, e, here);
                 //from stuff for drawing nodes, don't need for part 3
@@ -715,7 +745,7 @@ int dijkstra(Map *m, Map *w, Point p, Entity *e)
         }
         mvprintw(0, 10, "L\n");
         pnt = Point(pth->pos[1] - 1, pth->pos[0]);
-        if ((path[pnt.y][pnt.x].hn) && w->alt[pnt.y][pnt.x] < 99
+        if ((path[pnt.y][pnt.x].hn) && w->get_map_alt()[pnt.y][pnt.x] < 99
             && (path[pnt.y][pnt.x].cost > ((pth->cost + find_stress(w, e, here))))) {    //left
                 path[pnt.y][pnt.x].cost = pth->cost + find_stress(w, e, here);
                 //from stuff for drawing nodes, don't need for part 3
@@ -725,7 +755,7 @@ int dijkstra(Map *m, Map *w, Point p, Entity *e)
         }
         mvprintw(0, 10, "R\n");
         pnt = Point(pth->pos[1] + 1, pth->pos[0]);
-        if ((path[pnt.y][pnt.x].hn) && w->alt[pnt.y][pnt.x] < 99
+        if ((path[pnt.y][pnt.x].hn) && w->get_map_alt()[pnt.y][pnt.x] < 99
             && (path[pnt.y][pnt.x].cost > ((pth->cost + find_stress(w, e, here))))) {    //right
                 path[pnt.y][pnt.x].cost = pth->cost + find_stress(w, e, here);
                 //from stuff for drawing nodes, don't need for part 3
@@ -735,7 +765,7 @@ int dijkstra(Map *m, Map *w, Point p, Entity *e)
         }
         mvprintw(0, 10, "B\n");
         pnt = Point(pth->pos[1], pth->pos[0] + 1);
-        if ((path[pnt.y][pnt.x].hn) && w->alt[pnt.y][pnt.x] < 99
+        if ((path[pnt.y][pnt.x].hn) && w->get_map_alt()[pnt.y][pnt.x] < 99
             && (path[pnt.y][pnt.x].cost > ((pth->cost + find_stress(w, e, here))))) {    //bottom
                 path[pnt.y][pnt.x].cost = pth->cost + find_stress(w, e, here);
                 //from stuff for drawing nodes, don't need for part 3
@@ -745,7 +775,7 @@ int dijkstra(Map *m, Map *w, Point p, Entity *e)
         }
         mvprintw(0, 10, "BL\n");
         pnt = Point(pth->pos[1] - 1, pth->pos[0] + 1);
-        if ((path[pnt.y][pnt.x].hn) && w->alt[pnt.y][pnt.x] < 99
+        if ((path[pnt.y][pnt.x].hn) && w->get_map_alt()[pnt.y][pnt.x] < 99
             && (path[pnt.y][pnt.x].cost > ((pth->cost + find_stress(w, e, here))))) {    //BL
                 path[pnt.y][pnt.x].cost = pth->cost + find_stress(w, e, here);
                 //from stuff for drawing nodes, don't need for part 3
@@ -755,7 +785,7 @@ int dijkstra(Map *m, Map *w, Point p, Entity *e)
         }
         mvprintw(0, 10, "BR\n");
         pnt = Point(pth->pos[1] + 1, pth->pos[0] + 1);
-        if ((path[pnt.y][pnt.x].hn) && w->alt[pnt.y][pnt.x] < 99
+        if ((path[pnt.y][pnt.x].hn) && w->get_map_alt()[pnt.y][pnt.x] < 99
             && (path[pnt.y][pnt.x].cost > ((pth->cost + find_stress(w, e, here))))) {    //BR
                 path[pnt.y][pnt.x].cost = pth->cost + find_stress(w, e, here);
                 //from stuff for drawing nodes, don't need for part 3
@@ -768,7 +798,7 @@ int dijkstra(Map *m, Map *w, Point p, Entity *e)
 
     for (y = 0; y < BOUNDS_Y; y++) {
         for (x = 0; x < BOUNDS_X; x++) {
-            m->alt[y][x] = path[y][x].cost;
+            m->get_map_alt()[y][x] = path[y][x].cost;
         }
     }
 
@@ -787,7 +817,7 @@ WINDOW *create_newwin(int height, int width, int starty, int startx)
 
 int enter_building(Terrain_e t)
 {
-    WINDOW *map = malloc(sizeof(*map));
+    WINDOW *map = (WINDOW *) malloc(sizeof(*map));
 
 
     map = dupwin(stdscr);
@@ -803,7 +833,7 @@ int enter_building(Terrain_e t)
 
 int initiate_battle(Entity *trainer, PC *player)
 {
-    WINDOW *map = malloc(sizeof(*map));
+    WINDOW *map = (WINDOW *) malloc(sizeof(*map));
 
 
     map = dupwin(stdscr);
@@ -812,7 +842,7 @@ int initiate_battle(Entity *trainer, PC *player)
     getch();
     overwrite(map, stdscr);
     free(map);
-    trainer->defeted = 1;
+    trainer->defeat();
 
 
     return 0;
@@ -827,7 +857,7 @@ int display_trainer_list(Map *m, Entity *player, int y, int x)
     mvprintw(y, x, "Displaying list of trainers\n");
     while (i < numTrainers) {
         refresh();
-        print_entity_trainer_inline(&m->trainers[i]->e, player, y, x);
+        print_entity_trainer_inline(m->trainers[i], player, y, x);
         // c = getch();
 
         switch (getch()) {
@@ -871,8 +901,8 @@ bool check_battle(Map *wrld, Entity *e, PC *player)
     for(i = 0; i < num_dir; i++) {
         d = static_cast<Dir_e>(i);
         p = get_next_position(e->pos, d);
-        if (p.x == player->e.pos.x && p.y == player->e.pos.y) {
-            if (e->dir == d && player->e.dir == change_direction(0, d)) {
+        if (p.x == player->pos.x && p.y == player->pos.y) {
+            if (e->dir == d && player->dir == change_direction(0, d)) {
                 ret = true;
             }
             break;

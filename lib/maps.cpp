@@ -1,12 +1,17 @@
 #include "maps.h"
 
+#include <ncurses.h>
+
+#include "utils-misc.h"
+#include "trainers.h"
+
 
 //Bobs
-Map(Terrain_e **t, int **a, int *g)
+Map::Map(Terrain_e **t, int **a, int *g)
 {
-    this->terrain = t;
-    this->alt = a;
-    this->gates = g;
+    memcpy(this->terrain, t, sizeof(this->terrain));
+    memcpy(this->alt, a, sizeof(this->alt));
+    memcpy(this->gates, g, sizeof(this->gates));
 }
 
 //HP's
@@ -48,7 +53,7 @@ int Map::print_map_terrain() const
 
 int Map::print_map() const
 {
-    return (!print_map_terrain(this) && !print_map_alt(this));
+    return (!print_map_terrain() && !print_map_alt());
 }
 
 int Map::print_cost_map() const 
@@ -108,19 +113,14 @@ Map *Map::copy_map() const
     gates = (int *) memcpy(gates, this->gates, sizeof(this->gates));
 
 
-    return Map(terrain, alt, gates);
-}
-
-Map *Map::mapdup() const
-{
-    return copy_map();
+    return new Map(terrain, alt, gates);
 }
 
 //checkers
-int Map::check_map() 
+int Map::check_map() const 
 {
-    printf("terrain: %ld x %ld\n", sizeof(this->terrain[0])/sizeof(Terrain_e), sizeof(this->terrain)/sizeof(this->terrain[0])/sizeof(char));
-    printf("n:%d s:%d e:%d w:%d\n", this->n, this->s, this->e, this->w);
+    printw("terrain: %ld x %ld\n", sizeof(this->terrain[0])/sizeof(Terrain_e), sizeof(this->terrain)/sizeof(this->terrain[0])/sizeof(char));
+    printw("n:%d s:%d e:%d w:%d\n", this->gates[0], this->gates[1], this->gates[3], this->gates[4]);
 
     return 0;
 }
@@ -130,7 +130,7 @@ int Map::make_boundary(Point curPos)
 {
     int i;
 
-    int x[4] = {this->n, this->s, this->e, this->w};
+    int x[4] = {this->gates[0], this->gates[1], this->gates[3], this->gates[4]};
     
     //bounds X
     for (i = 0; i < BOUNDS_X; i++) {
@@ -152,22 +152,22 @@ int Map::make_boundary(Point curPos)
     if (curPos.x > 2) {
         this->alt[x[3]][0] = 25;
         this->terrain[x[3]][0] = GTE;
-        this->w = x[3];
+        this->gates[4] = x[3];
     }
     if (curPos.x < WORLD_SIZE - 1) {
         this->alt[x[2]][BOUNDS_X-1] = 25;
         this->terrain[x[2]][BOUNDS_X-1] = GTE;
-        this->e = x[2]-1;
+        this->gates[3] = x[2]-1;
     }
     if (curPos.y < WORLD_SIZE - 1) {
         this->alt[BOUNDS_Y-1][x[1]] = 25;
         this->terrain[BOUNDS_Y-1][x[1]] = GTE;
-        this->s = x[1];
+        this->gates[1] = x[1];
     }
     if (curPos.y > 1) {
         this->alt[0][x[0]] = 25;
         this->terrain[0][x[0]] = GTE;
-        this->n = x[0];
+        this->gates[0] = x[0];
     }
     // print_display(this);
     
@@ -185,7 +185,7 @@ int Map::add_terrain(int x, int y, Terrain_e c)
     } else {
         *alt = *alt - ((rand() % 3) - 1) * (rand() % 3);
         if (*alt > 45) {
-            *chr = ROCK;
+            *chr = RCK;
         } else if (*alt > 43) {
             int tmp = (rand() % 3);
             if (tmp == 1) {
@@ -257,18 +257,18 @@ int Map::spread_seed(queue_t *qx, queue_t *qy)
                 if (this->alt[y][x+i] < 50 && this->terrain[y][x+i] == -1) {
                     queue_enqueue(qx, x+i);
                     queue_enqueue(qy, y);
-                    add_terrain(this, x+i, y, chr);
+                    add_terrain(x+i, y, chr);
                 }
             }
             if (this->alt[y+1][x+i] < 50 && this->terrain[y+1][x+i] == -1) {
                 queue_enqueue(qx, x+i);
                 queue_enqueue(qy, y+1);
-                add_terrain(this, x+i, y+1, chr);
+                add_terrain(x+i, y+1, chr);
             }
             if (this->alt[y-1][x+i] < 50 && this->terrain[y-1][x+i] == -1) {
                 queue_enqueue(qx, x+i);
                 queue_enqueue(qy, y-1);
-                add_terrain(this, x+i, y-1, chr);
+                add_terrain(x+i, y-1, chr);
             }
         }
         
@@ -299,21 +299,21 @@ int Map::trailblaze(Point curPos, Point center)
 
     //left
     for (i = 0; i < u; i++) {
-        // printf("%d, %d\n", this->w, this->w+i);
-        this->terrain[this->w][1+i] = PTH;
-        this->alt[this->w][1+i] = 25;
+        // printf("%d, %d\n", this->gates[4], this->gates[4]+i);
+        this->terrain[this->gates[4]][1+i] = PTH;
+        this->alt[this->gates[4]][1+i] = 25;
     }
     l = i;
     // right
     while (i < BOUNDS_X) {
-        // printf("%d, %d\n", this->e, 0+i);
-        this->terrain[this->e][BOUNDS_X-1+i] = PTH;
-        this->alt[this->e][BOUNDS_X-1+i] = 25;
+        // printf("%d, %d\n", this->gates[3], 0+i);
+        this->terrain[this->gates[3]][BOUNDS_X-1+i] = PTH;
+        this->alt[this->gates[3]][BOUNDS_X-1+i] = 25;
         i++;
     }
     //connect left and right
-    j = (this->w > this->e) ? this->e : this->w;
-    k = (this->w > this->e) ? this->w : this->e;
+    j = (this->gates[4] > this->gates[3]) ? this->gates[3] : this->gates[4];
+    k = (this->gates[4] > this->gates[3]) ? this->gates[4] : this->gates[3];
     i = 0;
     while (j + i <= k) {
         // printf("%d, %d, %d\n", j, l, k);
@@ -324,21 +324,21 @@ int Map::trailblaze(Point curPos, Point center)
     
     //top
     b = 1;
-    // printf("%d, %d\n", 0 + b, this->n);
-    while (this->terrain[0 + b][this->n] != PTH) {
+    // printf("%d, %d\n", 0 + b, this->gates[0]);
+    while (this->terrain[0 + b][this->gates[0]] != PTH) {
         // printf("%d, %d\n", 0 + this, this);
-        this->terrain[0+b][this->n] = PTH;
-        this->alt[0+b][this->n] = 25;
+        this->terrain[0+b][this->gates[0]] = PTH;
+        this->alt[0+b][this->gates[0]] = 25;
         b++;
     }
 
     //bottom
     b = 1;
-    // printf("%d, %d\n", BOUNDS_Y-1 - b, this->s);
-    while (this->terrain[BOUNDS_Y-1 - b][this->s] != PTH) {
+    // printf("%d, %d\n", BOUNDS_Y-1 - b, this->gates[1]);
+    while (this->terrain[BOUNDS_Y-1 - b][this->gates[1]] != PTH) {
         // printf("%d, %d\n", BOUNDS_Y-1 - b, b);
-        this->terrain[BOUNDS_Y-1-b][this->s] = PTH;
-        this->alt[BOUNDS_Y-1-b][this->s] = 25;
+        this->terrain[BOUNDS_Y-1-b][this->gates[1]] = PTH;
+        this->alt[BOUNDS_Y-1-b][this->gates[1]] = 25;
         b++;
     }
     
@@ -411,28 +411,28 @@ int Map::create_map(Point curPos, Point center)
     w = 1 + (rand() % (BOUNDS_Y - 2));
 
     // printf("n:%d s:%d e:%d w:%d\n", n, s, e, w);
-    this->n = n;
-    this->s = s;
-    this->e = e;
-    this->w = w;
+    this->gates[0] = n;
+    this->gates[1] = s;
+    this->gates[2] = e;
+    this->gates[3] = w;
 
     // printf("setting map\n");
     for (i = 0; i < BOUNDS_Y; i++) {
         for (j = 0; j < BOUNDS_X; j++) {
-            this->terrain[i][j] = -1;
+            this->terrain[i][j] = (Terrain_e) num_types_ter;
             this->alt[i][j] = 25;
         }
     }
 
 
     // printf("trying boundary\n");
-    if (!(ret = make_boundary(this, curPos))) {
+    if (!(ret = make_boundary(curPos))) {
         int i, r;
         int x[2];
 
         // printf("Making queues\n");
-        qx = malloc(sizeof(*qx));
-        qy = malloc(sizeof(*qy));
+        qx = (queue_t *) malloc(sizeof(*qx));
+        qy = (queue_t *) malloc(sizeof(*qy));
         queue_init(qx);
         queue_init(qy);
 
@@ -478,7 +478,109 @@ int Map::create_map(Point curPos, Point center)
             x[1] = (rand() % (BOUNDS_Y - 5)) + 4;
             int a = rand() % 5;
             // printf("x: %d, y: %d, %c\n", x[0], x[1], (char) TERRAIN[a]);
-            this->terrain[x[1]][x[0]] = a;
+            this->terrain[x[1]][x[0]] = (Terrain_e) a;
+            this->alt[x[1]][x[0]] = ALTITUDE[a][0];
+            queue_enqueue(qx, x[0]);
+            queue_enqueue(qy, x[1]);
+        }
+
+        // print_display(this);
+        // printf("Begin spreading\n");
+        ret = spread_seed(qx, qy) || ret;
+        // printf("Fill Map\n");
+        ret = fill_map() || ret;
+        // printf("Add Paths\n");
+        // pathfind(this, 0);
+        ret = trailblaze(curPos, center) || ret;
+        queue_destroy(qx);
+        queue_destroy(qy);
+    } else {
+        mvprintw(0, 0, "There was an error generating the map border\n");
+    }
+
+    if (ret) {
+        mvprintw(0, 0, "There was an error generating the map.\n");
+    } else {
+        mvprintw(0, 0, "Created map.\n");
+    }
+
+    return ret;
+}
+
+int Map::create_map(Point curPos, Point center, int gates[4])
+{
+    queue_t *qx, *qy;
+    int i, j, ret = 0;
+
+    // printf("n:%d s:%d e:%d w:%d\n", n, s, e, w);
+    this->gates[0] = gates[0];
+    this->gates[1] = gates[1];
+    this->gates[2] = gates[2];
+    this->gates[3] = gates[3];
+
+    // printf("setting map\n");
+    for (i = 0; i < BOUNDS_Y; i++) {
+        for (j = 0; j < BOUNDS_X; j++) {
+            this->terrain[i][j] = (Terrain_e) num_types_ter;
+            this->alt[i][j] = 25;
+        }
+    }
+
+
+    // printf("trying boundary\n");
+    if (!(ret = make_boundary(curPos))) {
+        int i, r;
+        int x[2];
+
+        // printf("Making queues\n");
+        qx = (queue_t *) malloc(sizeof(*qx));
+        qy = (queue_t *) malloc(sizeof(*qy));
+        queue_init(qx);
+        queue_init(qy);
+
+        //seed
+        r = rand() % 2;
+        // printf("Start Seed: %d\n", r);
+        
+        //tallgrass
+        for (i = -1; i <= r; i++) {
+            x[0] = (rand() % (BOUNDS_X - 5)) + 3;
+            x[1] = (rand() % (BOUNDS_Y - 5)) + 3;
+            this->terrain[x[1]][x[0]] = GT;
+            this->alt[x[1]][x[0]] = (rand() % 10) + 25;
+            queue_enqueue(qx, x[0]);
+            queue_enqueue(qy, x[1]);
+        }
+
+        r = rand() % 2;
+        //short grass
+        for (i = -1; i <= r; i++) {
+            x[0] = (rand() % (BOUNDS_X - 5)) + 3;
+            x[1] = (rand() % (BOUNDS_Y - 5)) + 3;
+            this->terrain[x[1]][x[0]] = GS;
+            this->alt[x[1]][x[0]] = (rand() % 10) + 25;
+            queue_enqueue(qx, x[0]);
+            queue_enqueue(qy, x[1]);
+        }
+
+        //water
+        x[0] = (rand() % (BOUNDS_X - 5)) + 3;
+        x[1] = (rand() % (BOUNDS_Y - 5)) + 3;
+        this->terrain[x[1]][x[0]] = WTR;
+        this->alt[x[1]][x[0]] = (rand() % 18);
+        queue_enqueue(qx, x[0]);
+        queue_enqueue(qy, x[1]);
+
+        r = rand() % 3;
+
+        // printf("Random Terrain start\n");
+        //get seed coords
+        for (i = 0; i <= r; i++) {
+            x[0] = (rand() % (BOUNDS_X - 5)) + 3;
+            x[1] = (rand() % (BOUNDS_Y - 5)) + 4;
+            int a = rand() % 5;
+            // printf("x: %d, y: %d, %c\n", x[0], x[1], (char) TERRAIN[a]);
+            this->terrain[x[1]][x[0]] = (Terrain_e) a;
             this->alt[x[1]][x[0]] = ALTITUDE[a][0];
             queue_enqueue(qx, x[0]);
             queue_enqueue(qy, x[1]);

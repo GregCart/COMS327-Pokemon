@@ -44,6 +44,14 @@ HW5:
         (I added the link to the github, so if you've some free time i would appreciate any help with the trainers running away     
             problem! I've spent a lot of time and effort trying to fix it and i still cant figure it out. It's also very slow to take your turn so any suggestions would be welcome!)
 
+HW6:
+    It doesn't build. I've spent countless (like 30) hours trying to figure out why when it build it outputs a bunch of "reference not defined for" style errors.
+    All of the code fpor the requirements is implemented and is converted to c++ (see functions move_player() and handle_code() for the buld of movement handeling), but I can't test it. I went to office hours for this as often as I could (3 days), but couldn't figure it out. Ill go again next week when I can again, but for now you'll just have to read the code.
+    NOTES:
+        Presumably still has the same errors as before, but I did re-factor and re-work some of the major movement features for npcs
+        Presumably, all commands still work, and so does fly, but n, s, e, w, are not implemented (as they overlap with requirements)
+    Once again the github link is still there, so feel free to take a look there too. I merged everything to master.
+
 
 To build and run: make
 To build: make build

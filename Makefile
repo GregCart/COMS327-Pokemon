@@ -13,7 +13,7 @@ MAIN = Pokemon_GC2
 all: build start
 
 build: $(OBJS)
-	$(CXX) $(MAIN).c -o $(MAIN) $(OBJS) $(LFLAGS) $(LIBS)
+	$(CXX) $(MAIN).cpp -o $(MAIN) $(OBJS) $(LFLAGS) $(LIBS)
 
 start:
 	./$(MAIN)
@@ -42,5 +42,5 @@ package: clean
 	\cp -r changes.txt CHANGELOG
 	git --no-pager log --reverse > hist.txt
 	cat hist.txt >> CHANGELOG
-	cd ..; rm -fr greg-carter_assignment-1.05 greg-carter_assignment-1.05.tar.gz;
-	cd ..; rsync -av --exclude=Pokemon/.git --exclude=Pokemon/.vscode --exclude=Pokemon/pokemon-old Pokemon greg-carter_assignment-1.05; tar cvfz greg-carter_assignment-1.05.tar.gz greg-carter_assignment-1.05;
+	cd ..; rm -fr greg-carter_assignment-1.06 greg-carter_assignment-1.06.tar.gz;
+	cd ..; rsync -av --exclude=Pokemon/.git --exclude=Pokemon/.vscode --exclude=Pokemon/pokemon-old --exclude=Pokemon/pokemon-c Pokemon greg-carter_assignment-1.06; tar cvfz greg-carter_assignment-1.06.tar.gz greg-carter_assignment-1.06;

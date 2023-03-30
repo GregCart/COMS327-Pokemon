@@ -1,10 +1,7 @@
 #ifndef ENTITY_H
 #define ENTITY_H
 
-#include <cstdlib>
 
-#include "heap.h"
-#include "constants.h"
 #include "structs.h"
 
 
@@ -16,9 +13,7 @@ class Entity {
         
     protected:
         int nextTime;
-        int order;
         bool defeated;
-        Terrain_e start;
 
 
         int print_entity() const;
@@ -26,24 +21,29 @@ class Entity {
         heap_node_t *hn;
         Point pos;
         Dir_e dir;
+        Terrain_e start;
         int (*do_move)(Map *m, char map[BOUNDS_Y][BOUNDS_X][10]);
+        int order;
 
 
         Entity(const int i, const Point p, const Terrain_e st);
         Entity(const int i, const Point p, const Terrain_e st, const Dir_e d);
-        ~Entity() { free(this); }
+        ~Entity() {};
 
         bool operator==(Entity *e) const { return this->start == e->start; }
         bool operator!=(Entity *e) const { return this->start != e->start; }
 
         bool is_defeated() const { return this->defeated; }
         int get_chr() const { return this->chr; }
-        Point get_pos() const { return this->pos; }
+        int check_time() const { return this->nextTime; }
+        int check_order() const {return this->order; }
 
         void defeat() { this->defeated = true; }
         void update_time(const int i) { this->nextTime += i; }
 
         bool compare(const void *with) const;
+
+        friend int32_t entity_cmp(const void *key, const void *wwith);
 };
 
 #endif

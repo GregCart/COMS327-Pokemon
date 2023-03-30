@@ -1,4 +1,4 @@
-#include <stdlib>
+#include <cstdlib>
 #include "queue.h"
 
 int queue_enqueue(queue_t *q, int i)
