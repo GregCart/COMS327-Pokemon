@@ -232,7 +232,7 @@ int init_map(PC *player, Dir_e d) {
     if (!(ret) && 
             !(ret = map_chars(m, display) || ret)) {
         player->hn = heap_insert(&m->order, &(player));
-        player->pos = Point(((int *) m->get_map_gates())[1], BOUNDS_Y-2);
+        player->pos = new Point(((int *) m->get_map_gates())[1], BOUNDS_Y-2);
         trails[player->get_chr()] = (Map *) malloc(sizeof(*trails[0]));
 
         for (i = 0; i < numTrainers; i++) {

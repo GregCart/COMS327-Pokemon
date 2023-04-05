@@ -52,6 +52,11 @@ HW6:
         Presumably, all commands still work, and so does fly, but n, s, e, w, are not implemented (as they overlap with requirements)
     Once again the github link is still there, so feel free to take a look there too. I merged everything to master.
 
+HW6 RE & HW7:
+    It's failing on things that I don't understand. I have functions that return arrays as poineters, but it only treats them as if the are returning the pointer, and doesn't index them. I found a workarround in `map_chars()`, but That only works because I could spare an extra temp variable. I cant do it everywhere, but in `player->pos = new Point(((int *) m->get_map_gates())[1], BOUNDS_Y-2);` That cast was enough to fix the error. None of these appeared before and calgrind doesnt tell me anything. If you know how to fix these issues, please either respond to the post or email me. Thank you
+    Also there are still getch() statements sacttered from debugging.
+    File reading things are in teh database-utils files.
+
 
 To build and run: make
 To build: make build
@@ -61,4 +66,4 @@ To run test w/ Valgrind: make test-v
 TO clean: make clean
 To package into tarball: make package
 
-Github Repo with all changes (active branch is refactored): https://github.com/GregCart2/COMS327-Pokemon
+Github Repo with all changes: https://github.com/GregCart2/COMS327-Pokemon

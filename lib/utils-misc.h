@@ -3,7 +3,13 @@
 
 
 #include "queue.h"
-#include "maps.h"
+#include "structs.h"
+
+
+class Entity;
+class Trainer;
+using PC = Trainer;
+class Map;
 
 
 //globals
@@ -11,11 +17,11 @@ extern int numTrainers;
 extern Map *trails[num_types_tra];
 
 //constants
-extern int (*movement[]) (Entity *e, const Map *m, const char map[BOUNDS_Y][BOUNDS_X][10]);
-static const char TERRAIN[] = {ROCK, TREE, GRASS_T, WATER, GRASS_S};
-static const char ALL_TERRAIN[] = {ROCK, TREE, GRASS_T, WATER, GRASS_S, GATE, PATH, MART, CENTER, BORDER};
-static const char ALL_TRAINERS[] = {PLAYER, HIKER, RIVAL, PACER, WANDERER, SENTRY, EXPLORER, SWIMMER};
-static const int ALTITUDE[][2] = {{50, 30}, {43, 25}, {45, 15}, {18, 0}, {45, 20}};
+extern int (*movement[]) (Entity *e, const Map *m, char map[BOUNDS_Y][BOUNDS_X][10]);
+extern const char TERRAIN[];
+extern const char ALL_TERRAIN[];
+extern const char ALL_TRAINERS[];
+extern const int ALTITUDE[][2];
 
 
 //movement utility
@@ -40,14 +46,14 @@ Dir_e get_lower_alt(const Point p, const Map *m);
 Entity* find_entity_pos(Trainer **t, const Point p) ;
 
 //movement functions
-int move_player(Entity *self, const Map *wrld, const char map[BOUNDS_Y][BOUNDS_X][10]);
-int move_hiker(Entity *self, const Map *wrld, const char map[BOUNDS_Y][BOUNDS_X][10]);
-int move_rival(Entity *self, const Map *wrld, const char map[BOUNDS_Y][BOUNDS_X][10]);
-int move_pacer(Entity *self, const Map *wrld, const char map[BOUNDS_Y][BOUNDS_X][10]);
-int move_wanderer(Entity *self, const Map *wrld, const char map[BOUNDS_Y][BOUNDS_X][10]);
-int move_sentry(Entity *self, const Map *wrld, const char map[BOUNDS_Y][BOUNDS_X][10]);
-int move_explorer(Entity *self, const Map *wrld, const char map[BOUNDS_Y][BOUNDS_X][10]);
-int move_swimmer(Entity *self, const Map *wrld, const char map[BOUNDS_Y][BOUNDS_X][10]);
+int move_player(Entity *self, const Map *wrld, char map[BOUNDS_Y][BOUNDS_X][10]);
+int move_hiker(Entity *self, const Map *wrld, char map[BOUNDS_Y][BOUNDS_X][10]);
+int move_rival(Entity *self, const Map *wrld, char map[BOUNDS_Y][BOUNDS_X][10]);
+int move_pacer(Entity *self, const Map *wrld, char map[BOUNDS_Y][BOUNDS_X][10]);
+int move_wanderer(Entity *self, const Map *wrld, char map[BOUNDS_Y][BOUNDS_X][10]);
+int move_sentry(Entity *self, const Map *wrld, char map[BOUNDS_Y][BOUNDS_X][10]);
+int move_explorer(Entity *self, const Map *wrld, char map[BOUNDS_Y][BOUNDS_X][10]);
+int move_swimmer(Entity *self, const Map *wrld, char map[BOUNDS_Y][BOUNDS_X][10]);
 
 //distance finders
 int manhattan(const Point p, const Point q);
@@ -60,10 +66,13 @@ int print_entity(const Entity *e);
 
 //new screen manipulation
 int enter_building(const Terrain_e t);
-int initiate_battle(const Entity *trainer, const PC *player);
+int initiate_battle(Entity *trainer, PC *player);
 int display_trainer_list(const Map *m, const Entity *player, const int y, const int x);
 
 //misc
 bool check_battle(const Map *wrld, const Entity *e, const PC *player);
+
+//data lifters
+int load_data();
 
 #endif
