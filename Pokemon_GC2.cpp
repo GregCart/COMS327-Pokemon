@@ -8,6 +8,7 @@
 #include "lib/maps.h"
 #include "lib/trainers.h"
 #include "lib/structs.h"
+#include "lib/database-utils.h"
 
 
 
@@ -488,17 +489,23 @@ int testgame()
 
 int main(int argc, char *argv[])
 {
-    int ret = 1;
+    int ret = 1, i = 1;
     numTrainers = 10;
-
     
-    if (argc != 1 && argc != 3) {
-        printf("Usage: %s --numtrainers <number of trainers to spawn <default: 10>\n", argv[0]);
-    } else if (argc == 2 && strcmp(argv[1], "--numtrainers") == 0) {
-        numTrainers = atoi(argv[2]);
-    }
 
     if (!init_game()) {
+        while (i < argc) {
+            if (strcmp(argv[i], "--numtrainers") == 0) {
+                numTrainers = atoi(argv[i + 1]);
+                i += 2;
+            }
+            if (strcmp(argv[i], "--displayfile") == 0) {
+                load_database(argv[i+1]);
+                cleanup();
+                return 0;
+            }
+            i++;
+        }
         mvprintw(0, 0, "Init successful\n");
         ret = gameloop();
         // ret = testgame();

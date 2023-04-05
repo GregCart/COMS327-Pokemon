@@ -22,7 +22,7 @@ typedef struct path {
 
 typedef struct move {
     int id;
-    char *name;
+    char *identifier;
     int gen_id, type_id;
     int power, pp, accuracy, priority;
     int target_id, damage_class_id;

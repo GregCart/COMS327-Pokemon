@@ -7,7 +7,7 @@ LFLAGS = -lm -lncurses -L/lib
 MAIN = Pokemon_GC2
 SRCS = maps.c queue.c trainers.c utils-misc.c 
 ASRCS = heap.c
-CXSRCS = maps.cpp queue.cpp trainers.cpp utils-misc.cpp entity.cpp
+CXSRCS = maps.cpp queue.cpp trainers.cpp utils-misc.cpp entity.cpp database-utils.cpp
 OBJS = $(addprefix lib/, $(ASRCS:.c=.o)) $(addprefix lib/, $(CXSRCS:.cpp=.o))
 
 

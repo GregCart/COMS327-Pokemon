@@ -12,7 +12,6 @@ class Pokemon {
         int height, weight;
         int base_exp;
         int order;
-        bool is_default;
         int *movesList;
 
     public:
@@ -29,3 +28,5 @@ class Pokemon {
 
         
 };
+
+#endif

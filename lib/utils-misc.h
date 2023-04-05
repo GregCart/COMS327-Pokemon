@@ -72,7 +72,4 @@ int display_trainer_list(const Map *m, const Entity *player, const int y, const 
 //misc
 bool check_battle(const Map *wrld, const Entity *e, const PC *player);
 
-//data lifters
-int load_data();
-
 #endif
