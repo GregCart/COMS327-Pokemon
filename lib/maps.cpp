@@ -1,17 +1,42 @@
 #include "maps.h"
 
+#include <cstdlib>
+#include <cstring>
 #include <ncurses.h>
 
 #include "utils-misc.h"
+#include "structs.h"
 #include "trainers.h"
 
 
 //Bobs
-Map::Map(Terrain_e **t, int **a, int *g)
+Map::Map(Terrain_e **t, int **a, int *g, bool b)
 {
-    memcpy(this->terrain, t, sizeof(this->terrain));
-    memcpy(this->alt, a, sizeof(this->alt));
-    memcpy(this->gates, g, sizeof(this->gates));
+    if (b) {
+        memcpy(this->terrain, t, sizeof(this->terrain));
+        memcpy(this->alt, a, sizeof(this->alt));
+        memcpy(this->gates, g, sizeof(this->gates));
+    }
+}
+
+Map::Map(Point curPos, Point center) 
+{ 
+    create_map(curPos, center);
+}
+
+Map::Map(Point curPos, Point center, int gates[4]) 
+{ 
+    create_map(curPos, center, gates);
+}
+
+Map::Map(Map *m) 
+{ 
+    m = copy_map(); 
+}
+
+Map::~Map() 
+{
+
 }
 
 //HP's
@@ -43,7 +68,7 @@ int Map::print_map_terrain() const
     for (i = 0; i < BOUNDS_Y; i++) {
         printw("%d\t", i);
         for (j = 0; j < BOUNDS_X; j++) {
-            printw("%d ", this->terrain[i][j]);
+            printw("%2d", this->terrain[i][j]);
         }
         printw("\n");
     }
@@ -75,6 +100,22 @@ int Map::print_cost_map() const
     return 0;
 }
 
+//peepers
+Terrain_e **Map::get_map_terrain() const 
+{ 
+    return (Terrain_e **) &this->terrain; 
+}
+
+int **Map::get_map_alt() 
+{ 
+    return (int **) this->alt; 
+}
+
+int *Map::get_map_gates() 
+{
+    return (int *) this->gates;
+}
+
 //-cats
 Terrain_e **Map::copy_map_terrain() const
  {
@@ -93,7 +134,7 @@ Terrain_e **Map::copy_map_terrain() const
 int **Map::copy_map_alt() const
 {
     int i, j;
-    static int **ret = (int **) malloc(sizeof(this->alt));
+    int **ret = (int **) malloc(sizeof(this->alt));
 
 
     for (i = 0; i < BOUNDS_Y; i++) {
@@ -113,7 +154,23 @@ Map *Map::copy_map() const
     gates = (int *) memcpy(gates, this->gates, sizeof(this->gates));
 
 
-    return new Map(terrain, alt, gates);
+    return new Map(terrain, alt, gates, true);
+}
+
+//in stone
+void Map::set_map_terrain(Terrain_e **t) 
+{ 
+    memcpy(terrain, t, sizeof(**t)); 
+}
+
+void Map::set_map_alt(int **i)
+{ 
+    memcpy(alt, i, sizeof(**i));
+}
+
+void Map::set_map(Map *m) 
+{ 
+    memcpy(this, m, sizeof(*m)); 
 }
 
 //checkers
@@ -130,8 +187,8 @@ int Map::make_boundary(Point curPos)
 {
     int i;
 
-    int x[4] = {this->gates[0], this->gates[1], this->gates[3], this->gates[4]};
-    
+    int x[4] = {this->gates[0], this->gates[1], this->gates[2], this->gates[3]};
+
     //bounds X
     for (i = 0; i < BOUNDS_X; i++) {
         this->terrain[0][i] = BDR;
@@ -254,18 +311,18 @@ int Map::spread_seed(queue_t *qx, queue_t *qy)
 
         for (i = -1; i < 2; i++) {
             if (i != 0) {
-                if (this->alt[y][x+i] < 50 && this->terrain[y][x+i] == -1) {
+                if (this->alt[y][x+i] < 50 && this->terrain[y][x+i] == num_types_ter) {
                     queue_enqueue(qx, x+i);
                     queue_enqueue(qy, y);
                     add_terrain(x+i, y, chr);
                 }
             }
-            if (this->alt[y+1][x+i] < 50 && this->terrain[y+1][x+i] == -1) {
+            if (this->alt[y+1][x+i] < 50 && this->terrain[y+1][x+i] == num_types_ter) {
                 queue_enqueue(qx, x+i);
                 queue_enqueue(qy, y+1);
                 add_terrain(x+i, y+1, chr);
             }
-            if (this->alt[y-1][x+i] < 50 && this->terrain[y-1][x+i] == -1) {
+            if (this->alt[y-1][x+i] < 50 && this->terrain[y-1][x+i] == num_types_ter) {
                 queue_enqueue(qx, x+i);
                 queue_enqueue(qy, y-1);
                 add_terrain(x+i, y-1, chr);
@@ -283,7 +340,7 @@ int Map::fill_map()
 
     for (i = 0; i < BOUNDS_Y; i++) {
         for (j = 0; j < BOUNDS_X; j++) {
-            if (this->terrain[i][j] == -1) {
+            if (this->terrain[i][j] == num_types_ter) {
                 this->terrain[i][j] = GS;
                 this->alt[i][j] = 25;
             }
@@ -573,7 +630,6 @@ int Map::create_map(Point curPos, Point center, int gates[4])
 
         r = rand() % 3;
 
-        // printf("Random Terrain start\n");
         //get seed coords
         for (i = 0; i <= r; i++) {
             x[0] = (rand() % (BOUNDS_X - 5)) + 3;
@@ -586,14 +642,10 @@ int Map::create_map(Point curPos, Point center, int gates[4])
             queue_enqueue(qy, x[1]);
         }
 
-        // print_display(this);
-        // printf("Begin spreading\n");
         ret = spread_seed(qx, qy) || ret;
-        // printf("Fill Map\n");
         ret = fill_map() || ret;
-        // printf("Add Paths\n");
-        // pathfind(this, 0);
         ret = trailblaze(curPos, center) || ret;
+        
         queue_destroy(qx);
         queue_destroy(qy);
     } else {
@@ -605,6 +657,8 @@ int Map::create_map(Point curPos, Point center, int gates[4])
     } else {
         mvprintw(0, 0, "Created map.\n");
     }
+
+    mvprintw(0, 0, "Map created\n");
 
     return ret;
 }

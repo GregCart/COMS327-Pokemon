@@ -1,29 +1,21 @@
 #ifndef MAPS_H
 #define MAPS_H
 
-#include <cstdlib>
-#include <cstring>
 
 #include "structs.h"
-#include "queue.h"
-#include "trainers.h"
 
+class Entity;
+class Trainer;
 
 class Map {
     private:
-        Map(Terrain_e **t, int **a, int *g);
+        Map(Terrain_e **t, int **a, int *g, bool b);
     protected:
         Terrain_e terrain[BOUNDS_Y][BOUNDS_X];
         int alt[BOUNDS_Y][BOUNDS_X];
         //n, s, e, w
         int gates[4];
 
-
-        //HPs
-        int print_map_alt() const;
-        int print_map_terrain() const;
-        int print_map() const;
-        int print_cost_map() const;
 
         //!chess
         int check_map() const;
@@ -36,20 +28,25 @@ class Map {
         int trailblaze(const Point curPos, const Point center);
     public:
         Trainer **trainers;
-        heap_t *order;
+        heap_t order;
 
+        //HPs
+        int print_map_alt() const;
+        int print_map_terrain() const;
+        int print_map() const;
+        int print_cost_map() const;
 
         //Bobs
-        Map();
-        Map(const Point curPos, const Point center) { create_map(curPos, center); }
-        Map(const Point curPos, const Point center, int gates[4]) { create_map(curPos, center, gates); }
-        Map(Map *m) { m = copy_map(); }
-        ~Map() {  }
+        Map() {}
+        Map(const Point curPos, const Point center);
+        Map(const Point curPos, const Point center, int gates[4]);
+        Map(Map *m);
+        ~Map();
 
         //Peepers
-        Terrain_e **get_map_terrain() const { return (Terrain_e **) this->terrain; }
-        int **get_map_alt() { return (int **) this->alt; }
-        int *get_map_gates() {return (int *) this->gates; }
+        Terrain_e **get_map_terrain() const;
+        int **get_map_alt();
+        int *get_map_gates();
         
         //-cats
         Terrain_e **copy_map_terrain() const;
@@ -57,9 +54,9 @@ class Map {
         Map *copy_map() const;
 
         //in stone
-        void set_map_terrain(Terrain_e **t) { memcpy(terrain, t, sizeof(**t)); };
-        void set_map_alt(int **i) { memcpy(alt, i, sizeof(**i)); };
-        void set_map(Map *m) { memcpy(this, m, sizeof(*m)); };
+        void set_map_terrain(Terrain_e **t);
+        void set_map_alt(int **i);
+        void set_map(Map *m);
 
         //Indi Beningi
         int create_map(const Point curPos, const Point center);

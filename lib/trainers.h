@@ -11,8 +11,9 @@ class Trainer : public Entity {
         int print_trainer(Trainer *t);
     public:
         Trainer();
-        Trainer(Trainer_e te, Point p, Terrain_e st) : Entity(te, p, st) {}
-        Trainer(Trainer_e te, Point p, Terrain_e st, Dir_e d) : Entity(te, p, st, d) {}
+        Trainer(const Trainer_e te, const Point p, const Terrain_e st) : Entity((int) te, p, st) {}
+        Trainer(const Trainer_e te, const Point p, const Terrain_e st, const Dir_e d) : Entity((int) te, p, st, d) {}
+        ~Trainer() {}
 
         //initializers
         friend Trainer** init_trainers(const int num);

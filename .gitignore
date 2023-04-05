@@ -11,3 +11,4 @@ Pokemon_GC2
 lib/trainers.c
 hist.txt
 pokemon-c/changes.txt
+.vscode/settings.json

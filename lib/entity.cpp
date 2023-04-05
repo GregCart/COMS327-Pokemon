@@ -18,7 +18,7 @@ Entity::Entity(int i, Point p, Terrain_e st)
     this->dir = static_cast<Dir_e>(rand() % num_dir);
 }
 
-Entity::Entity(int i, Point p, Terrain_e st, Dir_e d) 
+Entity::Entity(const int i, const Point p, const Terrain_e st, const Dir_e d) 
 { 
     this->chr = i;
     this->pos = p;
@@ -30,6 +30,11 @@ Entity::Entity(int i, Point p, Terrain_e st, Dir_e d)
     this->dir = d;
 }
 
+Entity::~Entity()
+{
+    
+}
+
 //comperators
 bool Entity::compare(const void *with) const
 {
@@ -38,7 +43,7 @@ bool Entity::compare(const void *with) const
 }
 
 //HPs
-int Entity::print_entity() 
+int Entity::print_entity()  const
 {
     printw("Entity: {\n");
     printw("\tChar: %d\n", this->get_chr());

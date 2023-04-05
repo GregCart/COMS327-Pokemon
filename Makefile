@@ -4,9 +4,12 @@ CFLAGS = -Wall -Werror -ggdb -funroll-loops -DTERM=Fall2023
 CXXFLAGS = -Wall -Werror -ggdb -funroll-loops -DTERM=Fall2023 
 INCLUDES = -I/lib
 LFLAGS = -lm -lncurses -L/lib
-SRCS = heap.c maps.c queue.c trainers.c utils-misc.c
-OBJS = $(addprefix lib/, $(SRCS:.c=.o))
 MAIN = Pokemon_GC2
+SRCS = maps.c queue.c trainers.c utils-misc.c 
+ASRCS = heap.c
+CXSRCS = maps.cpp queue.cpp trainers.cpp utils-misc.cpp entity.cpp
+OBJS = $(addprefix lib/, $(ASRCS:.c=.o)) $(addprefix lib/, $(CXSRCS:.cpp=.o))
+
 
 .PHONY: depend clean
 
@@ -43,4 +46,4 @@ package: clean
 	git --no-pager log --reverse > hist.txt
 	cat hist.txt >> CHANGELOG
 	cd ..; rm -fr greg-carter_assignment-1.06 greg-carter_assignment-1.06.tar.gz;
-	cd ..; rsync -av --exclude=Pokemon/.git --exclude=Pokemon/.vscode --exclude=Pokemon/pokemon-old --exclude=Pokemon/pokemon-c Pokemon greg-carter_assignment-1.06; tar cvfz greg-carter_assignment-1.06.tar.gz greg-carter_assignment-1.06;
+	cd ..; rsync -av --exclude=Pokemon/.git --exclude=Pokemon/.vscode --exclude=Pokemon/pokemon-old --exclude=Pokemon/pokemon-c --exclude=Pokemon/pokedex Pokemon greg-carter_assignment-1.06; tar cvfz greg-carter_assignment-1.06.tar.gz greg-carter_assignment-1.06;

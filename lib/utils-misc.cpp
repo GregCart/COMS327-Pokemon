@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <string>
+#include <fstream>
 #include <ncurses.h>
 
 #include "maps.h"
@@ -14,8 +15,11 @@ int numTrainers;
 Map *trails[num_types_tra];
 
 //constants
-int (*movement[]) (Entity *e, const Map *m,const  char map[BOUNDS_Y][BOUNDS_X][10]) = {move_player, move_hiker, move_rival, move_pacer, move_wanderer, move_sentry, move_explorer, move_swimmer};
-
+int (*movement[]) (Entity *e, const Map *m, char map[BOUNDS_Y][BOUNDS_X][10]) = {move_player, move_hiker, move_rival, move_pacer, move_wanderer, move_sentry, move_explorer, move_swimmer};
+const char TERRAIN[] = {ROCK, TREE, GRASS_T, WATER, GRASS_S};
+const char ALL_TERRAIN[] = {ROCK, TREE, GRASS_T, WATER, GRASS_S, GATE, PATH, MART, CENTER, BORDER};
+const char ALL_TRAINERS[] = {PLAYER, HIKER, RIVAL, PACER, WANDERER, SENTRY, EXPLORER, SWIMMER};
+const int ALTITUDE[][2] = {{50, 30}, {43, 25}, {45, 15}, {18, 0}, {45, 20}};
 /*
  * rock, tree, tgrass, water, sgrass, gate, path, mart, center, border
  * player, hiker, rival, pacer, wanderer, sentry, explorer, swimmer
@@ -102,6 +106,8 @@ bool valid_move_ter(Terrain_e t)
 
 bool valid_pos_trainer(Trainer_e e, Terrain_e t, Terrain_e start)
 {
+    mvprintw(0, 0, "Test");
+    getch();
     if (!valid_move_ter(t) || t == MRT || t == CTR) {
         return false;
     }
@@ -151,7 +157,7 @@ bool containes_trainer(Point p, char map[BOUNDS_Y][BOUNDS_X][10]) {
     return ret;
 }
 
-Point check_surroundings_trainer(Point p, char map[BOUNDS_Y][BOUNDS_X][10])
+Point check_surroundings_trainer(const Point p, const char map[BOUNDS_Y][BOUNDS_X][10])
 {
     int i;
     Point q;
@@ -266,7 +272,7 @@ Entity* find_entity_pos(Trainer **t, Point p)
 }
 
 //movement functions
-int move_player(Entity *self, Map *wrld, char map[BOUNDS_Y][BOUNDS_X][10])
+int move_player(Entity *self, const Map *wrld, char map[BOUNDS_Y][BOUNDS_X][10])
 {
     int ret = 0;
     char c;
@@ -403,7 +409,7 @@ int move_player(Entity *self, Map *wrld, char map[BOUNDS_Y][BOUNDS_X][10])
     return ret;
 }
 
-int move_hiker(Entity *self, Map *wrld, char map[BOUNDS_Y][BOUNDS_X][10])
+int move_hiker(Entity *self, const Map *wrld, char map[BOUNDS_Y][BOUNDS_X][10])
 {
     Map *t = trails[HIKR];
     Dir_e d = get_lower_alt(self->pos, t);
@@ -436,7 +442,7 @@ int move_hiker(Entity *self, Map *wrld, char map[BOUNDS_Y][BOUNDS_X][10])
     return 0;
 }
 
-int move_rival(Entity *self, Map *wrld, char map[BOUNDS_Y][BOUNDS_X][10])
+int move_rival(Entity *self, const Map *wrld, char map[BOUNDS_Y][BOUNDS_X][10])
 {
     Map *m = trails[RIVL];
     Dir_e d = get_lower_alt(self->pos, m);
@@ -465,9 +471,9 @@ int move_rival(Entity *self, Map *wrld, char map[BOUNDS_Y][BOUNDS_X][10])
     return 0;
 }
 
-int move_pacer(Entity *self, Map *wrld, char map[BOUNDS_Y][BOUNDS_X][10])
+int move_pacer(Entity *self, const Map *wrld, char map[BOUNDS_Y][BOUNDS_X][10])
 {
-    Map *m = wrld;
+    const Map *m = wrld;
     Point q = get_next_position(self->pos, self->dir);
     Dir_e d;
 
@@ -484,9 +490,9 @@ int move_pacer(Entity *self, Map *wrld, char map[BOUNDS_Y][BOUNDS_X][10])
     return 0;
 }
 
-int move_wanderer(Entity *self, Map *wrld, char map[BOUNDS_Y][BOUNDS_X][10])
+int move_wanderer(Entity *self, const Map *wrld, char map[BOUNDS_Y][BOUNDS_X][10])
 {
-    Map *m = wrld;
+    const Map *m = wrld;
     Point q = get_next_position(self->pos, self->dir);
     Dir_e d;
     int i;
@@ -511,15 +517,15 @@ int move_wanderer(Entity *self, Map *wrld, char map[BOUNDS_Y][BOUNDS_X][10])
     return 0;
 }
 
-int move_sentry(Entity *self, Map *wrld, char map[BOUNDS_Y][BOUNDS_X][10])
+int move_sentry(Entity *self, const Map *wrld, char map[BOUNDS_Y][BOUNDS_X][10])
 {
     //no
     return 0;
 }
 
-int move_explorer(Entity *self, Map *wrld, char map[BOUNDS_Y][BOUNDS_X][10])
+int move_explorer(Entity *self, const Map *wrld, char map[BOUNDS_Y][BOUNDS_X][10])
 {
-    Map *m = wrld;
+    const Map *m = wrld;
     Point q = get_next_position(self->pos, self->dir);
     Dir_e d;
     int i;
@@ -547,7 +553,7 @@ int move_explorer(Entity *self, Map *wrld, char map[BOUNDS_Y][BOUNDS_X][10])
     return 1;
 }
 
-int move_swimmer(Entity *self, Map *wrld, char map[BOUNDS_Y][BOUNDS_X][10])
+int move_swimmer(Entity *self, const Map *wrld, char map[BOUNDS_Y][BOUNDS_X][10])
 {
     Map *m = trails[SWIM];
     Dir_e d = get_lower_alt(self->pos, m);
@@ -576,7 +582,7 @@ int move_swimmer(Entity *self, Map *wrld, char map[BOUNDS_Y][BOUNDS_X][10])
 
 
 //HP's
-int print_display(char map[BOUNDS_Y][BOUNDS_X][10])
+int print_display(const char map[BOUNDS_Y][BOUNDS_X][10])
 {
     int i, j;
 
@@ -589,7 +595,7 @@ int print_display(char map[BOUNDS_Y][BOUNDS_X][10])
     return 0;
 }
 
-int color_display(Map *m, PC *player, Trainer **ts)
+int color_display(const Map *m, const PC *player, Trainer **ts)
 {
     int i, j;
 
@@ -610,7 +616,7 @@ int color_display(Map *m, PC *player, Trainer **ts)
     return 0;
 }
 
-int print_entity_trainer_inline(Entity *e, Entity *player, int y, int x)
+int print_entity_trainer_inline(const Entity *e, const Entity *player, const int y, const int x)
 {
     int dist_x, dist_y;
     const char *compas_x, *compas_y, *def;
@@ -848,7 +854,7 @@ int initiate_battle(Entity *trainer, PC *player)
     return 0;
 }
 
-int display_trainer_list(Map *m, Entity *player, int y, int x)
+int display_trainer_list(const Map *m, const Entity *player, const int y, const     int x)
 {
     int i;
 
@@ -890,7 +896,7 @@ int display_trainer_list(Map *m, Entity *player, int y, int x)
 }
 
 //battle stuff
-bool check_battle(Map *wrld, Entity *e, PC *player)
+bool check_battle(const Map *wrld, const Entity *e, const PC *player)
 {
     int i;
     bool ret = false;
@@ -912,5 +918,4 @@ bool check_battle(Map *wrld, Entity *e, PC *player)
     
     return ret;
 }
-
 

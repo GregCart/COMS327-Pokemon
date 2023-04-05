@@ -26,9 +26,9 @@ class Entity {
         int order;
 
 
-        Entity(const int i, const Point p, const Terrain_e st);
+        Entity(int i, Point p, Terrain_e st);
         Entity(const int i, const Point p, const Terrain_e st, const Dir_e d);
-        ~Entity() {};
+        ~Entity();
 
         bool operator==(Entity *e) const { return this->start == e->start; }
         bool operator!=(Entity *e) const { return this->start != e->start; }

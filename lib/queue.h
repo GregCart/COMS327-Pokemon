@@ -13,12 +13,12 @@ typedef struct queue{
     int length;
 } queue_t;
 
-int queue_enqueue(const queue_t *q, int i);
-int queue_dequeue(const queue_t *q, int *i);
-int queue_front(const queue_t *q, int *i);
-int queue_length(const queue_t *q);
-int queue_is_empty(const queue_t *q);
-int queue_init(const queue_t *q);
-int queue_destroy(const queue_t *q);
+int queue_enqueue(queue_t *q, int i);
+int queue_dequeue(queue_t *q, int *i);
+int queue_front(queue_t *q, int *i);
+int queue_length(queue_t *q);
+int queue_is_empty(queue_t *q);
+int queue_init(queue_t *q);
+int queue_destroy(queue_t *q);
 
 #endif
