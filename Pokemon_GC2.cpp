@@ -187,12 +187,10 @@ Trainer** init_trainers()
 int init_map(PC *player, Dir_e d) {
     int ret = 0;
     int i, n, s, e, w;
-    Map *m, map;
+    Map *m;
 
     
     world[curPos.y][curPos.x] = (Map *) malloc(sizeof(*world[center.y][center.x]));
-    
-    m = world[curPos.y][curPos.x];
 
     if (curPos.y > 0 && world[curPos.y - 1][curPos.x] != NULL) {
         // printf("N->s:%d, ", world[curPos.y - 1][curPos.x]->n);
@@ -233,7 +231,7 @@ int init_map(PC *player, Dir_e d) {
     if (!(ret) && 
             !(ret = map_chars(m, display) || ret)) {
         player->hn = heap_insert(&m->order, &(player));
-        player->pos = new Point(((int *) m->get_map_gates())[1], BOUNDS_Y-2);
+        player->pos = Point(((int *) m->get_map_gates())[1], BOUNDS_Y-2);
         trails[player->get_chr()] = (Map *) malloc(sizeof(*trails[0]));
 
         for (i = 0; i < numTrainers; i++) {
@@ -269,7 +267,8 @@ int init_map(PC *player, Dir_e d) {
             default:
                 player->pos = Point(m->get_map_gates()[1], BOUNDS_Y-2);
         }
-            
+        
+        world[curPos.y][curPos.x] = m;
     } else {
         ret = 1;
     }

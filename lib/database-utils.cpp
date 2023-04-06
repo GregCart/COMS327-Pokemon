@@ -8,34 +8,37 @@
 
 #include "pokemon.h"
 
+
+using namespace std;
+
 //globals
-std::vector<Pokemon> pokemon;
-std::vector<Move> moves;
-std::vector<PokeMove> pokeMoves;
-std::vector<PokeSpecies> pokeSpecies;
-std::vector<Exp> exps;
-std::vector<Type> types;
-std::vector<PokeStats> pokeStats;
-std::vector<Stats> stats;
-std::vector<PokeType> pokeTypes;
+vector<Pokemon> pokemon;
+vector<Move> moves;
+vector<PokeMove> pokeMoves;
+vector<PokeSpecies> pokeSpecies;
+vector<Exp> exps;
+vector<Type> types;
+vector<PokeStats> pokeStats;
+vector<Stats> stats;
+vector<PokeType> pokeTypes;
 
 
 //Im a theif
-std::vector<std::string> pokebase_explode(const std::string& str, const char& ch) {
-    std::string next;
-    std::vector<std::string> result;
+vector<string> pokebase_explode(const string& str, const char& ch) {
+    string next;
+    vector<string> result;
 
     // For each character in the string
-    for (std::string::const_iterator it = str.begin(); it != str.end(); it++) {
+    for (string::const_iterator it = str.begin(); it != str.end(); it++) {
         // If we've hit the terminal character
         if (*it == ch) {
             // If we have some characters accumulated
-            if (!std::next.empty()) {
+            if (!next.empty()) {
                 // Add them to the result vector
                 result.push_back(next);
                 next.clear();
             } else {
-                result.push_back(std::to_string(INT_MAX));
+                result.push_back(to_string(INT_MAX));
             }
         } else {
             // Accumulate the next character into the sequence
@@ -47,14 +50,17 @@ std::vector<std::string> pokebase_explode(const std::string& str, const char& ch
     return result;
 }
 
-int load_pokeMoves(char *path);
+int load_pokeMoves(char *path)
+{
+    return 0;
+}
 
 int load_moves(char *path)
 {
     ifstream file;
-    char *filename;
+    char filename[100];
     char str[200];
-    std::vector<std::string> parts;
+    vector<string> parts;
     Move move;
 
 
@@ -68,21 +74,21 @@ int load_moves(char *path)
         file.getline(str, 200);
         parts = pokebase_explode(str, ',');
 
-        move.id = atoi(parts.at(0));
-        move.identifier = parts.at(1);
-        move.gen_id = atoi(parts.at(2));
-        move.type_id = atoi(parts.at(3));
-        move.power = atoi(parts.at(4));
-        move.pp = atoi(parts.at(5));
-        move.accuracy = atoi(parts.at(6));
-        move.priority = atoi(parts.at(7));
-        move.target_id = atoi(parts.at(8));
-        move.damage_class_id = atoi(parts.at(9));
-        move.effect_id = atoi(parts.at(10));
-        move.effect_chance = atoi(parts.at(11));
-        move.contest_type_id = atoi(parts.at(12));
-        move.contest_effect_id = atoi(parts.at(13));
-        move.super_contest_effect_id = atoi(parts.at(14));
+        move.id = stoi(parts.at(0));
+        strcpy(move.identifier, parts.at(1).c_str());
+        move.gen_id = stoi(parts.at(2));
+        move.type_id = stoi(parts.at(3));
+        move.power = stoi(parts.at(4));
+        move.pp = stoi(parts.at(5));
+        move.accuracy = stoi(parts.at(6));
+        move.priority = stoi(parts.at(7));
+        move.target_id = stoi(parts.at(8));
+        move.damage_class_id = stoi(parts.at(9));
+        move.effect_id = stoi(parts.at(10));
+        move.effect_chance = stoi(parts.at(11));
+        move.contest_type_id = stoi(parts.at(12));
+        move.contest_effect_id = stoi(parts.at(13));
+        move.super_contest_effect_id = stoi(parts.at(14));
 
         moves.push_back(move);
     }
@@ -90,67 +96,97 @@ int load_moves(char *path)
     return 0;
 }
 
-int load_pokeSpecies(char *path);
+int load_pokeSpecies(char *path)
+{
+    return 0;
+}
 
-int load_exp(char *path);
+int load_exp(char *path)
+{
+    return 0;
+}
 
-int load_types(char *path);
+int load_types(char *path)
+{
+    return 0;
+}
 
-int load_pokeStats(char *path);
+int load_pokeStats(char *path)
+{
+    return 0;
+}
 
-int load_stats(char *path);
+int load_stats(char *path)
+{
+    return 0;
+}
 
-int load_pokeTypes(char *path);
+int load_pokeTypes(char *path)
+{
+    return 0;
+}
 
-int load_pokemon(char *path);
+int load_pokemon(char *path)
+{
+    return 0;
+}
 
 int print_file(char *path) {
     ifstream file;
-    std::vector<std::string> parts, top;
+    vector<string> parts, top;
     char str[200];
     int i, j, lines;
-    int spaces = {0, 2, 15, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52, 54, 56, 58, 60};
 
 
-    mvprintw(0, 0, "Starting file print.")
+    clear();
+    mvprintw(0, 0, "Starting file print from %s", path);
     getch();
 
     file.open(path);
-
-    top = pokebase_explode(str, ',');
-
-    j = 0;
-    for (std::vector<std::string>::iterator it = top.begin(); 
-            it != top.end(); ++it) {
-        mvprintw(0, j, "%s", *it);
-        j += (*it).length() + 1;
-    }
-    i = 0;
-    while (!file.eof()) {
-        if (i > 45) {
-            printw("\nlines through %d\t(Press any key to see the next page.)",
-                    lines);
-            getch();
-            j = 0;
-            for (std::vector<std::string>::iterator it = top.begin(); 
-                    it != top.end(); ++it) {
-                mvprintw(0, spaces[j], "%s", *it);
-                j++;
-            }
-            i = 0;
-        }
+    if (file.is_open()) {
         file.getline(str, 200);
-        parts = pokebase_explode(str, ',');
-        j = 0;
-        for (std::vector<std::string>::iterator it = parts.begin(); 
-                it != parts.end(); ++it) {
-            mvprintw(i + 1, spaces[j], "%s", *it);
-            j++;
-        }
-        i++;
-        lines++;
-    }
 
+        top = pokebase_explode(str, ',');
+
+        j = 0;
+        for (vector<string>::iterator it = top.begin(); 
+                it != top.end(); ++it) {
+            mvprintw(0, j, "\t%s", (*it).c_str());
+            j += (*it).length() + 1;
+        }
+        // mvprintw(0, 0, "%s", str);
+        getch();
+        i = 0;
+        lines = 0;
+        while (!file.eof()) {
+            if (i > 45) {
+                printw("\nlines through %d\t(Press any key to see the next page.)",
+                        lines);
+                getch();
+                clear();
+                j = 0;
+                for (vector<string>::iterator it = top.begin(); 
+                        it != top.end(); ++it) {
+                    mvprintw(0, j, " %s", (*it).c_str());
+                    j += (*it).length() + strlen("\t");
+                }
+                i = 0;
+            }
+            file.getline(str, 200);
+            parts = pokebase_explode(str, ',');
+            j = 0;
+            for (vector<string>::iterator it = parts.begin(); 
+                    it != parts.end(); ++it) {
+                mvprintw(i + 1, j, "\t%s", (*it).c_str());
+                j += (*it).length() + 1;
+            }
+            i++;
+            lines++;
+        }
+    } else {
+        clear();
+        mvprintw(0, 0, "Failed to open file.");
+    }
     printw("\n (Press any key to exit)");
     getch();
 
@@ -162,30 +198,38 @@ int load_database(char *fn)
 {
     ifstream file;
     int i;
-    char *pokePath = "pokedex/pokedex/data/csv/";
-    char *prefix = {"/share/cs327/", "$HOME/.poke327/", "./"};
-    char *pf = strdup("");
-    char *path;
+    const char *pokePath = "pokedex/pokedex/data/csv/";
+    char *home = getenv("HOME");
+        strcat(home, "./poke327");
+    const char *prefix[] = {"/share/cs327/", home, "/Documents/SE 327/Pokemon/"};
+    char pf[150];
+    char path[200];
 
 
     mvprintw(0, 0, "Starting loading database.");
-    getch();
 
-    strcpy(path, prefix[0]);
-    strcat(path, pokePath);
-    while (!file.open(path) && i < sizeof(prefix)/sizeof(prefix[0])) {
+    strcpy(pf, prefix[0]);
+    strcat(pf, pokePath);
+    strcat(path, pf);
+    strcat(path, "pokemon.csv");
+    file.open(path, ios::binary);
+    i = 0;
+    while (!file.is_open() && (unsigned) i < sizeof(prefix)/sizeof(prefix[0])) {
         i++;
-        strcpy(path, prefix[i]);
-        strcat(path, pokePath);
+        strcpy(pf, prefix[0]);
+        strcat(pf, pokePath);
+        strcat(path, pf);
+        strcat(path, "pokemon.csv");
+        file.open(path, ios::binary);
     }
     i++;
 
-    if (i <= sizeof(prefix)/sizeof(prefix[0])) {
-        mvprintw(0, 0, "found path.");
-        getch();
-        file.close();
-        if (fn != "" && fn != NULL) {
-            strcpy(pf, path);
+    if ((unsigned) i <= sizeof(prefix)/sizeof(prefix[0])) {
+        mvprintw(0, 0, "found path %s", path);
+        if (fn) {
+            clear();
+            mvprintw(0, 0, "Printing file %s", fn);
+            getch();
 
             if (fn[0] == 'p') {
                 strcat(pf, "pokemon_");
