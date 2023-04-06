@@ -141,7 +141,6 @@ int print_file(char *path) {
 
     clear();
     mvprintw(0, 0, "Starting file print from %s", path);
-    getch();
 
     file.open(path);
     if (file.is_open()) {

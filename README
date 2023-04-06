@@ -57,6 +57,15 @@ HW6 RE & HW7:
     Also there are still getch() statements sacttered from debugging.
     File reading things are in teh database-utils files.
 
+HW7:
+    The file printing works, but it doesn't load the database yet. Ill work on getting that submitted by friday on piazza. If you give it any filename in the specified directory in the pdf, it will print eveything in the file in a nice format, unless tehr eare more than 18 categories with long names (but thats because of the limit in terminal size). If it doesnt show for you, make your terminal full screen. 
+    Notes:
+        Prints 45 lines of the file at a time, press any key to see the next 45.
+        When eof is reached, you will see a mesage telling you to press any key to exit the program.
+        still doesn't run, but will compile properly.
+    File reading things are in the database-utils files.
+    As always, github link at the bottom.
+
 
 To build and run: make
 To build: make build
