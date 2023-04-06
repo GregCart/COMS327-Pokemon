@@ -136,6 +136,7 @@ int print_file(char *path) {
     vector<string> parts, top;
     char str[200];
     int i, j, lines;
+    vector<string>::iterator it, itl;
 
 
     clear();
@@ -148,11 +149,11 @@ int print_file(char *path) {
 
         top = pokebase_explode(str, ',');
 
+        clear();
         j = 0;
-        for (vector<string>::iterator it = top.begin(); 
-                it != top.end(); ++it) {
-            mvprintw(0, j, "\t%s", (*it).c_str());
-            j += (*it).length() + 1;
+        for (it = top.begin(); it != top.end(); ++it) {
+            mvprintw(0, j, "%s\t", (*it).c_str());
+            j += (*it).length() + 5;
         }
         // mvprintw(0, 0, "%s", str);
         getch();
@@ -165,20 +166,20 @@ int print_file(char *path) {
                 getch();
                 clear();
                 j = 0;
-                for (vector<string>::iterator it = top.begin(); 
-                        it != top.end(); ++it) {
-                    mvprintw(0, j, " %s", (*it).c_str());
-                    j += (*it).length() + strlen("\t");
+                for (it = top.begin(); it != top.end(); ++it) {
+                    mvprintw(0, j, "%s", (*it).c_str());
+                    j += (*it).length() + 5;
                 }
                 i = 0;
             }
             file.getline(str, 200);
             parts = pokebase_explode(str, ',');
             j = 0;
-            for (vector<string>::iterator it = parts.begin(); 
-                    it != parts.end(); ++it) {
-                mvprintw(i + 1, j, "\t%s", (*it).c_str());
-                j += (*it).length() + 1;
+            for (itl = parts.begin(), it = top.begin(); itl != parts.end(); ++it, ++itl) {
+                if (strcmp((*itl).c_str(), to_string(INT_MAX).c_str())) {
+                    mvprintw(i + 1, j, " %s", (*itl).c_str());
+                }
+                j += (*it).length() + 5;
             }
             i++;
             lines++;
@@ -227,9 +228,7 @@ int load_database(char *fn)
     if ((unsigned) i <= sizeof(prefix)/sizeof(prefix[0])) {
         mvprintw(0, 0, "found path %s", path);
         if (fn) {
-            clear();
             mvprintw(0, 0, "Printing file %s", fn);
-            getch();
 
             if (fn[0] == 'p') {
                 strcat(pf, "pokemon_");
