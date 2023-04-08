@@ -5,7 +5,7 @@
 
 
 //Bobs
-Entity::Entity(int i, Point p, Terrain_e st) 
+Entity::Entity(const int i, const Point p, const Terrain_e st) 
 { 
     this->chr = i;
     this->pos = p;

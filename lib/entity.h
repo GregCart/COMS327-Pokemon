@@ -22,11 +22,11 @@ class Entity {
         Point pos;
         Dir_e dir;
         Terrain_e start;
-        int (*do_move)(Map *m, char map[BOUNDS_Y][BOUNDS_X][10]);
+        int (*do_move)(Map *m, Plane<char> map);
         int order;
 
 
-        Entity(int i, Point p, Terrain_e st);
+        Entity(const int i, const Point p, const Terrain_e st);
         Entity(const int i, const Point p, const Terrain_e st, const Dir_e d);
         ~Entity();
 

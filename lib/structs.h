@@ -1,6 +1,7 @@
 #ifndef STRUCTS_H
 #define STRUCTS_H
 
+#include <stdlib.h>
 
 #include "heap.h"
 #include "constants.h"
@@ -22,7 +23,7 @@ typedef struct path {
 
 typedef struct move {
     int id;
-    char *identifier;
+    const char *identifier;
     int gen_id, type_id;
     int power, pp, accuracy, priority;
     int target_id, damage_class_id;
@@ -37,7 +38,7 @@ typedef struct pokemon_move {
 
 typedef struct pokemon_species {
     int id;
-    char *identifier;
+    const char *identifier;
     int gen_id, evolves_from_species_id, evolution_chain_id;
     int color_id, shape_id, habitat_id;
     int gender_rate, capture_rate;
@@ -56,8 +57,8 @@ typedef struct experience {
 
 typedef struct type_name {
     int type_id,local_language_id;
-    char *name;
-} Type;
+    const char *name;
+} TypeName;
 
 typedef struct pokemon_stats {
     int pokemon_id, stat_id, base_stat, effort;
@@ -65,7 +66,7 @@ typedef struct pokemon_stats {
 
 typedef struct stats {
     int id, damage_class_id;
-    char *identifier;
+    const char *identifier;
     bool is_battle_only;
     int game_index;
 } Stats;
@@ -73,5 +74,20 @@ typedef struct stats {
 typedef struct pokemon_type {
     int pokemon_id, type_id, slot;
 } PokeType;
+
+template <typename T, size_t y = BOUNDS_Y, size_t x = BOUNDS_X>
+struct Plane {
+    T a[y][x];
+};
+template <typename T>
+struct Plane<T, BOUNDS_Y, BOUNDS_X> {
+    T a[BOUNDS_Y][BOUNDS_X];
+};
+
+// template <enum T>
+// T Plane = T[BOUNDS_Y][BOUNDS_X];
+
+// template <class T>
+// T Plane = T[BOUNDS_Y][BOUNDS_X];
 
 #endif

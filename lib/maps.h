@@ -9,10 +9,10 @@ class Trainer;
 
 class Map {
     private:
-        Map(Terrain_e **t, int **a, int *g, bool b);
+        Map(Plane<Terrain_e> t, Plane<int> a, int *g, bool b);
     protected:
-        Terrain_e terrain[BOUNDS_Y][BOUNDS_X];
-        int alt[BOUNDS_Y][BOUNDS_X];
+        Plane<Terrain_e> terrain;
+        Plane<int> alt;
         //n, s, e, w
         int gates[4];
 
@@ -44,23 +44,23 @@ class Map {
         ~Map();
 
         //Peepers
-        Terrain_e **get_map_terrain() const;
-        int **get_map_alt();
-        int *get_map_gates();
+        Plane<Terrain_e> get_map_terrain() const;
+        Plane<int> get_map_alt() const;
+        int (&get_map_gates()) [4];
         
         //-cats
-        Terrain_e **copy_map_terrain() const;
-        int **copy_map_alt() const;
-        Map *copy_map() const;
+        Plane<Terrain_e> copy_map_terrain(Map *m);
+        Plane<int> copy_map_alt(Map *m);
+        Map *copy_map(Map *m);
 
         //in stone
-        void set_map_terrain(Terrain_e **t);
-        void set_map_alt(int **i);
+        void set_map_terrain(Plane<Terrain_e> t);
+        void set_map_alt(Plane<int> i);
         void set_map(Map *m);
 
         //Indi Beningi
         int create_map(const Point curPos, const Point center);
-        int create_map(const Point curPos, const Point center, int gates[4]);
+        int create_map(const Point curPos, const Point center, const int gates[4]);
 
 
         //tomodachi

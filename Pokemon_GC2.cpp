@@ -13,22 +13,22 @@
 
 
 //globals
-Map *world[WORLD_SIZE][WORLD_SIZE];
+Plane<Map *, WORLD_SIZE, WORLD_SIZE> world;
 Point curPos, center;
-char display[BOUNDS_Y][BOUNDS_X][10];
+Plane<char> display;
 
 
 //display updates
-int add_entity_trainer(Entity *e, char map[BOUNDS_Y][BOUNDS_X][10])
+int add_entity_trainer(Entity *e, Plane<char> map)
 {
-    strcpy(map[e->pos.y][e->pos.x], new char[2] {ALL_TRAINERS[e->get_chr()], '\0'});
+    map.a[e->pos.y][e->pos.x] = ALL_TRAINERS[e->get_chr()];
     mvprintw(0, 0, "%c to (%d, %d)\n", ALL_TRAINERS[e->get_chr()], e->pos.x, e->pos.y);
 
 
     return 0;
 }
 
-int add_trainer(Trainer *t, char map[BOUNDS_Y][BOUNDS_X][10])
+int add_trainer(Trainer *t, Plane<char> map)
 {
     int ret = 0;
 
@@ -42,24 +42,24 @@ int add_trainer(Trainer *t, char map[BOUNDS_Y][BOUNDS_X][10])
 int update_trails(PC *player, Trainer** t)
 {
     int i, ret = 1;
-    int visited[num_types_tra];
-    Map *w = world[curPos.y][curPos.x];
+    bool visited[num_types_tra];
+    Map *w = world.a[curPos.y][curPos.x];
 
     
     // mvprintw(0, 0, "numTrainers: %d\n");
     for (i = 0; i < num_types_tra; i++) {
-        visited[i] = 0;
+        visited[i] = false;
     }
 
     ret = dijkstra(trails[PLAY], w, player->pos, player);
-    visited[0] = 1;
+    visited[0] = true;
     mvprintw(0, 0, "Updated Player trail.\n");
     for (i = 0; i < numTrainers; i++) {
         if (!visited[t[i]->get_chr()]) {
-            mvprintw(0, 0, "Updating Trail for Entity %d\n", t[i]->get_chr());
+            mvprintw(0, 0, "Updating Trail for Entity %c\n", ALL_TRAINERS[t[i]->get_chr()]);
             ret = dijkstra((Map *) trails[t[i]->get_chr()], (Map *) w, (Point) player->pos, (Entity *) &t[i]) || ret;
             mvprintw(0, 0, "Updated Trail %d\n", i);
-            visited[t[i]->get_chr()] = 1;
+            visited[t[i]->get_chr()] = true;
         }
     }
 
@@ -67,18 +67,18 @@ int update_trails(PC *player, Trainer** t)
     return ret;
 }
 
-int map_chars(Map *from, char map[BOUNDS_Y][BOUNDS_X][10])
+int map_chars(Map *from, Plane<char> map)
 {
     int i, j;
-    Terrain_e ter[BOUNDS_Y][BOUNDS_X];
+    Plane<Terrain_e> ter;
 
     
     mvprintw(0, 0, "Mapping terrain to display.\n");
-    memcpy(ter, from->get_map_terrain(), sizeof(ter));
+    memcpy(ter.a, from->get_map_terrain().a, sizeof(ter.a));
     for (i = 0; i < BOUNDS_Y; i++) {
         mvprintw(0, 0, "Mapping row %d.\n", i);
         for (j = 0; j < BOUNDS_X; j++) {
-            strcpy(map[i][j], new char[2] {ALL_TERRAIN[ter[i][j]], '\0'});
+            map.a[i][j] = ALL_TERRAIN[ter.a[i][j]];
         }
     }
     mvprintw(0, 0, "Mapped terrain to display.\n");
@@ -86,10 +86,10 @@ int map_chars(Map *from, char map[BOUNDS_Y][BOUNDS_X][10])
     return 0;
 }
 
-int map_char(Map *from, char map[BOUNDS_Y][BOUNDS_X][10], Point p)
+int map_char(Map *from, Plane<char> map, Point p)
 {
     
-    strcpy(map[p.y][p.x], new char[2] {ALL_TERRAIN[from->get_map_terrain()[p.y][p.x]], '\0'});
+    map.a[p.y][p.x] = ALL_TERRAIN[from->get_map_terrain().a[p.y][p.x]];
     
 
     return 0;
@@ -101,11 +101,18 @@ int init_world()
 {
     int i, j;
 
+
+    clear();
+    mvprintw(0, 0, "Initializing world.");
+    refresh();
+    world = Plane<Map *, (size_t) WORLD_SIZE, (size_t) WORLD_SIZE>();
     for (i = 0; i < WORLD_SIZE; i++) {
         for (j = 0; j < WORLD_SIZE; j++) {
-            world[i][j] = NULL;
+            world.a[i][j] = NULL;
         }
     }
+    mvprintw(0, 0, "Initialized World");
+    refresh();
 
     return 0;
 }
@@ -115,11 +122,14 @@ int init_trails()
     int i;
 
 
+    clear();
     mvprintw(0, 0, "Initializing Trails\n");
+    refresh();
     for (i = 0; i < num_types_tra; i++) {
         trails[i] = NULL;
     }
     mvprintw(0, 0, "Initialized Trails\n");
+    refresh();
 
     return 0;
 }
@@ -132,6 +142,7 @@ int ncurses_start()
     keypad(stdscr, TRUE);
     start_color();
     clear();
+    mvprintw(0, 0, "Initialized ncurses");
     refresh();
 
 
@@ -143,6 +154,7 @@ int init_colors()
     int ret = 0;
     
     
+    clear();
     ret = init_pair(1, COLOR_WHITE, COLOR_BLACK) || ret;
     ret = init_pair(2, COLOR_CYAN, COLOR_BLACK) || ret;
     ret = init_pair(3, COLOR_GREEN, COLOR_BLACK) || ret;
@@ -155,6 +167,9 @@ int init_colors()
     ret = init_pair(10, COLOR_WHITE, COLOR_WHITE) || ret;
     ret = init_pair(11, COLOR_WHITE, COLOR_BLACK) || ret;
 
+    mvprintw(0, 0, "Initialized colors");
+    refresh();
+
 
     return ret;
 }
@@ -164,6 +179,10 @@ Trainer** init_trainers()
     int i = 0;
     Trainer **trainers = (Trainer **) malloc(sizeof(Trainer) * numTrainers);
 
+    mvprintw(0, 0, "");
+    clrtoeol();
+    mvprintw(0, 0, "Initailizing Trainers");
+    refresh();
     if (numTrainers >= 2) {
         Hiker h = Trainer(HIKR, Point(2 + (rand() % (BOUNDS_X - 3)), 2 + (rand() % (BOUNDS_Y - 3))), num_types_ter);
         Rival r = Trainer(RIVL, Point(2 + (rand() % (BOUNDS_X - 3)), 2 + (rand() % (BOUNDS_Y - 3))), num_types_ter);
@@ -180,6 +199,10 @@ Trainer** init_trainers()
         trainers[i] = &t;
         i++;
     }
+    mvprintw(0, 0, "");
+    clrtoeol();
+    mvprintw(0, 0, "Initailized Trainers");
+    refresh();
 
     return trainers;
 }
@@ -188,59 +211,59 @@ int init_map(PC *player, Dir_e d) {
     int ret = 0;
     int i, n, s, e, w;
     Map *m;
+    Plane<Terrain_e> ter;
 
-    
-    world[curPos.y][curPos.x] = (Map *) malloc(sizeof(*world[center.y][center.x]));
-
-    if (curPos.y > 0 && world[curPos.y - 1][curPos.x] != NULL) {
-        // printf("N->s:%d, ", world[curPos.y - 1][curPos.x]->n);
-        s = world[curPos.y - 1][curPos.x]->get_map_gates()[0];
+    if (curPos.y > 0 && world.a[curPos.y - 1][curPos.x] != NULL) {
+        // printf("N->s:%d, ", world.a[curPos.y - 1][curPos.x]->n);
+        s = world.a[curPos.y - 1][curPos.x]->get_map_gates()[0];
     } else {
         s = 2 + (rand() % (BOUNDS_X - 3));
     }
     
-    if (curPos.y < (WORLD_SIZE - 1) && world[curPos.y + 1][curPos.x] != NULL) {
-        // printf("S->n:%d, ", world[curPos.y + 1][curPos.x]->s);
-        n = world[curPos.y + 1][curPos.x]->get_map_gates()[1];
+    if (curPos.y < (WORLD_SIZE - 1) && world.a[curPos.y + 1][curPos.x] != NULL) {
+        // printf("S->n:%d, ", world.a[curPos.y + 1][curPos.x]->s);
+        n = world.a[curPos.y + 1][curPos.x]->get_map_gates()[1];
     } else {
         n = 2 + (rand() % (BOUNDS_X - 3));
     }
     
-    if (curPos.x < (WORLD_SIZE - 1) && world[curPos.y][curPos.x + 1] != NULL) {
-        // printf("E->w:%d, ", world[curPos.y][curPos.x + 1]->w);
-        e = world[curPos.y][curPos.x + 1]->get_map_gates()[2];
+    if (curPos.x < (WORLD_SIZE - 1) && world.a[curPos.y][curPos.x + 1] != NULL) {
+        // printf("E->w:%d, ", world.a[curPos.y][curPos.x + 1]->w);
+        e = world.a[curPos.y][curPos.x + 1]->get_map_gates()[2];
     } else {
         e = 2 + (rand() % (BOUNDS_Y - 3));
     }
     
-    if (curPos.x > 0 && world[curPos.y][curPos.x - 1] != NULL) {
-        // printf("W->e:%d", world[curPos.y][curPos.x - 1]->e);
-        w = world[curPos.y][curPos.x - 1]->get_map_gates()[3];
+    if (curPos.x > 0 && world.a[curPos.y][curPos.x - 1] != NULL) {
+        // printf("W->e:%d", world.a[curPos.y][curPos.x - 1]->e);
+        w = world.a[curPos.y][curPos.x - 1]->get_map_gates()[3];
     } else {
         w = 2 + (rand() % (BOUNDS_Y - 3));
     }
 
-    m = new Map(curPos, center, new int[] {n, s, e, w});
+    world.a[curPos.y][curPos.x] = new Map(curPos, center, new int[] {n, s, e, w});
+    m = world.a[curPos.y][curPos.x];
 
     heap_init(&m->order, entity_cmp, NULL);
 
-    mvprintw(0, 0, "Map Heap created\n");
+    mvprintw(0, 0, "Map Heap created");
+    clrtoeol();
 
     m->trainers = init_trainers();
-    
+
     if (!(ret) && 
             !(ret = map_chars(m, display) || ret)) {
         player->hn = heap_insert(&m->order, &(player));
         player->pos = Point(((int *) m->get_map_gates())[1], BOUNDS_Y-2);
         trails[player->get_chr()] = (Map *) malloc(sizeof(*trails[0]));
 
+        memcpy(ter.a, m->get_map_terrain().a, sizeof(ter.a));
+
         for (i = 0; i < numTrainers; i++) {
             while (valid_pos_trainer((Trainer_e) (m->trainers[i]->get_chr()), 
-                    ((Terrain_e **) m->get_map_terrain())[m->trainers[i]->pos.y][m->trainers[i]->pos.x], m->trainers[i]->start)) {
-                mvprintw(0, 0, "Test");
-                getch();
+                    ter.a[m->trainers[i]->pos.y][m->trainers[i]->pos.x], m->trainers[i]->start)) {
                 m->trainers[i]->pos = Point(2 + (rand() % (BOUNDS_X - 3)), 2 + (rand() % (BOUNDS_Y - 3)));
-                m->trainers[i]->start = m->get_map_terrain()[m->trainers[i]->pos.y][m->trainers[i]->pos.x];
+                m->trainers[i]->start = ter.a[m->trainers[i]->pos.y][m->trainers[i]->pos.x];
             }
             m->trainers[i]->hn = heap_insert(&m->order, &(m->trainers[i]));
             if (trails[m->trainers[i]->get_chr()] == NULL) {
@@ -248,6 +271,7 @@ int init_map(PC *player, Dir_e d) {
                 trails[m->trainers[i]->get_chr()]->set_map_alt(m->get_map_alt());
             }
             ret = add_trainer(m->trainers[i], display) || ret;
+            
             mvprintw(0, 20, new char[2] {static_cast<char>(i + '0'), '\0'});
         }
 
@@ -267,8 +291,6 @@ int init_map(PC *player, Dir_e d) {
             default:
                 player->pos = Point(m->get_map_gates()[1], BOUNDS_Y-2);
         }
-        
-        world[curPos.y][curPos.x] = m;
     } else {
         ret = 1;
     }
@@ -279,7 +301,7 @@ int init_map(PC *player, Dir_e d) {
 
 int init_game() 
 {
-    return (init_world() + ncurses_start() + init_trails() + init_colors());
+    return (ncurses_start() + init_world() + init_trails() + init_colors());
 }
 
 int setup_game(PC *player)
@@ -293,7 +315,7 @@ int setup_game(PC *player)
     
     srand(time(NULL));
 
-    init_map(player, NONE);
+    ret = init_map(player, NONE);
 
 
     return ret;
@@ -350,7 +372,7 @@ int handle_code(int code, PC *player, Entity *ent)
         curPos.x += 1;
     }
 
-    if (world[curPos.y][curPos.x] == NULL) {
+    if (world.a[curPos.y][curPos.x] == NULL) {
        init_map(player, player->dir);
     }
 
@@ -373,11 +395,11 @@ int cleanup()
 
     for (i = 0; i < WORLD_SIZE; i++) {
         for (j = 0; j < WORLD_SIZE; j++) {
-            if (world[i][j] && world[i][j] != NULL) {
+            if (world.a[i][j] && world.a[i][j] != NULL) {
                 for (i = 0; i < numTrainers; i++) {
-                    free(world[i][j]->trainers[i]);
+                    free(world.a[i][j]->trainers[i]);
                 }
-                free(world[i][j]);
+                free(world.a[i][j]);
             }
         }
     }
@@ -392,7 +414,6 @@ int cleanup()
 int gameloop()
 {
     int ret = 0, code = 0;
-    char display[BOUNDS_Y][BOUNDS_X][10];
     PC *player;
     Trainer **trainers;
     Entity *ent;
@@ -403,15 +424,14 @@ int gameloop()
     player = new Trainer(PLAY, Point(BOUNDS_X - 3, BOUNDS_Y - 3), num_types_ter);
     if (!setup_game(player)) {
         mvprintw(0, 0, "Setup Successful\n");
-        getch();
-        m = world[curPos.y][curPos.x];
+        m = world.a[curPos.y][curPos.x];
         trainers = m->trainers;
         ret = add_trainer(player, display) || ret;
         ret = print_display(display) || ret;
         ret = color_display(m, player, trainers) || ret;
         update_trails(player, trainers);
         while (!ret) {
-            m = world[curPos.y][curPos.x];
+            m = world.a[curPos.y][curPos.x];
             trainers = m->trainers;
             ent = (Entity *) heap_remove_min(&m->order);
             mvprintw(0, 0, "Turn: %d, Trainer %d (%c)\n", ent->check_time(), ent->check_order(), ALL_TRAINERS[ent->get_chr()]);
@@ -421,7 +441,7 @@ int gameloop()
                     mvprintw(0, 0, "Battle Between %c and The Player!\n", ALL_TRAINERS[ent->get_chr()]);
                     initiate_battle(ent, player);
                 } else if(!(code = ent->do_move(m, display))) {
-                    ent->update_time(STRESS[ent->get_chr()][world[curPos.y][curPos.x]->get_map_terrain()[ent->pos.y][ent->pos.x]]);
+                    ent->update_time(STRESS[ent->get_chr()][world.a[curPos.y][curPos.x]->get_map_terrain().a[ent->pos.y][ent->pos.x]]);
                     ret = map_char(m, display, p) || ret;
                     ret = add_entity_trainer(ent, display) || ret;
                     ret = print_display(display) || ret;
@@ -460,7 +480,6 @@ int gameloop()
 int testgame()
 {
     int ret = 1;
-    char display[BOUNDS_Y][BOUNDS_X][10];
     PC *player;
 
 
@@ -468,10 +487,10 @@ int testgame()
     player = new Trainer(PLAY, Point(BOUNDS_X - 3, BOUNDS_Y - 3), num_types_ter);
     if (!(ret = setup_game(player))) {
         mvprintw(0, 0, "Did setup.\n");
-        ret = update_trails(player, world[curPos.y][curPos.x]->trainers) || ret;
+        ret = update_trails(player, world.a[curPos.y][curPos.x]->trainers) || ret;
         mvprintw(0, 0, "Updated Trails.\n");
         ret = print_display(display) || ret;
-        color_display(world[curPos.y][curPos.x], player, world[curPos.y][curPos.x]->trainers);
+        color_display(world.a[curPos.y][curPos.x], player, world.a[curPos.y][curPos.x]->trainers);
         refresh();
 
         getch();
@@ -489,6 +508,7 @@ int testgame()
 int main(int argc, char *argv[])
 {
     int ret = 1, i = 1;
+    char *arg = NULL;
     numTrainers = 10;
     
 
@@ -497,17 +517,24 @@ int main(int argc, char *argv[])
             if (strcmp(argv[i], "--numtrainers") == 0) {
                 numTrainers = atoi(argv[i + 1]);
                 i += 2;
+            } else if (strcmp(argv[i], "--displayfile") == 0) {
+                arg = argv[i+1];
+                i += 2;
+            } else {
+                i++;
             }
-            if (strcmp(argv[i], "--displayfile") == 0) {
-                load_database(argv[i+1]);
-                cleanup();
-                return 0;
-            }
-            i++;
         }
+        clear();
         mvprintw(0, 0, "Init successful\n");
-        ret = gameloop();
+        if (!load_database(arg)) {
+            clear();
+            mvprintw(0, 0, "Database loaded successful\n");
+            ret = gameloop();
+        } else {
+            ret = 1;
+        }
         // ret = testgame();
+        cleanup();
     } else {
         mvprintw(0, 0, "Something went wrong on init.\n");
         ret = 1;

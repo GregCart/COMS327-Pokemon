@@ -45,5 +45,5 @@ package: clean
 	\cp -r changes.txt CHANGELOG
 	git --no-pager log --reverse > hist.txt
 	cat hist.txt >> CHANGELOG
-	cd ..; rm -fr greg-carter_assignment-1.06 greg-carter_assignment-1.06.tar.gz;
-	cd ..; rsync -av --exclude=Pokemon/.git --exclude=Pokemon/.vscode --exclude=Pokemon/pokemon-old --exclude=Pokemon/pokemon-c --exclude=Pokemon/pokedex Pokemon greg-carter_assignment-1.06; tar cvfz greg-carter_assignment-1.06.tar.gz greg-carter_assignment-1.06;
+	cd ..; rm -fr greg-carter_assignment-1.07 greg-carter_assignment-1.07.tar.gz;
+	cd ..; rsync -av --exclude=Pokemon/.git --exclude=Pokemon/.vscode --exclude=Pokemon/pokemon-old --exclude=Pokemon/pokemon-c --exclude=Pokemon/pokedex Pokemon greg-carter_assignment-1.07; tar cvfz greg-carter_assignment-1.07.tar.gz greg-carter_assignment-1.07;

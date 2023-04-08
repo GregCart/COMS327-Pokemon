@@ -16,7 +16,7 @@ extern std::vector<Move> moves;
 extern std::vector<PokeMove> pokeMoves;
 extern std::vector<PokeSpecies> pokeSpecies;
 extern std::vector<Exp> exps;
-extern std::vector<Type> types;
+extern std::vector<TypeName> typeNames;
 extern std::vector<PokeStats> pokeStats;
 extern std::vector<Stats> stats;
 extern std::vector<PokeType> pokeTypes;
