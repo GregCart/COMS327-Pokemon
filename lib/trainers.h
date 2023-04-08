@@ -7,8 +7,6 @@
 class Trainer : public Entity {
     private:
     protected:
-        //HP's
-        int print_trainer(Trainer *t);
     public:
         Trainer();
         Trainer(const Trainer_e te, const Point p, const Terrain_e st) : Entity((int) te, p, st) {}
@@ -17,6 +15,9 @@ class Trainer : public Entity {
 
         //initializers
         friend Trainer** init_trainers(const int num);
+
+        //HP's
+        int print_trainer();
 };
 
 using PC = Trainer;

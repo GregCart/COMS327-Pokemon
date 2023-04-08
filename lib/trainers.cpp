@@ -2,9 +2,9 @@
 
 
 //HP's
-int Trainer::print_trainer(Trainer *t)
+int Trainer::print_trainer()
 {
-    print_entity();
+    this->print_entity();
 
     return 0;
 }

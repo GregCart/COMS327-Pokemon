@@ -54,6 +54,7 @@ int Entity::print_entity()  const
     printw("\tMove? %d\n", this->do_move == NULL);
     printw("\tCurrent direction: %d\n", this->dir);
     printw("}\n");
+    refresh();
 
     return 0;
 }

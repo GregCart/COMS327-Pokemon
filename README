@@ -66,6 +66,13 @@ HW7:
     File reading things are in the database-utils files.
     As always, github link at the bottom.
 
+HW7 RE:
+    It now loads all the database, and can print a file for display if correct flag is used. There are several getch() statements for debuging purpoised, but it fails on init_trainers() when building a new random trainer, and I can't figure out why. If you find out please let me know.
+    Thank you.
+
+
+--numtrainers <number>
+--displayfile <filename>
 
 To build and run: make
 To build: make build

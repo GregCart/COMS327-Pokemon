@@ -179,29 +179,42 @@ Trainer** init_trainers()
     int i = 0;
     Trainer **trainers = (Trainer **) malloc(sizeof(Trainer) * numTrainers);
 
-    mvprintw(0, 0, "");
-    clrtoeol();
+
     mvprintw(0, 0, "Initailizing Trainers");
+    clrtoeol();
     refresh();
     if (numTrainers >= 2) {
-        Hiker h = Trainer(HIKR, Point(2 + (rand() % (BOUNDS_X - 3)), 2 + (rand() % (BOUNDS_Y - 3))), num_types_ter);
-        Rival r = Trainer(RIVL, Point(2 + (rand() % (BOUNDS_X - 3)), 2 + (rand() % (BOUNDS_Y - 3))), num_types_ter);
-        h.order = 0;
-        r.order = 1;
-        trainers[0] = &h;
-        trainers[1] = &r;
+        Hiker *h = new Trainer(HIKR, Point(2 + (rand() % (BOUNDS_X - 3)), 2 + (rand() % (BOUNDS_Y - 3))), num_types_ter);
+        Rival *r = new Trainer(RIVL, Point(2 + (rand() % (BOUNDS_X - 3)), 2 + (rand() % (BOUNDS_Y - 3))), num_types_ter);
+        h->order = 0;
+        r->order = 1;
+        trainers[0] = h;
+        trainers[1] = r;
         i = 2;
+        mvprintw(0, 0, "Test 0: %d\n", 0);
+            clrtoeol();
+            trainers[0]->print_trainer();
+            getch();
+            mvprintw(0, 0, "Test 0: %d\n", 1);
+            clrtoeol();
+            trainers[1]->print_trainer();
+            // getch();
     }
 
     while (i < numTrainers) {
-        Trainer t = Trainer(static_cast<Trainer_e>(1 + (rand() % (num_types_tra - 1))), Point(2 + (rand() % (BOUNDS_X - 3)), 2 + (rand() % (BOUNDS_Y - 3))), num_types_ter);
-        t.order = i;
-        trainers[i] = &t;
+        Trainer_e tr = (Trainer_e) (1 + (rand() % (num_types_tra - 1)));
+        Point pnt = Point(2 + (rand() % (BOUNDS_X - 3)), 2 + (rand() % (BOUNDS_Y - 3)));
+        Trainer *t = new Trainer(tr, pnt, num_types_ter);
+        t->order = i;
+        trainers[i] = t;
         i++;
-    }
-    mvprintw(0, 0, "");
-    clrtoeol();
+        mvprintw(0, 0, "Test 0: %d\n", i);
+            clrtoeol();
+            trainers[i]->print_trainer();
+            // getch();
+    }    
     mvprintw(0, 0, "Initailized Trainers");
+    clrtoeol();
     refresh();
 
     return trainers;
@@ -260,11 +273,16 @@ int init_map(PC *player, Dir_e d) {
         memcpy(ter.a, m->get_map_terrain().a, sizeof(ter.a));
 
         for (i = 0; i < numTrainers; i++) {
-            while (valid_pos_trainer((Trainer_e) (m->trainers[i]->get_chr()), 
+            mvprintw(0, 0, "Test 0: %d\n", i);
+            clrtoeol();
+            m->trainers[i]->print_trainer();
+            getch();
+            while (!valid_pos_trainer((Trainer_e) (m->trainers[i]->get_chr()), 
                     ter.a[m->trainers[i]->pos.y][m->trainers[i]->pos.x], m->trainers[i]->start)) {
                 m->trainers[i]->pos = Point(2 + (rand() % (BOUNDS_X - 3)), 2 + (rand() % (BOUNDS_Y - 3)));
                 m->trainers[i]->start = ter.a[m->trainers[i]->pos.y][m->trainers[i]->pos.x];
             }
+            
             m->trainers[i]->hn = heap_insert(&m->order, &(m->trainers[i]));
             if (trails[m->trainers[i]->get_chr()] == NULL) {
                 trails[m->trainers[i]->get_chr()] = (Map *) malloc(sizeof(*trails[0]));
@@ -273,7 +291,10 @@ int init_map(PC *player, Dir_e d) {
             ret = add_trainer(m->trainers[i], display) || ret;
             
             mvprintw(0, 20, new char[2] {static_cast<char>(i + '0'), '\0'});
+            refresh();
         }
+
+        
 
         switch (d) {
             case N:
@@ -294,6 +315,10 @@ int init_map(PC *player, Dir_e d) {
     } else {
         ret = 1;
     }
+
+    mvprintw(1, 0, "Test 1");
+    clrtoeol();
+    // getch();
 
 
     return ret;
@@ -316,6 +341,10 @@ int setup_game(PC *player)
     srand(time(NULL));
 
     ret = init_map(player, NONE);
+
+    mvprintw(0, 0, "Test 2");
+    clrtoeol();
+    // getch();
 
 
     return ret;
