@@ -79,7 +79,7 @@ int32_t entity_cmp(const void *key, const void *with)
 
   ret = ((Entity *) key)->nextTime - ((Entity *) with)->nextTime;
   if (ret == 0) {
-    ret = ((Entity *) key)->order - ((Entity *) with)->order;
+    ret = ((Entity *) key)->turnOrder - ((Entity *) with)->turnOrder;
   }
 
   return ret;
@@ -186,7 +186,7 @@ Point check_surroundings_trainer(const Point p, const Plane<char> map)
 //getters
 int find_stress(Map *m, Entity *e, Point p)
 {
-    mvprintw(0, 0, "Finding Stress at (%d, %d) for Entity %d at terrain %d\n", p.x, p.y, e->get_chr(), m->get_map_terrain().a[p.y][p.x]);
+    mvprintw(0, 0, "Finding Stress at (%d, %d) for Entity %d at terrain %d", p.x, p.y, e->get_chr(), m->get_map_terrain().a[p.y][p.x]);
     switch (e->get_chr()){
         case PLAY:
         case RIVL:
@@ -203,7 +203,9 @@ int find_stress(Map *m, Entity *e, Point p)
             return D_MAX;
             break;
         default:
-            mvprintw(0, 0, "Error finding stress for %c\n", ALL_TRAINERS[e->get_chr()]);
+            mvprintw(0, 0, "Error finding stress for %c", ALL_TRAINERS[e->get_chr()]);
+            clrtoeol();
+            getch();
             return -1;
     }
     return -1;
@@ -586,7 +588,9 @@ int print_display(const Plane<char> map)
 
     for (i = 0; i < BOUNDS_Y; i++) {
         for (j = 0; j < BOUNDS_X; j++) {
-            mvprintw(i + 1, j, "%s", map.a[i][j]);
+            mvprintw(0, 0, "char: %c.", map.a[i][j]);
+            clrtoeol();
+            mvprintw(i + 1, j, "%c", map.a[i][j]);
         }
     }
 
@@ -650,7 +654,7 @@ int print_entity_trainer_inline(const Entity *e, const Entity *player, const int
 
 int print_point(Point p)
 {
-    printw("(%d, %d)\n", p.x, p.y);
+    printw("(%d, %d)", p.x, p.y);
 
     return 0;
 }
@@ -695,23 +699,25 @@ int dijkstra(Map *m, Map *w, Point p, Entity *e)
             path.a[y][x].cost = D_MAX;
         }
     }
-    mvprintw(0, 0, "Initialized Path costs.\n");
+    mvprintw(0, 0, "Initialized Path costs.");
+    clrtoeol();
 
     path.a[p.y][p.x].cost = 0;
-    mvprintw(0, 0, "Set point cost to 0\n");
+    mvprintw(0, 0, "Set point cost to 0");
 
     heap_init(&h, path_cmp, NULL);
-    mvprintw(0, 0, "Initialized Heap\n");
+    mvprintw(0, 0, "Initialized Heap");
+    clrtoeol();
 
     for (y = 1; y < BOUNDS_Y - 1; y++) {
         for (x = 1; x < BOUNDS_X - 1; x++) {
             if (find_stress(w, e, Point(x, y)) != D_MAX) {
-                mvprintw(0, 0, "Heap Node at (%d, %d): %d\n", x, y, path.a[y][x].hn == NULL);
+                mvprintw(0, 0, "Heap Node at (%d, %d): %d", x, y, path.a[y][x].hn == NULL);
                 path.a[y][x].hn = heap_insert(&h, &path.a[y][x]);
             }
         }
     }
-    mvprintw(0, 0, "Filled Heap\n");
+    mvprintw(0, 0, "Filled Heap");
 
     c = 0;
     while ((pth = (Path *) heap_remove_min(&h))) {

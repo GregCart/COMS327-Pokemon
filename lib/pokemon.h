@@ -2,10 +2,13 @@
 #define POKEMON_H
 
 
-class Pokemon {
+#include "entity.h"
+
+
+class Pokemon: public Entity {
     private:
         int id;
-        char *identifier;
+        const char *identifier;
         int species_id;
 
     protected:
@@ -18,14 +21,14 @@ class Pokemon {
         bool is_default;
 
 
-        int get_id();
-        char *get_identifier();
-        int get_species_id();
+        const int get_id() const { return this->id; }
+        const char *get_identifier() const { return this->identifier; }
+        const int get_species_id() const { return this->species_id; }
 
-        int *get_height_weight();
-        int get_base_xp();
-        int get_order();
-
+        int *get_height_weight() const { return new int[2] {this->height, this->weight}; }
+        int get_base_xp() const { return this->base_exp; }
+        int get_order() const { return this->order; }
+        int *get_moves() const { return this->movesList; }
         
 };
 

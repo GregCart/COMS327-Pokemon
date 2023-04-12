@@ -63,6 +63,7 @@ int load_pokeMoves(char *path)
     strcat(filename, "pokemon_moves.csv");
     mvprintw(0, 0, "Loading file %s", filename);
     clrtoeol();
+    refresh();
 
     file.open(filename, ios::binary);
 
@@ -75,9 +76,9 @@ int load_pokeMoves(char *path)
             file.getline(str, 250);
             parts = pokebase_explode(str, ',');
             parts.resize(6);
-            mvprintw(1, 0, "For# %s: %s", parts.at(0).c_str(), str);
-            clrtoeol();
-            refresh();
+            // mvprintw(1, 0, "For# %s: %s", parts.at(0).c_str(), str);
+            // clrtoeol();
+            // refresh();
 
             for (i = 0; i < 6; i++) {
                 if (parts.at(i).empty()) {
@@ -116,6 +117,7 @@ int load_moves(char *path)
     strcat(filename, "moves.csv");
     mvprintw(0, 0, "Loading file %s", filename);
     clrtoeol();
+    refresh();
 
     file.open(filename, ios::binary);
 
@@ -128,9 +130,9 @@ int load_moves(char *path)
             file.getline(str, 250);
             parts = pokebase_explode(str, ',');
             parts.resize(15);
-            mvprintw(1, 0, "for %s: %s", parts.at(0).c_str(), str);
-            clrtoeol();
-            refresh();
+            // mvprintw(1, 0, "for %s: %s", parts.at(0).c_str(), str);
+            // clrtoeol();
+            // refresh();
 
             for (i = 0; i < 15; i++) {
                 if (parts.at(i).empty()) {
@@ -191,9 +193,9 @@ int load_pokeSpecies(char *path)
             file.getline(str, 250);
             parts = pokebase_explode(str, ',');
             parts.resize(size);
-            mvprintw(1, 0, "For# %s: %s", parts.at(0).c_str(), str);
-            clrtoeol();
-            refresh();
+            // mvprintw(1, 0, "For# %s: %s", parts.at(0).c_str(), str);
+            // clrtoeol();
+            // refresh();
 
             for (i = 0; i < size; i++) {
                 if (parts.at(i).empty()) {
@@ -259,9 +261,9 @@ int load_exp(char *path)
             file.getline(str, 250);
             parts = pokebase_explode(str, ',');
             parts.resize(size);
-            mvprintw(1, 0, "For# %s: %s", parts.at(0).c_str(), str);
-            clrtoeol();
-            refresh();
+            // mvprintw(1, 0, "For# %s: %s", parts.at(0).c_str(), str);
+            // clrtoeol();
+            // refresh();
 
             for (i = 0; i < size; i++) {
                 if (parts.at(i).empty()) {
@@ -310,9 +312,9 @@ int load_types(char *path)
             file.getline(str, 250);
             parts = pokebase_explode(str, ',');
             parts.resize(size);
-            mvprintw(1, 0, "For# %s: %s", parts.at(0).c_str(), str);
-            clrtoeol();
-            refresh();
+            // mvprintw(1, 0, "For# %s: %s", parts.at(0).c_str(), str);
+            // clrtoeol();
+            // refresh();
 
             for (i = 0; i < size; i++) {
                 if (parts.at(i).empty()) {
@@ -361,9 +363,9 @@ int load_pokeStats(char *path)
             file.getline(str, 250);
             parts = pokebase_explode(str, ',');
             parts.resize(size);
-            mvprintw(1, 0, "For# %s: %s", parts.at(0).c_str(), str);
-            clrtoeol();
-            refresh();
+            // mvprintw(1, 0, "For# %s: %s", parts.at(0).c_str(), str);
+            // clrtoeol();
+            // refresh();
 
             for (i = 0; i < size; i++) {
                 if (parts.at(i).empty()) {
@@ -413,9 +415,9 @@ int load_stats(char *path)
             file.getline(str, 250);
             parts = pokebase_explode(str, ',');
             parts.resize(size);
-            mvprintw(1, 0, "For# %s: %s", parts.at(0).c_str(), str);
-            clrtoeol();
-            refresh();
+            // mvprintw(1, 0, "For# %s: %s", parts.at(0).c_str(), str);
+            // clrtoeol();
+            // refresh();
 
             for (i = 0; i < size; i++) {
                 if (parts.at(i).empty()) {
@@ -466,9 +468,9 @@ int load_pokeTypes(char *path)
             file.getline(str, 250);
             parts = pokebase_explode(str, ',');
             parts.resize(size);
-            mvprintw(1, 0, "For# %s: %s", parts.at(0).c_str(), str);
-            clrtoeol();
-            refresh();
+            // mvprintw(1, 0, "For# %s: %s", parts.at(0).c_str(), str);
+            // clrtoeol();
+            // refresh();
 
             for (i = 0; i < size; i++) {
                 if (parts.at(i).empty()) {
@@ -565,7 +567,7 @@ int load_database(char *fn)
     const char *pokePath = "pokedex/pokedex/data/csv/";
     char *home = getenv("HOME");
         strcat(home, "./poke327");
-    const char *prefix[] = {"/share/cs327/", home, "/Documents/SE 327/Pokemon/"};
+    const char *prefix[] = {"./", "/share/cs327/", home};
     char pf[150] = "";
     char path[200] = "";
 
@@ -586,7 +588,7 @@ int load_database(char *fn)
         strcpy(pf, "");
         strcpy(pf, prefix[i]);
         strcat(pf, pokePath);
-        strcat(path, pf);
+        strcpy(path, pf);
         strcat(path, "pokemon.csv");
         file.open(path, ios::binary);
         mvprintw(0, 0, "Testing path %s", path);

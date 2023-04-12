@@ -59,14 +59,14 @@ int Map::print_map_terrain() const
 {
     int i , j;
 
-    mvprintw(22, 0, " \t.a");
+    mvprintw(22, 0, " \t");
     for (j = 0; j < BOUNDS_X; j++) {
         printw("%d ", j % 10);
     }
     printw("\n\n");
 
     for (i = 0; i < BOUNDS_Y; i++) {
-        printw("%d\t.a", i);
+        printw("%d\t", i);
         for (j = 0; j < BOUNDS_X; j++) {
             printw("%2d", this->terrain.a[i][j]);
         }

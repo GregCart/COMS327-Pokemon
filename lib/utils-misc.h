@@ -63,6 +63,7 @@ int dijkstra(const Map *m, const Map *w, const Point p, const Entity *e);
 int print_display(const Plane<char> map);
 int color_display(const Map *m, const PC *player, Trainer **ts);
 int print_entity(const Entity *e);
+int print_point(const Point p);
 
 //new screen manipulation
 int enter_building(const Terrain_e t);

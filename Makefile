@@ -8,7 +8,7 @@ MAIN = Pokemon_GC2
 SRCS = maps.c queue.c trainers.c utils-misc.c 
 ASRCS = heap.c
 CXSRCS = maps.cpp queue.cpp trainers.cpp utils-misc.cpp entity.cpp database-utils.cpp
-OBJS = $(addprefix lib/, $(ASRCS:.c=.o)) $(addprefix lib/, $(CXSRCS:.cpp=.o))
+OBJS = $(addprefix lib/, $(ASRCS:.c=.o)) $(addprefix lib/, $(CXSRCS:.cpp=.o)) $(Main)
 
 
 .PHONY: depend clean
@@ -16,7 +16,7 @@ OBJS = $(addprefix lib/, $(ASRCS:.c=.o)) $(addprefix lib/, $(CXSRCS:.cpp=.o))
 all: build start
 
 build: $(OBJS)
-	$(CXX) $(MAIN).cpp -o $(MAIN) $(OBJS) $(LFLAGS) $(LIBS)
+	$(CXX) $(CXXFLAGS) $(MAIN).cpp -o $(MAIN) $(OBJS) $(LFLAGS) $(LIBS)
 
 start:
 	./$(MAIN)
@@ -35,7 +35,7 @@ test: build
 	./$(MAIN) 
 
 test-v: build
-	valgrind --leak-check=full --log-file=valgrind-log.txt ./$(MAIN) 
+	valgrind --leak-check=full --track-origins=yes --log-file=valgrind-log.txt ./$(MAIN) 
 
 
 clean:

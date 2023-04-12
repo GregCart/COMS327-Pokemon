@@ -19,16 +19,17 @@ Plane<char> display;
 
 
 //display updates
-int add_entity_trainer(Entity *e, Plane<char> map)
+int add_entity_trainer(Entity *e, Plane<char> &map)
 {
     map.a[e->pos.y][e->pos.x] = ALL_TRAINERS[e->get_chr()];
     mvprintw(0, 0, "%c to (%d, %d)\n", ALL_TRAINERS[e->get_chr()], e->pos.x, e->pos.y);
+    mvprintw(0, 50, "Actual: %c", map.a[e->pos.y][e->pos.x]);
 
 
     return 0;
 }
 
-int add_trainer(Trainer *t, Plane<char> map)
+int add_trainer(Trainer *t, Plane<char> &map)
 {
     int ret = 0;
 
@@ -46,28 +47,31 @@ int update_trails(PC *player, Trainer** t)
     Map *w = world.a[curPos.y][curPos.x];
 
     
-    // mvprintw(0, 0, "numTrainers: %d\n");
+    mvprintw(0, 0, "numTrainers: %d", numTrainers);
+    clrtoeol();
     for (i = 0; i < num_types_tra; i++) {
         visited[i] = false;
     }
 
     ret = dijkstra(trails[PLAY], w, player->pos, player);
     visited[0] = true;
-    mvprintw(0, 0, "Updated Player trail.\n");
+    mvprintw(0, 0, "Updated Player trail.");
     for (i = 0; i < numTrainers; i++) {
         if (!visited[t[i]->get_chr()]) {
-            mvprintw(0, 0, "Updating Trail for Entity %c\n", ALL_TRAINERS[t[i]->get_chr()]);
-            ret = dijkstra((Map *) trails[t[i]->get_chr()], (Map *) w, (Point) player->pos, (Entity *) &t[i]) || ret;
+            mvprintw(0, 0, "Updating Trail for Entity %c", ALL_TRAINERS[t[i]->get_chr()]);
+            ret = dijkstra((Map *) trails[t[i]->get_chr()], (Map *) w, (Point) player->pos, (Entity *) t[i]) || ret;
             mvprintw(0, 0, "Updated Trail %d\n", i);
             visited[t[i]->get_chr()] = true;
         }
     }
+    mvprintw(0, 0, "Updated trails.");
+    clrtoeol();
 
 
     return ret;
 }
 
-int map_chars(Map *from, Plane<char> map)
+int map_chars(Map *from, Plane<char> &map)
 {
     int i, j;
     Plane<Terrain_e> ter;
@@ -78,7 +82,10 @@ int map_chars(Map *from, Plane<char> map)
     for (i = 0; i < BOUNDS_Y; i++) {
         mvprintw(0, 0, "Mapping row %d.\n", i);
         for (j = 0; j < BOUNDS_X; j++) {
+            mvprintw(0, 0, "At (%d, %d) Terrain: %d, Char: %c", j, i, ter.a[i][j], ALL_TERRAIN[ter.a[i][j]]);
+            clrtoeol();
             map.a[i][j] = ALL_TERRAIN[ter.a[i][j]];
+            mvprintw(0, 50, "Actual: %c", map.a[i][j]);
         }
     }
     mvprintw(0, 0, "Mapped terrain to display.\n");
@@ -86,7 +93,7 @@ int map_chars(Map *from, Plane<char> map)
     return 0;
 }
 
-int map_char(Map *from, Plane<char> map, Point p)
+int map_char(Map *from, Plane<char> &map, Point p)
 {
     
     map.a[p.y][p.x] = ALL_TERRAIN[from->get_map_terrain().a[p.y][p.x]];
@@ -186,32 +193,30 @@ Trainer** init_trainers()
     if (numTrainers >= 2) {
         Hiker *h = new Trainer(HIKR, Point(2 + (rand() % (BOUNDS_X - 3)), 2 + (rand() % (BOUNDS_Y - 3))), num_types_ter);
         Rival *r = new Trainer(RIVL, Point(2 + (rand() % (BOUNDS_X - 3)), 2 + (rand() % (BOUNDS_Y - 3))), num_types_ter);
-        h->order = 0;
-        r->order = 1;
+        h->turnOrder = 0;
+        r->turnOrder = 1;
+        h->hn = NULL;
+        r->hn = NULL;
         trainers[0] = h;
         trainers[1] = r;
         i = 2;
         mvprintw(0, 0, "Test 0: %d\n", 0);
-            clrtoeol();
-            trainers[0]->print_trainer();
-            getch();
-            mvprintw(0, 0, "Test 0: %d\n", 1);
-            clrtoeol();
-            trainers[1]->print_trainer();
-            // getch();
+        clrtoeol();
+        trainers[0]->print_trainer();
+        mvprintw(0, 0, "Test 0: %d\n", 1);
+        clrtoeol();
+        trainers[1]->print_trainer();
     }
 
     while (i < numTrainers) {
-        Trainer_e tr = (Trainer_e) (1 + (rand() % (num_types_tra - 1)));
-        Point pnt = Point(2 + (rand() % (BOUNDS_X - 3)), 2 + (rand() % (BOUNDS_Y - 3)));
-        Trainer *t = new Trainer(tr, pnt, num_types_ter);
-        t->order = i;
+        Trainer *t = new Trainer((Trainer_e) (1 + (rand() % (num_types_tra - 1))), Point(2 + (rand() % (BOUNDS_X - 3)), 2 + (rand() % (BOUNDS_Y - 3))), num_types_ter);
+        t->turnOrder = i;
+        t->hn = NULL;
         trainers[i] = t;
+        // mvprintw(0, 0, "");
+        // trainers[i]->print_trainer();
+        // refresh();
         i++;
-        mvprintw(0, 0, "Test 0: %d\n", i);
-            clrtoeol();
-            trainers[i]->print_trainer();
-            // getch();
     }    
     mvprintw(0, 0, "Initailized Trainers");
     clrtoeol();
@@ -273,28 +278,32 @@ int init_map(PC *player, Dir_e d) {
         memcpy(ter.a, m->get_map_terrain().a, sizeof(ter.a));
 
         for (i = 0; i < numTrainers; i++) {
-            mvprintw(0, 0, "Test 0: %d\n", i);
-            clrtoeol();
-            m->trainers[i]->print_trainer();
-            getch();
             while (!valid_pos_trainer((Trainer_e) (m->trainers[i]->get_chr()), 
                     ter.a[m->trainers[i]->pos.y][m->trainers[i]->pos.x], m->trainers[i]->start)) {
                 m->trainers[i]->pos = Point(2 + (rand() % (BOUNDS_X - 3)), 2 + (rand() % (BOUNDS_Y - 3)));
                 m->trainers[i]->start = ter.a[m->trainers[i]->pos.y][m->trainers[i]->pos.x];
             }
             
-            m->trainers[i]->hn = heap_insert(&m->order, &(m->trainers[i]));
+            m->trainers[i]->hn = heap_insert(&m->order, m->trainers[i]);
+
             if (trails[m->trainers[i]->get_chr()] == NULL) {
                 trails[m->trainers[i]->get_chr()] = (Map *) malloc(sizeof(*trails[0]));
                 trails[m->trainers[i]->get_chr()]->set_map_alt(m->get_map_alt());
             }
             ret = add_trainer(m->trainers[i], display) || ret;
             
-            mvprintw(0, 20, new char[2] {static_cast<char>(i + '0'), '\0'});
+            printw(new char[2] {static_cast<char>(i + '0'), '\0'});
             refresh();
         }
 
-        
+        // mvprintw(1, 0, "n: %d", m->get_map_gates()[0]);
+        // getch();
+        // mvprintw(2, 0, "s: %d", m->get_map_gates()[1]);
+        // getch();
+        // mvprintw(3, 0, "e: %d", m->get_map_gates()[2]);
+        // getch();
+        // mvprintw(4, 0, "w: %d", m->get_map_gates()[3]);
+        // getch();
 
         switch (d) {
             case N:
@@ -304,7 +313,7 @@ int init_map(PC *player, Dir_e d) {
                 player->pos = Point(m->get_map_gates()[0], 2);
                 break;
             case E:
-                player->pos = Point(2, m->get_map_gates()[2]);
+                player->pos = Point(2, m->get_map_gates()[3]);
                 break;
             case W:
                 player->pos = Point(BOUNDS_X-2, m->get_map_gates()[2]);
@@ -315,10 +324,6 @@ int init_map(PC *player, Dir_e d) {
     } else {
         ret = 1;
     }
-
-    mvprintw(1, 0, "Test 1");
-    clrtoeol();
-    // getch();
 
 
     return ret;
@@ -341,10 +346,6 @@ int setup_game(PC *player)
     srand(time(NULL));
 
     ret = init_map(player, NONE);
-
-    mvprintw(0, 0, "Test 2");
-    clrtoeol();
-    // getch();
 
 
     return ret;
@@ -442,28 +443,35 @@ int cleanup()
 //The actual game
 int gameloop()
 {
-    int ret = 0, code = 0;
+    int ret = 0, code = 0, i;
     PC *player;
     Trainer **trainers;
     Entity *ent;
     Map *m;
     Point p, q;
 
-
+    
     player = new Trainer(PLAY, Point(BOUNDS_X - 3, BOUNDS_Y - 3), num_types_ter);
     if (!setup_game(player)) {
+        clear();
         mvprintw(0, 0, "Setup Successful\n");
         m = world.a[curPos.y][curPos.x];
         trainers = m->trainers;
+        ret = map_chars(m, display) || ret;
         ret = add_trainer(player, display) || ret;
+        for (i = 0; i < numTrainers; i++) {
+            ret = add_trainer(m->trainers[i], display) || ret;
+        }
         ret = print_display(display) || ret;
         ret = color_display(m, player, trainers) || ret;
+        refresh();
         update_trails(player, trainers);
         while (!ret) {
             m = world.a[curPos.y][curPos.x];
             trainers = m->trainers;
             ent = (Entity *) heap_remove_min(&m->order);
-            mvprintw(0, 0, "Turn: %d, Trainer %d (%c)\n", ent->check_time(), ent->check_order(), ALL_TRAINERS[ent->get_chr()]);
+            mvprintw(0, 0, "Turn: %d, Trainer %d (%c)", ent->check_time(), ent->check_order(), ALL_TRAINERS[ent->get_chr()]);
+            clrtoeol();
             p = ent->pos;
             if (!ent->is_defeated()) {
                 if (!ret && check_battle(m, ent, player)) {

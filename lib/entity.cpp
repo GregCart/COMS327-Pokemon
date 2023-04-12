@@ -39,7 +39,7 @@ Entity::~Entity()
 bool Entity::compare(const void *with) const
 {
   return(this)->nextTime == ((Entity *) with)->nextTime &&
-    (this)->order == ((Entity *) with)->order;
+    (this)->turnOrder == ((Entity *) with)->turnOrder;
 }
 
 //HPs
