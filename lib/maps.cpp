@@ -81,25 +81,6 @@ int Map::print_map() const
     return (!print_map_terrain() && !print_map_alt());
 }
 
-int Map::print_cost_map() const 
-{
-    int i, j;
-
-    for (i = 0; i < BOUNDS_Y; i++) {
-        for (j = 0; j < BOUNDS_X; j++) {
-            if (this->alt.a[i][j] < D_MAX) {
-                mvprintw(BOUNDS_Y + 4 + i, j*3, "%02d", this->alt.a[i][j] % 100);
-            } else {
-                mvprintw(BOUNDS_Y + 4 + i, j, "   ");
-            }
-            
-        }
-        printw("\n");
-    }
-
-    return 0;
-}
-
 //peepers
 Plane<Terrain_e> Map::get_map_terrain() const
 { 

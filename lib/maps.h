@@ -34,7 +34,6 @@ class Map {
         int print_map_alt() const;
         int print_map_terrain() const;
         int print_map() const;
-        int print_cost_map() const;
 
         //Bobs
         Map() {}

@@ -14,7 +14,7 @@ class Map;
 
 //globals
 extern int numTrainers;
-extern Map *trails[num_types_tra];
+extern Plane<int> *trails[num_types_tra];
 
 //constants
 extern int (*movement[]) (Entity *e, Map *m, Plane<char> map);
@@ -57,13 +57,14 @@ int move_swimmer(Entity *self, Map *wrld, Plane<char> map);
 
 //distance finders
 int manhattan(const Point p, const Point q);
-int dijkstra(const Map *m, const Map *w, const Point p, const Entity *e);
+int dijkstra(Plane<int> &m, Map *w, Point p, Entity *e);
 
 //HP's
 int print_display(const Plane<char> map);
 int color_display(const Map *m, const PC *player, Trainer **ts);
 int print_entity(const Entity *e);
 int print_point(const Point p);
+int print_cost_map(const Plane<int> &map);
 
 //new screen manipulation
 int enter_building(const Terrain_e t);

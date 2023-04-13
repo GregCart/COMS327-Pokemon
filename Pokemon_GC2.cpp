@@ -53,13 +53,13 @@ int update_trails(PC *player, Trainer** t)
         visited[i] = false;
     }
 
-    ret = dijkstra(trails[PLAY], w, player->pos, player);
+    ret = dijkstra(*trails[PLAY], w, player->pos, player);
     visited[0] = true;
     mvprintw(0, 0, "Updated Player trail.");
     for (i = 0; i < numTrainers; i++) {
         if (!visited[t[i]->get_chr()]) {
             mvprintw(0, 0, "Updating Trail for Entity %c", ALL_TRAINERS[t[i]->get_chr()]);
-            ret = dijkstra((Map *) trails[t[i]->get_chr()], (Map *) w, (Point) player->pos, (Entity *) t[i]) || ret;
+            ret = dijkstra(*trails[t[i]->get_chr()], (Map *) w, (Point) player->pos, (Entity *) t[i]) || ret;
             mvprintw(0, 0, "Updated Trail %d", i);
             clrtoeol();
             visited[t[i]->get_chr()] = true;
@@ -269,7 +269,7 @@ int init_map(PC *player, Dir_e d) {
         player->hn = heap_insert(&m->order, player);
         player->pos = Point(((int *) m->get_map_gates())[1], BOUNDS_Y-2);
         player->start = m->get_map_terrain().a[player->pos.y][player->pos.x];
-        trails[player->get_chr()] = (Map *) malloc(sizeof(*trails[0]));
+        trails[player->get_chr()] = (Plane<int> *) malloc(sizeof(*trails[0]));
 
         memcpy(ter.a, m->get_map_terrain().a, sizeof(ter.a));
 
@@ -284,8 +284,7 @@ int init_map(PC *player, Dir_e d) {
             m->trainers[i]->hn = heap_insert(&m->order, m->trainers[i]);
 
             if (trails[m->trainers[i]->get_chr()] == NULL) {
-                trails[m->trainers[i]->get_chr()] = (Map *) malloc(sizeof(*trails[0]));
-                trails[m->trainers[i]->get_chr()]->set_map_alt(m->get_map_alt());
+                trails[m->trainers[i]->get_chr()] = (Plane<int> *) malloc(sizeof(*trails[0]));
             }
             ret = add_trainer(m->trainers[i], display) || ret;
             
@@ -467,6 +466,15 @@ int gameloop()
         ret = color_display(m, player, trainers) || ret;
         refresh();
         update_trails(player, trainers);
+        // for (i = 0; i < num_types_tra; i++) {
+        //     if (trails[i] != NULL) {
+        //         mvprintw(23, 0, "DONE!");
+        //         getch();
+        //         mvprintw(23, 0, "Trail: %c\n", ALL_TRAINERS[i]);
+        //         print_cost_map(*trails[i]);
+        //         getch();
+        //     }
+        // }
         while (!ret) {
             m = world.a[curPos.y][curPos.x];
             trainers = m->trainers;
