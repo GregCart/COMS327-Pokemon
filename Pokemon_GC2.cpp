@@ -196,6 +196,8 @@ Trainer** init_trainers()
         Rival *r = new Trainer(RIVL, Point(2 + (rand() % (BOUNDS_X - 3)), 2 + (rand() % (BOUNDS_Y - 3))), num_types_ter);
         h->turnOrder = 1;
         r->turnOrder = 2;
+        h->do_move = movement[HIKR];
+        r->do_move = movement[RIVL];
         h->hn = NULL;
         r->hn = NULL;
         trainers[0] = h;
@@ -266,6 +268,7 @@ int init_map(PC *player, Dir_e d) {
             !(ret = map_chars(m, display) || ret)) {
         player->hn = heap_insert(&m->order, player);
         player->pos = Point(((int *) m->get_map_gates())[1], BOUNDS_Y-2);
+        player->start = m->get_map_terrain().a[player->pos.y][player->pos.x];
         trails[player->get_chr()] = (Map *) malloc(sizeof(*trails[0]));
 
         memcpy(ter.a, m->get_map_terrain().a, sizeof(ter.a));
@@ -344,14 +347,13 @@ int handle_code(int code, PC *player, Entity *ent)
     Point q, p;
 
 
-    // mvprintw(23, 0, "Test 4: %d", code);
-    // clrtoeol();
-    // getch();
+    mvprintw(23, 0, "Test 4: %d", code);
+    clrtoeol();
+    getch();
 
     p = curPos;
     switch (code) { 
         case 2:
-            ent->update_time(STRESS[ent->get_chr()][world.a[curPos.y][curPos.x]->get_map_terrain().a[ent->pos.y][ent->pos.x]]);
             break;
         case 6: //fight
             mvprintw(0, 0, "Battle Between %c and The Player!\n", ALL_TRAINERS[ent->get_chr()]);
@@ -472,19 +474,18 @@ int gameloop()
             mvprintw(0, 0, "Turn: %d, Trainer %d (%c)", ent->check_time(), ent->check_order(), ALL_TRAINERS[ent->get_chr()]);
             clrtoeol();
             p = ent->pos;
-            // mvprintw(23, 0, "Test 0");
-            // clrtoeol();
+            mvprintw(23, 0, "Test 0");
+            clrtoeol();
             getch();
             if (!ent->is_defeated()) {
-            //     mvprintw(23, 0, "Test 1");
-            // getch();
+                mvprintw(23, 0, "Test 1");
+            getch();
                 if (!ret && check_battle(m, ent, player)) {
                     mvprintw(0, 0, "Battle Between %c and The Player", ALL_TRAINERS[ent->get_chr()]);
                     initiate_battle(ent, player);
                 } else if(!(code = ent->do_move(ent, m, display))) {
-            //         mvprintw(23, 0, "Test 10");
-            // getch();
-                    ent->update_time(STRESS[ent->get_chr()][world.a[curPos.y][curPos.x]->get_map_terrain().a[ent->pos.y][ent->pos.x]]);
+                    mvprintw(23, 0, "Test 10");
+            getch();
                     ret = map_char(m, display, p) || ret;
                     ret = add_entity_trainer(ent, display) || ret;
                     ret = print_display(display) || ret;
@@ -498,8 +499,10 @@ int gameloop()
                 } else if (code) {
                     ret = handle_code(code, player, ent) || ret;
                 }
-    //             mvprintw(23, 0, "Test 6");
-    // getch();
+                
+                ent->update_time(STRESS[ent->get_chr()][world.a[curPos.y][curPos.x]->get_map_terrain().a[ent->pos.y][ent->pos.x]]);
+                mvprintw(23, 0, "Test 6: %d", ent->check_time());
+    getch();
                 
                 ent->hn = heap_insert(&m->order, ent);
             }
