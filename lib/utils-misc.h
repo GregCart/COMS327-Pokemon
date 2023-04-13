@@ -17,7 +17,7 @@ extern int numTrainers;
 extern Map *trails[num_types_tra];
 
 //constants
-extern int (*movement[]) (Entity *e, const Map *m, Plane<char> map);
+extern int (*movement[]) (Entity *e, Map *m, Plane<char> map);
 extern const char TERRAIN[];
 extern const char ALL_TERRAIN[];
 extern const char ALL_TRAINERS[];
@@ -46,14 +46,14 @@ Dir_e get_lower_alt(const Point p, const Map *m);
 Entity* find_entity_pos(Trainer **t, const Point p) ;
 
 //movement functions
-int move_player(Entity *self, const Map *wrld, Plane<char> map);
-int move_hiker(Entity *self, const Map *wrld, Plane<char> map);
-int move_rival(Entity *self, const Map *wrld, Plane<char> map);
-int move_pacer(Entity *self, const Map *wrld, Plane<char> map);
-int move_wanderer(Entity *self, const Map *wrld, Plane<char> map);
-int move_sentry(Entity *self, const Map *wrld, Plane<char> map);
-int move_explorer(Entity *self, const Map *wrld, Plane<char> map);
-int move_swimmer(Entity *self, const Map *wrld, Plane<char> map);
+int move_player(Entity *self, Map *wrld, Plane<char> map);
+int move_hiker(Entity *self, Map *wrld, Plane<char> map);
+int move_rival(Entity *self, Map *wrld, Plane<char> map);
+int move_pacer(Entity *self, Map *wrld, Plane<char> map);
+int move_wanderer(Entity *self, Map *wrld, Plane<char> map);
+int move_sentry(Entity *self, Map *wrld, Plane<char> map);
+int move_explorer(Entity *self, Map *wrld, Plane<char> map);
+int move_swimmer(Entity *self, Map *wrld, Plane<char> map);
 
 //distance finders
 int manhattan(const Point p, const Point q);

@@ -12,7 +12,7 @@
 using namespace std;
 
 //globals
-vector<Pokemon> pokemon;
+vector<Pokemon *> pokemon;
 vector<Move> moves;
 vector<PokeMove> pokeMoves;
 vector<PokeSpecies> pokeSpecies;
@@ -495,6 +495,59 @@ int load_pokeTypes(char *path)
 
 int load_pokemon(char *path)
 {
+    ifstream file;
+    char filename[100], str[250];
+    vector<string> parts;
+    Pokemon *data;
+    int i, size;
+
+
+    strcpy(filename, path);
+    strcat(filename, "pokemon.csv");
+    mvprintw(0, 0, "Loading file %s", filename);
+    clrtoeol();
+
+    file.open(filename, ios::binary);
+
+    mvprintw(0, 0, "Opened file %s", filename);
+    clrtoeol();
+
+    if (file.is_open()) {
+        file.getline(str, 250);
+        size = 8;
+        while (!file.eof()) {
+            file.getline(str, 250);
+            parts = pokebase_explode(str, ',');
+            parts.resize(size);
+            // mvprintw(1, 0, "For# %s: %s", parts.at(0).c_str(), str);
+            // clrtoeol();
+            // refresh();
+
+            for (i = 0; i < size; i++) {
+                if (parts.at(i).empty()) {
+                    parts.at(i).assign(to_string(INT_MAX).c_str());
+                }
+            }
+
+            data = new Pokemon(
+                stoi(parts.at(0).c_str()),
+                parts.at(1).c_str(),
+                stoi(parts.at(2).c_str()),
+                stoi(parts.at(3).c_str()),
+                stoi(parts.at(4).c_str()),
+                stoi(parts.at(5).c_str()),
+                stoi(parts.at(6).c_str()),
+                stoi(parts.at(7).c_str())
+            );
+
+            pokemon.push_back(data);
+        }
+    } else {
+        clear();
+        mvprintw(0, 0, "Error Trying to open file %s. (Press any key)", filename);
+        getch();
+    }
+
     return 0;
 }
 

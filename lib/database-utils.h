@@ -11,7 +11,7 @@
 class Pokemon;
 
 //globals
-extern std::vector<Pokemon> pokemon;
+extern std::vector<Pokemon *> pokemon;
 extern std::vector<Move> moves;
 extern std::vector<PokeMove> pokeMoves;
 extern std::vector<PokeSpecies> pokeSpecies;

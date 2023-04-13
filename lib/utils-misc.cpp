@@ -15,7 +15,7 @@ int numTrainers;
 Map *trails[num_types_tra];
 
 //constants
-int (*movement[]) (Entity *e, const Map *m, Plane<char> map) = {move_player, move_hiker, move_rival, move_pacer, move_wanderer, move_sentry, move_explorer, move_swimmer};
+int (*movement[]) (Entity *e, Map *m, Plane<char> map) = {move_player, move_hiker, move_rival, move_pacer, move_wanderer, move_sentry, move_explorer, move_swimmer};
 const char TERRAIN[] = {ROCK, TREE, GRASS_T, WATER, GRASS_S};
 const char ALL_TERRAIN[] = {ROCK, TREE, GRASS_T, WATER, GRASS_S, GATE, PATH, MART, CENTER, BORDER};
 const char ALL_TRAINERS[] = {PLAYER, HIKER, RIVAL, PACER, WANDERER, SENTRY, EXPLORER, SWIMMER};
@@ -76,6 +76,7 @@ int32_t path_cmp(const void *key, const void *with)
 int32_t entity_cmp(const void *key, const void *with) 
 {
   int ret;
+  
 
   ret = ((Entity *) key)->nextTime - ((Entity *) with)->nextTime;
   if (ret == 0) {
@@ -133,10 +134,7 @@ bool valid_pos_trainer(Trainer_e e, Terrain_e t, Terrain_e start)
 
 bool valid_pos(Trainer_e e, Terrain_e t)
 {
-    if (valid_move_ter(t) && t != MRT && t != CTR) {
-        return true;
-    }
-    return (STRESS[e][t] != D_MAX);
+    return (valid_move_ter(t) && t != MRT && t != CTR && STRESS[e][t] != D_MAX);
 }
 
 bool containes_trainer(Point p, Plane<char> map) {
@@ -272,7 +270,7 @@ Entity* find_entity_pos(Trainer **t, Point p)
 }
 
 //movement functions
-int move_player(Entity *self, const Map *wrld, Plane<char> map)
+int move_player(Entity *self, Map *wrld, Plane<char> map)
 {
     int ret = 0;
     char c;
@@ -332,7 +330,7 @@ int move_player(Entity *self, const Map *wrld, Plane<char> map)
                     d = self->dir;
                     ret = 0;
                 } else {
-                    mvprintw(0, 0, "That is not a building!\n");
+                    mvprintw(0, 0, "That is not a building!");
                 }
                 break;
             case '5':
@@ -371,7 +369,7 @@ int move_player(Entity *self, const Map *wrld, Plane<char> map)
 
         if (ret == 8) {
             p = get_next_position(self->pos, d);
-            mvprintw(0, 0, "Input: %c, Next position: (%d, %d)\n", c, p.x, p.y);
+            mvprintw(0, 0, "Input: %c, Next position: (%d, %d)", c, p.x, p.y);
             if (self->pos.x != p.x || self->pos.y != p.y) {
                 if (valid_pos((Trainer_e) self->get_chr(), wrld->get_map_terrain().a[p.y][p.x])) {
                     if (containes_trainer(p, map)) {
@@ -398,32 +396,37 @@ int move_player(Entity *self, const Map *wrld, Plane<char> map)
                             ret = 11;
                     }
                 } else {
-                    mvprintw(0, 0, "Failed to move player\n");
+                    mvprintw(0, 0, "Failed to move player");
                     ret = 2;
                 }
             }
         }
     } while (!ret);
-    
 
     return ret;
 }
 
-int move_hiker(Entity *self, const Map *wrld, Plane<char> map)
+int move_hiker(Entity *self, Map *wrld, Plane<char> map)
 {
+    // mvprintw(23, 0, "Test 2");
+    // getch();
     Map *t = trails[HIKR];
     Dir_e d = get_lower_alt(self->pos, t);
     Point q = get_next_position(self->pos, d);
 
     
-    // mvprintw(0, 0, "%c, %d\n", ALL_TRAINERS[(Trainer_e) self->get_chr()], t->get_map_alt().a[self->pos.y][self->pos.x]);
+    // mvprintw(23, 0, "Test 3");
     // getch();
     if ((t->get_map_alt().a[q.y][q.x] <= t->get_map_alt().a[self->pos.y][self->pos.x] || rand() % 500 == 0) &&
-        !containes_trainer(q, map) && 
-        !valid_pos_trainer((Trainer_e) self->get_chr(), t->get_map_terrain().a[q.y][q.x], t->get_map_terrain().a[self->pos.y][self->pos.x])) {
+            !containes_trainer(q, map) && 
+            !valid_pos_trainer((Trainer_e) self->get_chr(), t->get_map_terrain().a[q.y][q.x], t->get_map_terrain().a[self->pos.y][self->pos.x])) {
+    //     mvprintw(23, 0, "Test 3-1");
+    // getch();
         self->pos = q;
         self->dir = d;
     } else {
+    //     mvprintw(23, 0, "Test 2");
+    // getch();
         d = get_lower_alt(self->pos, t);
         q = get_next_position(self->pos, d);
         if (d > 0 && 
@@ -442,7 +445,7 @@ int move_hiker(Entity *self, const Map *wrld, Plane<char> map)
     return 0;
 }
 
-int move_rival(Entity *self, const Map *wrld, Plane<char> map)
+int move_rival(Entity *self, Map *wrld, Plane<char> map)
 {
     Map *m = trails[RIVL];
     Dir_e d = get_lower_alt(self->pos, m);
@@ -471,7 +474,7 @@ int move_rival(Entity *self, const Map *wrld, Plane<char> map)
     return 0;
 }
 
-int move_pacer(Entity *self, const Map *wrld, Plane<char> map)
+int move_pacer(Entity *self, Map *wrld, Plane<char> map)
 {
     const Map *m = wrld;
     Point q = get_next_position(self->pos, self->dir);
@@ -490,7 +493,7 @@ int move_pacer(Entity *self, const Map *wrld, Plane<char> map)
     return 0;
 }
 
-int move_wanderer(Entity *self, const Map *wrld, Plane<char> map)
+int move_wanderer(Entity *self, Map *wrld, Plane<char> map)
 {
     const Map *m = wrld;
     Point q = get_next_position(self->pos, self->dir);
@@ -517,13 +520,13 @@ int move_wanderer(Entity *self, const Map *wrld, Plane<char> map)
     return 0;
 }
 
-int move_sentry(Entity *self, const Map *wrld, Plane<char> map)
+int move_sentry(Entity *self, Map *wrld, Plane<char> map)
 {
     //no
     return 0;
 }
 
-int move_explorer(Entity *self, const Map *wrld, Plane<char> map)
+int move_explorer(Entity *self, Map *wrld, Plane<char> map)
 {
     const Map *m = wrld;
     Point q = get_next_position(self->pos, self->dir);
@@ -553,7 +556,7 @@ int move_explorer(Entity *self, const Map *wrld, Plane<char> map)
     return 1;
 }
 
-int move_swimmer(Entity *self, const Map *wrld, Plane<char> map)
+int move_swimmer(Entity *self, Map *wrld, Plane<char> map)
 {
     Map *m = trails[SWIM];
     Dir_e d = get_lower_alt(self->pos, m);

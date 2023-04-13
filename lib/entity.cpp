@@ -5,6 +5,18 @@
 
 
 //Bobs
+Entity::Entity()
+{
+    this->chr = -1;
+    this->pos = Point(-1, -1);
+    this->start = num_types_ter;
+    this->nextTime = 0;
+    this->defeated = 0;
+    this->dir = num_dir;
+    this->hn = NULL;
+    this->do_move = NULL;
+}
+
 Entity::Entity(const int i, const Point p, const Terrain_e st) 
 { 
     this->chr = i;
@@ -50,8 +62,9 @@ int Entity::print_entity()  const
     printw("\tPos: (%d, %d),\n", this->pos.x, this->pos.y);
     printw("\tStart: %d\n", this->start);
     printw("\tTime: %d\n", this->nextTime);
-    printw("\tHn? %d\n", this->hn == NULL);
-    printw("\tMove? %d\n", this->do_move == NULL);
+    printw("\tTurn Order: %d\n", this->turnOrder);
+    printw("\tHn? %d\n", this->hn != NULL);
+    printw("\tMove? %d\n", this->do_move != NULL);
     printw("\tCurrent direction: %d\n", this->dir);
     printw("}\n");
     refresh();

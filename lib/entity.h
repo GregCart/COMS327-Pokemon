@@ -19,10 +19,11 @@ class Entity {
         Point pos;
         Dir_e dir;
         Terrain_e start;
-        int (*do_move)(Map *m, Plane<char> map);
+        int (*do_move)(Entity *, Map *m, Plane<char> map);
         int turnOrder;
 
 
+        Entity();
         Entity(const int i, const Point p, const Terrain_e st);
         Entity(const int i, const Point p, const Terrain_e st, const Dir_e d);
         ~Entity();
@@ -37,6 +38,7 @@ class Entity {
 
         void defeat() { this->defeated = true; }
         void update_time(const int i) { this->nextTime += i; }
+        void set_time(const int i) { this->nextTime = i; }
 
         bool compare(const void *with) const;
 

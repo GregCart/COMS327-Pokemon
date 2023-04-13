@@ -21,6 +21,10 @@ class Pokemon: public Entity {
         bool is_default;
 
 
+        Pokemon():Entity() {}
+        Pokemon(int id, const char *iden, int spec_id, int h, int w, int b_exp, int ord, int is_def);
+        Pokemon(int id, const char *iden, int spec_id, int h, int w, int b_exp, int ord, int *moveList, int is_def);
+        
         const int get_id() const { return this->id; }
         const char *get_identifier() const { return this->identifier; }
         const int get_species_id() const { return this->species_id; }
