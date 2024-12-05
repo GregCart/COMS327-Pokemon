@@ -82,4 +82,4 @@ To run test w/ Valgrind: make test-v
 TO clean: make clean
 To package into tarball: make package
 
-Github Repo with all changes: https://github.com/GregCart2/COMS327-Pokemon
+Github Repo with all changes: https://github.com/GregCart/COMS327-Pokemon
